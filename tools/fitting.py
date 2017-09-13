@@ -17,12 +17,9 @@ def fit(fun,X,Y):
         popt = [np.nan]
         
     return popt
-    
-def parabola(t,a):
-    return a*t**2
-    
-def exp(t,tau):
-    return np.exp(t*tau)
+
+def exp(x,tau):
+    return np.exp(x*tau)
     
 def parabola(x,a):
     return a*x**2
