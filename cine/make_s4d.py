@@ -179,7 +179,7 @@ for fn in files:
     header = {'original_bitdepth':bit_depth, 'original_file':fn, 'bottom_clip':bottom_clip, '3dsetup':setup_str, 'use_3dsetup_perspective':True, 'dtype':args.type, 'frame size': test_frame.shape}
     
     #print header
-    print(args.range)
+    
     frames = eval('x[%s]' % args.range, {'x':range(num_frames)})
     
     fmt = '%d' % len(frames)
@@ -206,7 +206,7 @@ for fn in files:
 
     volume_shape = (len(setup['display_frames']), ) + test_frame.shape
 
-    output = cine.sparse.Sparse4D(ofn, 'w', header)
+    output = cine.Sparse4D(ofn, 'w', header)
     print '',
     for i, j in enumerate(frames):
         print fmt % (i+1),
