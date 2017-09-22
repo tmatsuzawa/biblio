@@ -9,9 +9,6 @@ import matplotlib.pyplot as plt
 #cwd = os.getcwd()  # get the path of the current working directory
 #filelist = os.listdir(cwd)  # list files in the directory
 
-datafile='circulation_fv_fps4000_left_macro105mm_D20mm_spanVaried_freq0.2Hz_vVaried.txt'
-data_path='C:\Users\labusr\Documents\git\circulation_fv_fps4000_left_macro105mm_D20mm_spanVaried_freq0.2Hz_vVaried.txt'
-
 def generate_data_dct(data_path,separation=' '):
     """
     Read data from txt files, and make a dictionary
