@@ -53,7 +53,6 @@ def  main(date):
     #if the directory is not specified, look automatticlly in grid_turbulence folders
     if args.folder is None:
         args.folder = file_architecture.get_dir(date)
-
     process(args.folder)
     list_item = glob.glob(args.folder+'/*')
     
