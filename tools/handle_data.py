@@ -134,37 +134,64 @@ def generate_data_dct_plottable(dataPath, threshold=0.0, separation='\t', varInd
     key, dataMasked, counter = generate_data_dct_masked(dataPath, threshold=0.0, separation='\t')
 
     dataMaskedForPlot={}
-    for x in range(0, 2*len(key)):
-        dataMaskedForPlot["var{0}".format(x)] = []  # initialize lists var0, var1,...
+    # for x in range(0, 2*len(key)):
+    #     dataMaskedForPlot["var{0}".format(x)] = np.ma.zeros(len(dataMasked["var0"]))  # initialize lists var0, var1,...
 
     for x in range(0,2*len(key),2):
-        dataMaskedForPlot["var{0}".format(x)] = []  # initialize lists var0, var1,...
-        npMaskedPlottableDataArray1, npMaskedPlottableDataArray2 = generate_plottable_arrays(dataMasked["var{0}".format(varIndexForX)], dataMasked["var{0}".format(x/2)])
-        dataMaskedForPlot["var{0}".format(x)]=npMaskedPlottableDataArray1
-        dataMaskedForPlot["var{0}".format(x+1)] = npMaskedPlottableDataArray2
-        print dataMaskedForPlot["var{0}".format(x)]
-        print dataMaskedForPlot["var{0}".format(x+1)]
+        #dataMaskedForPlot["var{0}".format(x)], dataMaskedForPlot["var{0}".format(x+1)] = [], []  # initialize lists var0, var1,...
 
+        #npMaskedPlottableDataArray1, npMaskedPlottableDataArray2 = generate_plottable_arrays(dataMasked["var{0}".format(varIndexForX)], dataMasked["var{0}".format(x/2)])
+        #dataMaskedForPlot["var{0}".format(x)]=npMaskedPlottableDataArray1
+        #dataMaskedForPlot["var{0}".format(x+1)] = npMaskedPlottableDataArray2
 
+        dataMaskedForPlot["var{0}".format(x)],dataMaskedForPlot["var{0}".format(x+1)]=generate_plottable_arrays(dataMasked["var{0}".format(varIndexForX)], dataMasked["var{0}".format(x/2)])
+
+        print 'var' + str(x) + '-Masked'
+        #print dataMaskedForPlot["var{0}".format(x)]
+        print dataMaskedForPlot["var{0}".format(x)].mask
+        print 'var' + str(x+1) + '-Masked'
+        #print dataMaskedForPlot["var{0}".format(x+1)]
+        print dataMaskedForPlot["var{0}".format(x+1)].mask
+
+        # if not x==0:
+        #     print 'var' + str(x-2) + '-Masked'
+        #     print dataMaskedForPlot["var{0}".format(x)].mask
+        #     print 'var' + str(x-1) + '-Masked'
+        #     print dataMaskedForPlot["var{0}".format(x + 1)].mask
+
+    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    for x in range(0, len(dataMaskedForPlot)):
+        print dataMaskedForPlot["var{0}".format(x)].mask
+    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
 #Cropping
     print len(dataMaskedForPlot)
     dataCroppedForPlot = {}  # initialize a dictionary where numpy masked arrays will be stored
-
+    print dataMaskedForPlot["var{0}".format(0)].mask  ####
     for x in range(0, len(dataMaskedForPlot)):
         dataCroppedForPlot["var{0}".format(x)] = []  # initialize lists var0, var1,...
-        checkerArray = np.zeros((len(dataMaskedForPlot["var{0}".format(x)])), dtype=bool)
-        try:
-            if dataMaskedForPlot["var{0}".format(x)].mask == False:
+        checkerArray = np.zeros((len(dataMaskedForPlot["var{0}".format(x)])), dtype=bool) #Used to identify which lists need to be cropped for plotting
+        print dataMaskedForPlot["var{0}".format(x)].mask
+        print 'var' + str(x)
+        print dataMaskedForPlot["var{0}".format(x)].mask
+        if np.array_equal(dataMaskedForPlot["var{0}".format(x)].mask, checkerArray):
                 dataCroppedForPlot["var{0}".format(x)] = dataMaskedForPlot["var{0}".format(x)]  # If var# does not have a mask, no need to crop the data!
-        except ValueError:
+                print 'var' + str(x) + ' will NOT be cropped! (no mask)'
+        if not np.array_equal(dataMaskedForPlot["var{0}".format(x)].mask, checkerArray):
+            print 'var' + str(x) + ' will be  cropped!'
             for y in range(0, len(dataMaskedForPlot["var{0}".format(x)])):
                 if dataMaskedForPlot["var{0}".format(x)].mask[y] == False:  # Crop data so that it contains only values and no masks
                     dataCroppedForPlot["var{0}".format(x)].append(dataMaskedForPlot["var{0}".format(x)][y])
-                continue
+                    #print 'var' + str(x) + '[' + str(y) +'] was appended to ' +  'var' + str(x)
+        print dataCroppedForPlot["var{0}".format(x)]
+
     return key, dataCroppedForPlot
 
 
 def generate_plottable_arrays(maskedArray1, maskedArray2):
+    newMaskedArray1 = maskedArray1
+    newMaskedArray2 = maskedArray2
     mask1 = maskedArray1.mask
     mask2 = maskedArray2.mask
     #mask3 = np.zeros(len(maskedArray1), dtype=bool)
@@ -195,13 +222,11 @@ def generate_plottable_arrays(maskedArray1, maskedArray2):
     # print mask3
 
     #Remask the masked arrays with the new mask, mask3
-    maskedArray1.mask=mask3
-    maskedArray2.mask=mask3
 
-    # print maskedArray1
-    # print maskedArray2
+    newMaskedArray1.mask=mask3
+    newMaskedArray2.mask=mask3
 
-    return maskedArray1, maskedArray2
+    return newMaskedArray1, newMaskedArray2
 
 
 
@@ -220,12 +245,5 @@ def main(dataPath, threshold=0.0, separation=' '):
     # Instead of just cropping, you may crop the Masked Data arrays in such a way that they become immediately plottable.
 
 
-    mask1 = maskedArray1.mask
-    mask2 = maskedArray2.mask
-    mask3 = np.zeros(len(maskedArray1),dtype=bool)
-    for x in range(0,len(mask1)):
-        mask3[x]=mask1[x]*mask2[x]
-    #Remask the masked arrays with the new mask, mask3
-    maskedArray1.mask=mask3
-    maskedArray2.mask=mask3
-    return maskedArray1, maskedArray2
+
+    return
