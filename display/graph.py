@@ -1,8 +1,9 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 from math import *
-# import turbulence.tools.fitting as fitting
+import sys
+sys.path.append('/Users/stephane/Documents/git/takumi/library/')
+# import library.tools.fitting as fitting
 import library.hdf5.h5py_s as h5py_s
 
 '''
@@ -15,9 +16,18 @@ __fontsize__ = 12
 
 import os
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import itertools
 
+#Global variables
+#Default color cycle: iterator which gets repeated if all elements were exhausted
+__color_cycle__ = itertools.cycle(iter(plt.rcParams['axes.prop_cycle'].by_key()['color']))
 
-def save(path, ext='png', close=True, verbose=True):
+__itrcounter__ = 0
+#__fontsize__ = 16
+__figsize__ = (8,8)
+
+def save(path, ext='png', close=True, verbose=True, **kwargs):
     """Save a figure from pyplot. -Written by jhamrick
     Parameters
     ----------
@@ -48,13 +58,13 @@ def save(path, ext='png', close=True, verbose=True):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    # The final path to save to
+    # path where the figure is saved
     savepath = os.path.join(directory, filename)
 
     if verbose:
         print("Saving figure to '%s'..." % savepath),
 
-    # Actually save the figure
+    # Save the figure
     plt.savefig(savepath)
 
     # Close it
@@ -62,20 +72,190 @@ def save(path, ext='png', close=True, verbose=True):
         plt.close()
 
     if verbose:
-        print("Done")
+        print("... Done")
 
 
-def plot(fun, x, y, fignum=1, label='-', subplot=None, **kwargs):
+def plotfunc(fun, x, param, fignum=1, label='-', color = 'k', subplot=None, legend=True,figsize=__figsize__, **kwargs):
     """
     plot a graph using the function fun
     fignum can be specified
     any kwargs from plot can be passed
     Use the homemade function refresh() to draw and plot the figure, no matter the way python is called (terminal, script, notebook)
     """
-    set_fig(fignum, subplot=subplot)
-    fun(x, y, label, **kwargs)
-    refresh()
 
+    fig, ax = set_fig(fignum, subplot=subplot, figsize=figsize)
+    y = fun(x, param)
+    plt.plot(x, y, color=color, label=label,**kwargs)
+    if legend:
+        plt.legend()
+    return fig, ax
+
+def plot(x, y, fignum=1, label='-', color = 'k', subplot=None, legend=True, figsize=__figsize__,**kwargs):
+    """
+    plot a graph using given x,y
+    fignum can be specified
+    any kwargs from plot can be passed
+    Use the homemade function refresh() to draw and plot the figure, no matter the way python is called (terminal, script, notebook)
+    """
+
+    fig, ax = set_fig(fignum, subplot=subplot,figsize=figsize, **kwargs)
+
+    if len(x) > len(y):
+        print("Warning : x and y data do not have the same length")
+        x = x[:len(y)]
+    plt.plot(x, y, color=color, label=label,**kwargs)
+    if legend:
+        plt.legend()
+    return fig, ax
+
+def errorbar(x, y, xerr, yerr, fignum=1, label='-', color ='k',subplot=None, legend=False, figsize=__figsize__,**kwargs):
+    """ errorbar plot
+
+    Parameters
+    ----------
+    x
+    y
+    xerr: could be a list [xerr_left, xerr_right]
+    yerr: could be a list [yerr_left, yerr_right]
+    fignum
+    label
+    color
+    subplot
+    legend
+    kwargs
+
+    Returns
+    -------
+    fig
+    ax
+
+    """
+    fig, ax = set_fig(fignum, subplot=subplot, figsize=figsize, **kwargs)
+
+    plt.errorbar(x, y, xerr, yerr)
+    if legend:
+        plt.legend()
+    return fig, ax
+
+def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax=None, label='-',
+              legend=False, figsize=__figsize__, color_cycle=__color_cycle__,**kwargs):
+    fig, ax = set_fig(fignum, subplot, figsize)
+
+    x = np.array(x)
+    y = np.array(y)
+    yerr = np.array(yerr)
+
+    #ax = ax if ax is not None else plt.gca()
+    if color is None:
+        color = color_cycle.next()
+    if np.isscalar(yerr) or len(yerr) == len(y):
+        ymin = y - yerr
+        ymax = y + yerr
+    elif len(yerr) == 2:
+        yerrdown, yerrup = yerr
+        ymin = y - yerrdown
+        ymax = y + yerrup
+
+
+    ax.plot(x, y, color=color, label=label)
+    ax.fill_between(x, ymax, ymin, color=color, alpha=alpha_fill)
+
+    #patch used for legend
+    color_patch = mpatches.Patch(color=color, label=label)
+    if legend:
+        plt.legend(handles=[color_patch])
+
+
+    return fig, ax, color_patch
+
+
+def show():
+    plt.show()
+
+def labelaxes(xlabel, ylabel, **kwargs):
+    plt.xlabel(xlabel, **kwargs)
+    plt.ylabel(ylabel, **kwargs)
+
+### Axes
+## Limits
+def setaxes(ax, xmin, xmax, ymin, ymax):
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+    return ax
+
+## Set axes to semilog or loglog
+def tosemilogx(ax):
+    ax.set_xscale("log", nonposx='clip')
+def tosemilogy(ax):
+    ax.set_yscale("log", nonposx='clip')
+def tologlog(ax):
+    ax.set_xscale("log", nonposx='clip')
+    ax.set_yscale("log", nonposx='clip')
+
+##Text
+def addtext(fig,subplot=111, text='text goes here', x=0, y=0, fontsize=__fontsize__, color='r'):
+    print '!!!!!!!!!!!',text
+    ax = fig.add_subplot(subplot)
+    ax.text(x, y, text, fontsize=fontsize, color=color)
+    return ax
+
+
+## create a figure and axes
+def set_fig(fignum, subplot=None, dpi=100, **kwargs):
+    if fignum == -1:
+        fig = plt.figure(dpi,**kwargs)
+    if fignum == 0:
+        fig = plt.cla()  #clear axis
+    if fignum > 0:
+        fig = plt.figure(fignum,dpi,**kwargs)
+
+    if subplot is not None:
+        # a triplet is expected !
+        ax = fig.add_subplot(subplot,**kwargs)
+        return fig, ax
+    else:
+        ax = fig.add_subplot(111)
+        return fig, ax
+
+
+def cla(fignum):
+    plt.figure(fignum)
+    plt.cla()
+
+
+
+
+## Color cycle
+def skipcolor(numskip, color_cycle=__color_cycle__):
+    """ Skips numskip times in the color_cycle iterator
+        Can be used to reset the color_cycle"""
+    for i in range(numskip):
+        color_cycle.next()
+def countcolorcycle(color_cycle = __color_cycle__):
+    color_cycle = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+    return sum(1 for color in color_cycle)
+
+numcolors = countcolorcycle()
+
+######################
+######################
+######################
+######################
+######################
+######################
+
+# def plot(fun, x, y, fignum=1, label='-', subplot=None, **kwargs):
+#     """
+#     plot a graph using the function fun
+#     fignum can be specified
+#     any kwargs from plot can be passed
+#     Use the homemade function refresh() to draw and plot the figure, no matter the way python is called (terminal, script, notebook)
+#     """
+#
+#
+#     set_fig(fignum, subplot=subplot)
+#     y = fun(x, y, **kwargs)
+#     refresh()
 
 def graph(x, y, fignum=1, label='-', subplot=None, **kwargs):
     """
@@ -106,45 +286,17 @@ def semilogy(*args, **kwargs):
     plot(plt.semilogy, *args, **kwargs)
 
 
-def errorbar(x, y, xerr, yerr, fignum=1, label='k^', subplot=None, **kwargs):
-    """
-    plot a graph using matplotlib.pyplot.errorbar function
-    fignum can be specified
-    cut x data if longer than y data
-    any kwargs from plot can be passed
-    """
-    set_fig(fignum, subplot=subplot)
-    plt.errorbar(x, y, yerr, xerr, label, **kwargs)
-    refresh()
+# def errorbar(x, y, xerr, yerr, fignum=1, label='k^', subplot=None, **kwargs):
+#     """
+#     plot a graph using matplotlib.pyplot.errorbar function
+#     fignum can be specified
+#     cut x data if longer than y data
+#     any kwargs from plot can be passed
+#     """
+#     set_fig(fignum, subplot=subplot)
+#     plt.errorbar(x, y, yerr, xerr, label, **kwargs)
+#     refresh()
 
-
-def set_fig(fignum, subplot=None):
-    if fignum == -2:
-        fig = None
-        pass
-    if fignum == -1:
-        fig = plt.figure()
-    if fignum == 0:
-        fig = plt.cla()
-    if fignum > 0:
-        fig = plt.figure(fignum)
-
-    if subplot is not None:
-        # a triplet is expected !
-        ax = fig.add_subplot(subplot)
-        return fig, ax
-    return fig
-
-
-def cla(fignum):
-    set_fig(fignum)
-    plt.cla()
-
-
-def set_axis(xmin, xmax, ymin, ymax):
-    # set axis
-    plt.xlim(xmin=xmin, xmax=xmax)
-    plt.ylim(ymin=ymin, ymax=ymax)
 
 
 def time_label(M, frame):
@@ -159,6 +311,8 @@ def pause(time=3):
 
 def refresh(hold=True, block=False, ipython=True):
     """
+    Depreciated. Use plt.show()- Takumi 1/11/18
+
     Refresh the display of the current figure.
     INPUT
     -----
@@ -168,7 +322,7 @@ def refresh(hold=True, block=False, ipython=True):
     None
     """
 
-    plt.pause(0.1)
+    plt.pause(10.0)
     plt.draw()
 
     if not ipython:
@@ -180,7 +334,7 @@ def subplot(i, j, k):
     plt.subplot(i, j, k)
 
 
-def legend(x_legend, y_legend, title, display=False, cplot=False, show=True, fontsize=__fontsize__):
+def legend(x_legend, y_legend, title, display=False, cplot=False, show=False, fontsize=__fontsize__):
     """
     Add a legend to the current figure
         Contains standard used font and sizes
@@ -213,7 +367,7 @@ def legend(x_legend, y_legend, title, display=False, cplot=False, show=True, fon
     if show:
         refresh()
 
-    # fig is a dictionnary where the key correspond to the fig number and the element to the automatic title
+    # fig is a dictionary where the key correspond to the fig number and the element to the automatic title
     fig = figure_label(x_legend, y_legend, title, display=display, cplot=cplot)
     fig = get_data(fig)
 
@@ -423,7 +577,7 @@ def save_figs(figs, savedir='./', suffix='', prefix='', frmt='pdf', dpi=300, dis
         print(filename)
 
 
-def save_fig(fignum, filename, frmt='pdf', dpi=300, overwrite=False):
+def save_fig(fignum, filename, frmt='pdf', dpi=300, overwrite=True):
     """
     Save the figure fignumber in the given filename
 
@@ -505,9 +659,9 @@ def color_plot(x, y, z, fignum=1, vmin=0, vmax=0, log10=False, show=False, cbar=
     # Note that the cc returned is a matplotlib.collections.QuadMesh
     # print('np.shape(z) = ' + str(np.shape(z)))
     if vmin == vmax == 0:
-        cc = plt.pcolormesh(x, y, z)
+        cc = plt.pcolormesh(x, y, z, cmap='jet')
     else:
-        cc = plt.pcolormesh(x, y, z, vmin=vmin, vmax=vmax)
+        cc = plt.pcolormesh(x, y, z, cmap='jet', vmin=vmin, vmax=vmax)
 
     if cbar:
         colorbar()
@@ -562,8 +716,8 @@ def Mplot(M, field, frame, auto_axis=False, step=1, W=None, Dt=None, fignum=1, s
     Returns
     -------
     """
-    import turbulence.pprocess.check_piv as check
-    import turbulence.manager.access as access
+    import library.pprocess.check_piv as check
+    import library.manager.access as access
 
     data = access.get(M, field, frame, step=1, compute=compute)
     dimensions = data.shape
@@ -650,7 +804,7 @@ def Mplot(M, field, frame, auto_axis=False, step=1, W=None, Dt=None, fignum=1, s
         s = ''
 
     figs = {}
-    figs.update(legende('X (mm)', 'Y (mm)', field + s, display=display, cplot=True, show=show))
+    figs.update(legend('X (mm)', 'Y (mm)', field + s, display=display, cplot=True, show=show))
 
     return figs
 
@@ -786,7 +940,7 @@ def vfield_plot(M, frame, fignum=1):
         Q = ax.quiver(x, y, Ux / E, Uy / E, scale=vectorScale / refVector, scale_units='width',
                       zorder=4)  # , color=settings.vectorColor
 
-    legende('$x$ (mm)', '$y$ (mm)', '')
+    legend('$x$ (mm)', '$y$ (mm)', '')
 
     # add reference vector
     # if settings.showReferenceVector:
@@ -840,7 +994,7 @@ def hist(Y, Nvec=1, fignum=1, num=100, step=None, label='o-', log=False, normali
 
 
 def pdf(M, field, frame, Dt=10, Dx=1024, label='ko-', fignum=1, a=15., norm=True, sign=1):
-    import turbulence.manager.access as access
+    import library.manager.access as access
     Up = access.get(M, field, frame, Dt=Dt)
 
     limits = [(0, Dx), (0, Dx)]
@@ -852,7 +1006,7 @@ def pdf(M, field, frame, Dt=10, Dx=1024, label='ko-', fignum=1, a=15., norm=True
 
 
 def pdf_ensemble(Mlist, field, frame, Dt=10, Dx=1024, label='r-', fignum=1, a=10., norm=True, model=False):
-    import turbulence.manager.access as access
+    import library.manager.access as access
 
     U_tot = []
 
@@ -888,7 +1042,7 @@ def pdf_ensemble(Mlist, field, frame, Dt=10, Dx=1024, label='r-', fignum=1, a=10
     else:
         unit = ' (mm/s)'
     figs = {}
-    figs.update(legende(field + unit, field + ' PDF', time_label(M, frame)))
+    figs.update(legend(field + unit, field + ' PDF', time_label(M, frame)))
     return figs
 
 
@@ -942,7 +1096,7 @@ def distribution(Y, normfactor=1, a=10., label='k', fignum=1, norm=True):
     semilogy(xbin, n, label=label, fignum=fignum)
     set_axis(min(xbin), max(xbin), min(n) / 2, max(n) * 2)
     figs = {}
-    figs.update(legende('', 'PDF', ''))
+    figs.update(legend('', 'PDF', ''))
 
     val = 0.5
     x_center = xbin[np.abs(xbin) < val]
