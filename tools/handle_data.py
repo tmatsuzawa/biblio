@@ -65,7 +65,7 @@ def generate_data_dct_masked(dataPath, threshold=0.0, separation='\t'):
         a dictionary with numpy masked arrays.
         keys are named as var0, var1, ...var#. Corresponding values are numpy masked lists.
     """
-    dataMasked={}   #initialize a dictionary where numpy maseked arrays will be stored
+    dataMasked={}   #initialize a dictionary where numpy maseked arrays will be stred
     key, data, counter = generate_data_dct(dataPath, separation)
 
     for x in range(0,len(key)):
