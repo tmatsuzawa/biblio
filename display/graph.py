@@ -22,12 +22,10 @@ import itertools
 #Global variables
 #Default color cycle: iterator which gets repeated if all elements were exhausted
 __color_cycle__ = itertools.cycle(iter(plt.rcParams['axes.prop_cycle'].by_key()['color']))
-
-__itrcounter__ = 0
 #__fontsize__ = 16
 __figsize__ = (8,8)
 
-def save(path, ext='png', close=True, verbose=True, **kwargs):
+def save(path, ext='png', close=True, verbose=True, fignum=None, **kwargs):
     """Save a figure from pyplot. -Written by jhamrick
     Parameters
     ----------
@@ -47,6 +45,11 @@ def save(path, ext='png', close=True, verbose=True, **kwargs):
         Whether to print information about when and where the image
         has been saved.
     """
+    if fignum == None:
+       fignum = plt.gcf()
+    else:
+        fignum = plt.figure(fignum)
+
 
     # Extract the directory and filename from the given path
     directory = os.path.split(path)[0]
@@ -75,7 +78,25 @@ def save(path, ext='png', close=True, verbose=True, **kwargs):
         print("... Done")
 
 
-def plotfunc(fun, x, param, fignum=1, label='-', color = 'k', subplot=None, legend=True,figsize=__figsize__, **kwargs):
+## create a figure and axes
+def set_fig(fignum, subplot=None, dpi=100, **kwargs):
+    if fignum == -1:
+        fig = plt.figure(dpi, **kwargs)
+    if fignum == 0:
+        fig = plt.cla()  #clear axis
+    if fignum > 0:
+        fig = plt.figure(fignum, dpi, **kwargs)
+
+    if subplot is not None:
+        # a triplet is expected !
+        ax = fig.add_subplot(subplot,**kwargs)
+        return fig, ax
+    else:
+        ax = fig.add_subplot(111)
+        return fig, ax
+
+
+def plotfunc(fun, x, param, fignum=1, label='-', color = 'k', subplot=None, legend=False, figsize=__figsize__, **kwargs):
     """
     plot a graph using the function fun
     fignum can be specified
@@ -83,22 +104,21 @@ def plotfunc(fun, x, param, fignum=1, label='-', color = 'k', subplot=None, lege
     Use the homemade function refresh() to draw and plot the figure, no matter the way python is called (terminal, script, notebook)
     """
 
-    fig, ax = set_fig(fignum, subplot=subplot, figsize=figsize)
+    fig, ax = set_fig(fignum, subplot, figsize, **kwargs)
     y = fun(x, param)
-    plt.plot(x, y, color=color, label=label,**kwargs)
+    plt.plot(x, y, color=color, label=label, **kwargs)
     if legend:
         plt.legend()
     return fig, ax
 
-def plot(x, y, fignum=1, label='-', color = 'k', subplot=None, legend=True, figsize=__figsize__,**kwargs):
+def plot(x, y, fignum=1, figsize=__figsize__, label='-', color = 'k', subplot=None, legend=False,**kwargs):
     """
     plot a graph using given x,y
     fignum can be specified
     any kwargs from plot can be passed
     Use the homemade function refresh() to draw and plot the figure, no matter the way python is called (terminal, script, notebook)
     """
-
-    fig, ax = set_fig(fignum, subplot=subplot,figsize=figsize, **kwargs)
+    fig, ax = set_fig(fignum, subplot, figsize)
 
     if len(x) > len(y):
         print("Warning : x and y data do not have the same length")
@@ -107,6 +127,9 @@ def plot(x, y, fignum=1, label='-', color = 'k', subplot=None, legend=True, figs
     if legend:
         plt.legend()
     return fig, ax
+
+def test():
+    print 'test'
 
 def errorbar(x, y, xerr, yerr, fignum=1, label='-', color ='k',subplot=None, legend=False, figsize=__figsize__,**kwargs):
     """ errorbar plot
@@ -130,7 +153,7 @@ def errorbar(x, y, xerr, yerr, fignum=1, label='-', color ='k',subplot=None, leg
     ax
 
     """
-    fig, ax = set_fig(fignum, subplot=subplot, figsize=figsize, **kwargs)
+    fig, ax = set_fig(fignum, subplot, figsize, **kwargs)
 
     plt.errorbar(x, y, xerr, yerr)
     if legend:
@@ -138,7 +161,7 @@ def errorbar(x, y, xerr, yerr, fignum=1, label='-', color ='k',subplot=None, leg
     return fig, ax
 
 def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax=None, label='-',
-              legend=False, figsize=__figsize__, color_cycle=__color_cycle__,**kwargs):
+              legend=False, figsize=__figsize__, color_cycle=__color_cycle__, **kwargs):
     fig, ax = set_fig(fignum, subplot, figsize)
 
     x = np.array(x)
@@ -169,26 +192,83 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
     return fig, ax, color_patch
 
 
+## 2D plots
+def color_plot(x, y, z, subplot=111, fignum=1, vmin=0, vmax=0, figsize=__figsize__, log10=True, show=False, cbar=False, cmap='jet'):
+    """  Color plot of 2D array
+    Parameters
+    ----------
+    x
+    y
+    z
+    subplot
+    fignum
+    vmin
+    vmax
+    log10
+    show
+    cbar
+    cmap
+
+    Returns
+    -------
+    fig
+    ax
+    cc QuadMesh class object
+
+    """
+    fig, ax = set_fig(fignum, subplot, figsize)
+
+    if log10:
+        z = np.log10(z)
+
+    # Note that the cc returned is a matplotlib.collections.QuadMesh
+    # print('np.shape(z) = ' + str(np.shape(z)))
+    if vmin == vmax == 0:
+        # plt.pcolormesh returns a QuadMesh class object.
+        cc = plt.pcolormesh(x, y, z, cmap=cmap)
+    else:
+        cc = plt.pcolormesh(x, y, z, cmap=cmap, vmin=vmin, vmax=vmax)
+
+    if cbar:
+        colorbar()
+    if show:
+        refresh()
+    return fig, ax, cc
+
 def show():
     plt.show()
 
+## Legend
+def legend():
+    plot.legend()
+    return
+
+
+### Axes
+# Label
 def labelaxes(xlabel, ylabel, **kwargs):
     plt.xlabel(xlabel, **kwargs)
     plt.ylabel(ylabel, **kwargs)
 
-### Axes
-## Limits
+
+# Limits
 def setaxes(ax, xmin, xmax, ymin, ymax):
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
     return ax
 
 ## Set axes to semilog or loglog
-def tosemilogx(ax):
+def tosemilogx(ax=None):
+    if ax == None:
+        ax = plt.gca()
     ax.set_xscale("log", nonposx='clip')
-def tosemilogy(ax):
+def tosemilogy(ax=None):
+    if ax == None:
+        ax = plt.gca()
     ax.set_yscale("log", nonposx='clip')
-def tologlog(ax):
+def tologlog(ax=None):
+    if ax == None:
+        ax = plt.gca()
     ax.set_xscale("log", nonposx='clip')
     ax.set_yscale("log", nonposx='clip')
 
@@ -198,24 +278,6 @@ def addtext(fig,subplot=111, text='text goes here', x=0, y=0, fontsize=__fontsiz
     ax = fig.add_subplot(subplot)
     ax.text(x, y, text, fontsize=fontsize, color=color)
     return ax
-
-
-## create a figure and axes
-def set_fig(fignum, subplot=None, dpi=100, **kwargs):
-    if fignum == -1:
-        fig = plt.figure(dpi,**kwargs)
-    if fignum == 0:
-        fig = plt.cla()  #clear axis
-    if fignum > 0:
-        fig = plt.figure(fignum,dpi,**kwargs)
-
-    if subplot is not None:
-        # a triplet is expected !
-        ax = fig.add_subplot(subplot,**kwargs)
-        return fig, ax
-    else:
-        ax = fig.add_subplot(111)
-        return fig, ax
 
 
 def cla(fignum):
@@ -235,7 +297,9 @@ def countcolorcycle(color_cycle = __color_cycle__):
     color_cycle = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
     return sum(1 for color in color_cycle)
 
-numcolors = countcolorcycle()
+
+
+
 
 ######################
 ######################
@@ -334,7 +398,7 @@ def subplot(i, j, k):
     plt.subplot(i, j, k)
 
 
-def legend(x_legend, y_legend, title, display=False, cplot=False, show=False, fontsize=__fontsize__):
+def legend_stephane(x_legend, y_legend, title, display=False, cplot=False, show=False, fontsize=__fontsize__):
     """
     Add a legend to the current figure
         Contains standard used font and sizes
@@ -630,58 +694,6 @@ def plot_axes(fig, num):
     return ax
 
 
-def color_plot(x, y, z, fignum=1, vmin=0, vmax=0, log10=False, show=False, cbar=False):
-    """Color coded plot
-
-    Parameters
-    ----------
-    x : 2d numpy array
-    y : 2d numpy array
-    Z : 2d numpy array
-    fignum : int
-    vmin : float
-    vmax : float
-    log10 : bool
-    show : bool
-    cbar : bool
-
-    Returns
-    -------
-    fig
-    ax
-    cc
-    """
-    fig, ax = set_fig(fignum, subplot=111)
-
-    if log10:
-        z = np.log10(z)
-
-    # Note that the cc returned is a matplotlib.collections.QuadMesh
-    # print('np.shape(z) = ' + str(np.shape(z)))
-    if vmin == vmax == 0:
-        cc = plt.pcolormesh(x, y, z, cmap='jet')
-    else:
-        cc = plt.pcolormesh(x, y, z, cmap='jet', vmin=vmin, vmax=vmax)
-
-    if cbar:
-        colorbar()
-    if show:
-        refresh()
-    return fig, ax, cc
-
-
-def get_axis_coord(M, direction='v'):
-    X = M.x
-    Y = M.y
-
-    if hasattr(M, 'param'):
-        if M.param.angle == 90:
-            Xb = X
-            Yb = Y
-            X = Yb
-            Y = Xb
-    # return rotate(X,Y,M.param.angle)
-    return X, Y
 
 
 def rotate(X, Y, angle):

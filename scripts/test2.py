@@ -381,8 +381,8 @@ plt.legend(handles=[color_patch3, color_patch4])
 graph.setaxes(ax3, xmin, xmax, ymin, ymax)
 graph.labelaxes(xlabel='$\overline{v_p^2}$ / ${\overline{v_p}}$ [mm/s]',ylabel='$v_{i}^2/(v_{top}^2 + v_{bottom}^2)$', fontsize=10)
 
-#graph.show()
-savedir = "/Volumes/labshared3-1/takumi/good_data/vortex_ring_characterization/figures/"
-filename = "vfraction_8rings"
-filepath = savedir + filename
-graph.save(filepath)
+graph.show()
+# savedir = "/Volumes/labshared3-1/takumi/good_data/vortex_ring_characterization/figures/"
+# filename = "vfraction_8rings"
+# filepath = savedir + filename
+# graph.save(filepath)
