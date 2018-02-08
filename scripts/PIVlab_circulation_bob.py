@@ -63,7 +63,7 @@ def load_matlab_data(data_loc):
 def interp_flow_component(x, y, ux, imsize):
     uxindicies = [(yy, xx) for xx, yy in zip(x, y)]
     grid_ind0, grid_ind1 = mgrid[0:imsize[0], 0:imsize[1]]
-    return interpolate.griddata(uxindicies, ux, (grid_ind0, grid_ind1), method='linear', fill_value=0.)
+    return interpolate.griddata(uxindicies, ux, (grid_ind0, grid_ind1), method='cubic', fill_value=0.)
 
 
 def colorbar(mappable, location='right'):
