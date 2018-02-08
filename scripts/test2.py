@@ -330,8 +330,8 @@ vratio8min_tr = vring8_tr_eight_min/ vring2total8
 vratio8max_br = vring8_br_eight_max/ vring2total8
 vratio8max_tr = vring8_tr_eight_max/ vring2total8
 
-vratio8tr = np.mean(np.array([vratio8max_tr,vratio8min_tr]),axis=0)
-vratio8br = np.mean(np.array([vratio8max_br,vratio8min_br]),axis=0)
+vratio8tr = np.mean(np.array([vratio8max_tr,vratio8min_tr]), axis=0)
+vratio8br = np.mean(np.array([vratio8max_br,vratio8min_br]), axis=0)
 
 
 #err

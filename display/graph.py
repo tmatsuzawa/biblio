@@ -22,10 +22,11 @@ import itertools
 #Global variables
 #Default color cycle: iterator which gets repeated if all elements were exhausted
 __color_cycle__ = itertools.cycle(iter(plt.rcParams['axes.prop_cycle'].by_key()['color']))
-#__fontsize__ = 16
+__fontsize__ = 16
 __figsize__ = (8,8)
 
-def save(path, ext='png', close=True, verbose=True, fignum=None, **kwargs):
+## Save a figure
+def save(path, ext='png', close=False, verbose=True, fignum=None, **kwargs):
     """Save a figure from pyplot. -Written by jhamrick
     Parameters
     ----------
@@ -78,7 +79,7 @@ def save(path, ext='png', close=True, verbose=True, fignum=None, **kwargs):
         print("... Done")
 
 
-## create a figure and axes
+## Create a figure and axes
 def set_fig(fignum, subplot=None, dpi=100, **kwargs):
     if fignum == -1:
         fig = plt.figure(dpi, **kwargs)
@@ -89,7 +90,7 @@ def set_fig(fignum, subplot=None, dpi=100, **kwargs):
 
     if subplot is not None:
         # a triplet is expected !
-        ax = fig.add_subplot(subplot,**kwargs)
+        ax = fig.add_subplot(subplot, **kwargs)
         return fig, ax
     else:
         ax = fig.add_subplot(111)
@@ -128,8 +129,6 @@ def plot(x, y, fignum=1, figsize=__figsize__, label='-', color = 'k', subplot=No
         plt.legend()
     return fig, ax
 
-def test():
-    print 'test'
 
 def errorbar(x, y, xerr, yerr, fignum=1, label='-', color ='k',subplot=None, legend=False, figsize=__figsize__,**kwargs):
     """ errorbar plot
@@ -193,13 +192,13 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
 
 
 ## 2D plots
-def color_plot(x, y, z, subplot=111, fignum=1, vmin=0, vmax=0, figsize=__figsize__, log10=True, show=False, cbar=False, cmap='jet'):
+def color_plot(x, y, z, subplot=None, fignum=1, vmin=0, vmax=0, figsize=__figsize__, log10=False, show=False, cbar=False, cmap='jet'):
     """  Color plot of 2D array
     Parameters
     ----------
-    x
-    y
-    z
+    x 2d array eg. x = np.mgrid[slice(1, 5, dx), slice(1, 5, dy)]
+    y 2dd array
+    z 2d array
     subplot
     fignum
     vmin
@@ -230,25 +229,56 @@ def color_plot(x, y, z, subplot=111, fignum=1, vmin=0, vmax=0, figsize=__figsize
         cc = plt.pcolormesh(x, y, z, cmap=cmap, vmin=vmin, vmax=vmax)
 
     if cbar:
-        colorbar()
-    if show:
-        refresh()
+        plt.colorbar()
+
     return fig, ax, cc
+
+def imshow(griddata, xmin=0, xmax=1, ymin=0, ymax=1, cbar=True, vmin=0, vmax=0, \
+           fignum=1, subplot=111, figsize=__figsize__, interpolation='linear', cmap='bwr'):
+    fig, ax = set_fig(fignum, subplot, figsize)
+    if vmin == vmax == 0:
+        cax = ax.imshow(griddata, extent=(xmin, xmax, ymin, ymax),\
+                   interpolation=interpolation, cmap=cmap)
+    else:
+        cax = ax.imshow(griddata, extent=(xmin, xmax, ymin, ymax),\
+                   interpolation=interpolation, cmap=cmap, vmin=vmin, vmax=vmax)
+    if cbar:
+        cc = fig.colorbar(cax)
+    return fig, ax, cax, cc
 
 def show():
     plt.show()
 
 ## Legend
+# Legend
 def legend():
     plot.legend()
     return
 
+# Colorbar
+def colorbar(fignum=plt.gcf().number, label=None, fontsize=__fontsize__):
+    """
+
+    Parameters
+    ----------
+    fignum :
+    label :
+
+    Returns
+    -------
+    """
+    fig, ax = set_fig(fignum)
+    c = plt.colorbar()
+    if not label==None:
+        c.set_label(label, fontsize=fontsize)
+    return c
+
 
 ### Axes
 # Label
-def labelaxes(xlabel, ylabel, **kwargs):
-    plt.xlabel(xlabel, **kwargs)
-    plt.ylabel(ylabel, **kwargs)
+def labelaxes(xlabel, ylabel, fontsize=__fontsize__, **kwargs):
+    plt.xlabel(xlabel, fontsize=__fontsize__, **kwargs)
+    plt.ylabel(ylabel, fontsize=__fontsize__, **kwargs)
 
 
 # Limits
@@ -270,19 +300,27 @@ def tologlog(ax=None):
     if ax == None:
         ax = plt.gca()
     ax.set_xscale("log", nonposx='clip')
-    ax.set_yscale("log", nonposx='clip')
+
+
+##Title
+def title(title, fignum=plt.gcf().number):
+    fig, ax = set_fig(fignum)
+    plt.title(title, fontsize=__fontsize__)
+
 
 ##Text
-def addtext(fig,subplot=111, text='text goes here', x=0, y=0, fontsize=__fontsize__, color='r'):
-    print '!!!!!!!!!!!',text
+def addtext(fig, subplot=111, text='text goes here', x=0, y=0, fontsize=__fontsize__, color='r'):
+    print '!!!!!!!!!!!', text
     ax = fig.add_subplot(subplot)
     ax.text(x, y, text, fontsize=fontsize, color=color)
     return ax
 
 
-def cla(fignum):
+
+##Clear plot
+def clf(fignum=plt.gcf().number):
     plt.figure(fignum)
-    plt.cla()
+    plt.clf()
 
 
 
@@ -524,7 +562,7 @@ def remove_special_chars(string, chars_rm=['$', '\ ', '[', ']', '^', '/', ') ', 
     return string
 
 
-def title(M):
+def titleS(M):
     """standard title format to know from what date is has been created
     Need something much more sophisticated than that !
     Create a dictionary of keyword to be added in the title, and add every element into a string formatted style
@@ -545,21 +583,7 @@ def title(M):
     return title
 
 
-def colorbar(fignum=-2, label='', fontsize=__fontsize__):
-    """
 
-    Parameters
-    ----------
-    fignum :
-    label :
-
-    Returns
-    -------
-    """
-    set_fig(fignum)
-    c = plt.colorbar()
-    c.set_label(label, fontsize=fontsize)
-    return c
 
 
 def set_title(M, opt=''):
@@ -694,6 +718,21 @@ def plot_axes(fig, num):
     return ax
 
 
+
+
+
+def get_axis_coord(M, direction='v'):
+    X = M.x
+    Y = M.y
+
+    if hasattr(M, 'param'):
+        if M.param.angle == 90:
+            Xb = X
+            Yb = Y
+            X = Yb
+            Y = Xb
+    # return rotate(X,Y,M.param.angle)
+    return X, Y
 
 
 def rotate(X, Y, angle):
