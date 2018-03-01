@@ -112,7 +112,7 @@ def plotfunc(fun, x, param, fignum=1, label='-', color = 'k', subplot=None, lege
         plt.legend()
     return fig, ax
 
-def plot(x, y, fignum=1, figsize=__figsize__, label='-', color = 'k', subplot=None, legend=False,**kwargs):
+def plot(x, y, fignum=1, figsize=__figsize__, label='-', color = 'k', subplot=None, legend=False, **kwargs):
     """
     plot a graph using given x,y
     fignum can be specified
@@ -128,6 +128,24 @@ def plot(x, y, fignum=1, figsize=__figsize__, label='-', color = 'k', subplot=No
     if legend:
         plt.legend()
     return fig, ax
+
+def scatter(x, y, fignum=1, figsize=__figsize__, label='-', color = 'k', subplot=None, legend=False, **kwargs):
+    """
+    plot a graph using given x,y
+    fignum can be specified
+    any kwargs from plot can be passed
+    Use the homemade function refresh() to draw and plot the figure, no matter the way python is called (terminal, script, notebook)
+    """
+    fig, ax = set_fig(fignum, subplot, figsize)
+
+    if len(x) > len(y):
+        print("Warning : x and y data do not have the same length")
+        x = x[:len(y)]
+    plt.scatter(x, y, color=color, label=label,**kwargs)
+    if legend:
+        plt.legend()
+    return fig, ax
+
 
 
 def errorbar(x, y, xerr, yerr, fignum=1, label='-', color ='k',subplot=None, legend=False, figsize=__figsize__,**kwargs):
@@ -249,6 +267,11 @@ def imshow(griddata, xmin=0, xmax=1, ymin=0, ymax=1, cbar=True, vmin=0, vmax=0, 
 def show():
     plt.show()
 
+def axhline(y, x):
+    xmin, xmax = np.max(x), np.min(x)
+    plt.axhline(y, xmin, xmax)
+
+
 ## Legend
 # Legend
 def legend():
@@ -276,9 +299,9 @@ def colorbar(fignum=plt.gcf().number, label=None, fontsize=__fontsize__):
 
 ### Axes
 # Label
-def labelaxes(xlabel, ylabel, fontsize=__fontsize__, **kwargs):
-    plt.xlabel(xlabel, fontsize=__fontsize__, **kwargs)
-    plt.ylabel(ylabel, fontsize=__fontsize__, **kwargs)
+def labelaxes(ax, xlabel, ylabel, fontsize=__fontsize__, **kwargs):
+    ax.set_xlabel(xlabel, fontsize=fontsize, **kwargs)
+    ax.set_ylabel(ylabel, fontsize=fontsize, **kwargs)
 
 
 # Limits
@@ -303,18 +326,15 @@ def tologlog(ax=None):
 
 
 ##Title
-def title(title, fignum=plt.gcf().number):
-    fig, ax = set_fig(fignum)
+def title(title, subplot=111):
+    plt.subplot(subplot)
     plt.title(title, fontsize=__fontsize__)
 
 
 ##Text
-def addtext(fig, subplot=111, text='text goes here', x=0, y=0, fontsize=__fontsize__, color='r'):
-    print '!!!!!!!!!!!', text
-    ax = fig.add_subplot(subplot)
+def addtext(ax, subplot=111, text='text goes here', x=0, y=0, fontsize=__fontsize__, color='k', **kwargs):
     ax.text(x, y, text, fontsize=fontsize, color=color)
     return ax
-
 
 
 ##Clear plot
