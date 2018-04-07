@@ -43,8 +43,31 @@ def get_number(s,start,end,display=False,shift=0,from_end=True):
 def get_end(s,start,end=0,shift=0,display=False):
     n=len(start)
     return s[n:]
+
+def replace_letter_in_string(str, oldletter, newletter):
+    strlist = list(str)
+    for i, letter in enumerate(strlist):
+        if letter == oldletter:
+            strlist[i] = newletter
+    newstr = "".join(strlist)
+    return newstr
     
 def get_string(s,start,end='',shift=0,display=False,from_end=False):
+    """
+    Get a string from another string like...  get_string(__startSOMETHINGend__) -> SOMETHING
+    Parameters
+    ----------
+    s
+    start
+    end
+    shift
+    display
+    from_end
+
+    Returns
+    -------
+
+    """
     if from_end:
         j_p=str.find(s,end)
         i_p=str.find(s[j_p-1:0:-1],start[::-1])

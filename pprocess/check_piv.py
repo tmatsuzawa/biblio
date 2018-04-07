@@ -1,5 +1,5 @@
 """
-For various time, compute the histogramm of velocity measured, and look how it
+For various time, compute the histogram of velocity measured, and look how it
 then, should be able to launch an extrapolation in the presence of out of bound velocities
 
 Evaluate the local gradient, or too strong spatial variation of velocity (that are not expected).

@@ -30,8 +30,7 @@ def generate_data_dct(dataPath, separation='\t'):
             key = line.split(separation)
             for x in range(0,len(key)):
                 data["var{0}".format(x)] = []  # initialize lists var0, var1,...
-
-        if not counter==1:
+        else:
             val = line.split(separation)
             for i,x in enumerate(val):
                 try:
@@ -231,6 +230,7 @@ def generate_plottable_arrays(maskedArray1, maskedArray2):
 
 
 
+
 def main(dataPath, threshold=0.0, separation=' '):
     # Generate data arrays from a txt file
     key, dataRaw, counter = generate_data_dct(dataPath, separation='\t')
@@ -243,7 +243,5 @@ def main(dataPath, threshold=0.0, separation=' '):
     key, dataCropped, counter = generate_data_dct_cropped(dataPath, threshold=0.0, separation='\t')
 
     # Instead of just cropping, you may crop the Masked Data arrays in such a way that they become immediately plottable.
-
-
 
     return
