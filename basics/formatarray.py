@@ -1,5 +1,5 @@
 import numpy as np
-
+from scipy import ndimage
 
 # Array Formatting
 def array2chunks(l, chunksize):
@@ -80,8 +80,9 @@ def sort_two_arrays_using_order_of_first_array(arr1, arr2):
     -------
 
     """
-    arr1, arr2 = zip(*sorted(zip(arr1,arr2)))
+    arr1, arr2 = zip(*sorted(zip(arr1, arr2)))
     return arr1, arr2
+
 
 def detect_sign_flip(arr, delete_first_index=True):
     """
@@ -101,7 +102,7 @@ def detect_sign_flip(arr, delete_first_index=True):
     arrsign = np.sign(arr)
     signchange = ((np.roll(arrsign, 1) - arrsign) != 0).astype(int)
     indices = np.array(np.where(signchange == 1))
-    print indices, indices.shape
+    # Print indices, indices.shape
     if indices.shape==(1,0):
         print 'No sign flip in the array! Returning [0]...'
         return [0]
@@ -111,3 +112,91 @@ def detect_sign_flip(arr, delete_first_index=True):
         if delete_first_index:
             indices = np.delete(indices, 0)
     return np.array(indices).flatten()
+
+
+def get_values_from_multidim_array_at_coord(data_arr, x, y, order=3):
+    """
+    Returns values at spcific coordinates (indices) even if the coordinates are expressed as decimal numbers
+    e.g.- a is a 2d array, and you would like to get a value at (x1, y1) = (1.2, 6.5).
+          This method returns an interpolated value.
+    Give coordinates (x1,y1), (x2, y2),... like [x1, x2, ...], [y1, y2, ...]
+    Parameters
+    ----------
+    data_arr multi-dim array
+    x
+    y
+
+    Returns
+    -------
+    value
+
+    """
+    if not type(x) == 'list' or  type(x) == 'numpy.ndarray':
+        x = [x]
+        y = [y]
+    # make sure all arrays are numpy arrays
+    x = np.array(x)
+    y = np.array(y)
+    data_arr = np.array(data_arr)
+
+    coord = [x, y]
+
+    values = ndimage.map_coordinates(data_arr, coord, order=order)
+    return values
+
+
+def make_blocks_from_2d_array(arr, nrows, ncols):
+    """
+    Return an array of shape (n, nrows, ncols) where n * nrows * ncols = arr.size
+    If arr is a 2D array, the returned array should look like n subblocks with
+    each subblock preserving the "physical" layout of arr.
+
+    Parameters
+    ----------
+    arr: M x N list or numpy array
+    nrows:
+    ncols
+
+    Returns
+    -------
+    blocks: numpy array with shape (n, nrows, ncols)
+    """
+
+    arr = np.array(arr)
+    h, w = arr.shape
+    blocks = (arr.reshape(h//nrows, nrows, -1, ncols)
+               .swapaxes(1,2)
+               .reshape(-1, nrows, ncols))
+    return blocks
+
+def divide_2d_array_into_four_domains(arr, rx=0.5, ry=0.5):
+    """
+    Divide m x n matrix into four domains
+
+    ################################
+    #        -> x
+    #   |           rx        1-rx
+    # y v       <---------><--------->
+    #        ^ | Domain 1 | Domain 3 |
+    #     ry | |          |          |
+    #        v  _____________________
+    #        ^ |          |          |
+    #  1-ry  | |          |          |
+    #        v | Domain 2 | Domain 4 |
+    ################################
+
+    Parameters
+    ----------
+    arr
+
+    Returns
+    -------
+
+    """
+    arr = np.array(arr)
+    m, n = arr.shape  # NOTE THAT SHAPE RETURNS (NO OF ROWS * NO OF COLUMNS)
+    mm, nn = int(round(m * ry)), int(round(n * rx))
+    arr1, arr2 = arr[:mm, :nn], arr[mm:, :nn]
+    arr3, arr4 = arr[:mm, nn:], arr[mm:, nn:]
+    blocks = [arr1, arr2, arr3, arr4]
+    return blocks

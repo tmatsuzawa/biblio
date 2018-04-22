@@ -9,6 +9,7 @@ import numpy as np
 import json
 import csv
 import pickle
+import library.basics.formatdict as fd
 
 ## Read
 # json
@@ -41,6 +42,7 @@ def reader_csv(datafilepath):
 #            print ', '.join(row)
     return csvreader
 
+# More general data reader; default is csv.
 def read_data(datafilepathpath, delimiter=','):
     """
     Versatile method to read data
@@ -71,9 +73,15 @@ def write_json(datafilepath, datadict):
     -------
 
     """
+
     with open(datafilepath, 'w') as fyle:
-        json.dump(datadict, fyle, sort_keys=True, indent=1, separators=(',', ': '))
-        fyle.close()
+        try:
+            json.dump(datadict, fyle, sort_keys=True, indent=1, separators=(',', ': '))
+            fyle.close()
+        except TypeError:
+            datadict = fd.make_dict_json_serializable(datadict)
+            json.dump(datadict, fyle, sort_keys=True, indent=1, separators=(',', ': '))
+            fyle.close()
     print 'Data was successfully saved as ' + datafilepath
 
 def write_pickle(obj, filepath, verbose=True):

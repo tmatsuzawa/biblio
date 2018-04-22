@@ -46,7 +46,7 @@ def interpolate_using_mask(arr1, mask):
 
 def get_mask_for_unphysical(U, cutoffU=2000., fill_value=99999., verbose=True):
     """
-
+    Returns a mask (N-dim boolean array). If elements were below/above a cutoff, np.nan, or np.inf, then they get masked.
     Parameters
     ----------
     U: array-like
@@ -60,6 +60,7 @@ def get_mask_for_unphysical(U, cutoffU=2000., fill_value=99999., verbose=True):
     mask: multidimensional boolean array
 
     """
+    U = np.array(U)
     if verbose:
         print '...Note that nan/inf values in U are replaced by ' + str(fill_value)
         print '...number of invalid values (nan and inf) in the array: ' + str(np.isnan(U).sum() + np.isinf(U).sum())
@@ -100,6 +101,62 @@ def get_mask_for_unphysical(U, cutoffU=2000., fill_value=99999., verbose=True):
     print '...total number of unphysical values: ' + str(ma.count_masked(d)) + '  (' + str((float(n_total)/N*100)) + '%)\n'
     return mask
 
+def get_mask_for_unphysical2(U, low_tld=-2000., high_tld=2000., fill_value=99999., verbose=True):
+    """
+    Returns a mask (N-dim boolean array). If elements were below/above a cutoff, np.nan, or np.inf, then they get masked.
+    Parameters
+    ----------
+    U: array-like
+    cutoffU: float
+        if |value| > cutoff, this method considers those values unphysical.
+    fill_value:
+
+
+    Returns
+    -------
+    mask: multidimensional boolean array
+
+    """
+    U = np.array(U)
+    if verbose:
+        print '...Note that nan/inf values in U are replaced by ' + str(fill_value)
+        print '...number of invalid values (nan and inf) in the array: ' + str(np.isnan(U).sum() + np.isinf(U).sum())
+        print '...number of nan values in U: ' + str(np.isnan(U).sum())
+        print '...number of inf values in U: ' + str(np.isinf(U).sum()) + '\n'
+
+    # Replace all nan and inf values with fill_value.
+    # fix_invalid still enforces a mask on elements with originally invalid values
+    U_fixed = ma.fix_invalid(U, fill_value=fill_value)
+    n_invalid = ma.count_masked(U_fixed)
+    if verbose:
+        print '...number of masked elements by masked_invalid: ' + str(n_invalid)
+    # Update the mask to False (no masking)
+    U_fixed.mask = False
+
+
+
+    # Mask unreasonable values of U_fixed
+    b = ma.masked_greater(U_fixed, high_tld)
+    c = ma.masked_less(U_fixed, low_tld)
+    n_greater = ma.count_masked(b) - n_invalid
+    n_less = ma.count_masked(c)
+    if verbose:
+        print '...number of masked elements greater than cutoff: ' + str(n_greater)
+        print '...number of masked elements less than -cutoff: ' + str(n_less)
+
+    # Generate a mask for all nonsense values in the array U
+    mask = ~(~b.mask * ~c.mask)
+
+    d = ma.array(U_fixed, mask=mask)
+    n_total = ma.count_masked(d)
+    # U_filled = ma.filled(d, fill_value)
+
+    #Total number of elements in U
+    N = 1
+    for i in range(len(U.shape)):
+        N *= U.shape[i]
+    print '...total number of unphysical values: ' + str(ma.count_masked(d)) + '  (' + str((float(n_total)/N*100)) + '%)\n'
+    return mask
 
 
 def fill_unphysical_with_sth(U, mask, fill_value=np.nan):
@@ -147,6 +204,19 @@ def get_mask_for_unphysical_using_cutoff(U, cutoff=None, mode='less'):
 
 
 def clean_vdata(M, cutoffU=2000, fill_value=np.nan, verbose=True):
+    """
+    Clean M class objects.
+    Parameters
+    ----------
+    M
+    cutoffU
+    fill_value
+    verbose
+
+    Returns
+    -------
+
+    """
     print 'Cleaning M.Ux...'
     mask = get_mask_for_unphysical(M.Ux, cutoffU=cutoffU, fill_value=fill_value, verbose=verbose)
     Ux_filled_with_nans = fill_unphysical_with_sth(M.Ux, mask, fill_value=fill_value)
@@ -159,6 +229,8 @@ def clean_vdata(M, cutoffU=2000, fill_value=np.nan, verbose=True):
     M.Uy[:]= Uy_interpolated[:]
     print '...Cleaning Done.'
     return M
+
+
 
 
 ## CLEANING N-D arrays
@@ -182,6 +254,24 @@ def clean_multi_dim_array(data, cutoff, verbose=True):
     data_interpolated = interpolate_using_mask(data_filled_with_nans, mask)
     '...Cleaning Done.'
     return data_interpolated
+
+def delete_masked_elements(data, mask):
+    """
+    Deletes elements of data using mask, and returns a 1d array
+    Parameters
+    ----------
+    data
+    mask
+
+    Returns
+    -------
+
+    """
+    data_masked = ma.array(data, mask=mask)
+    compressed_data = data_masked.compress()
+    '...Reduced data using a given mask'
+    return compressed_data
+
 
 def clean_multi_dim_array_using_median(data, cutoffratio=0.4, mode='less'):
     """
@@ -286,15 +376,14 @@ def clean_multi_dim_array_trio_using_median(arg, data1, data2, cutoffratio=0.4, 
 
     """
     mask = get_mask_for_unphysical_using_median(data1, cutoffratio, mode)
-    data1_masked =  ma.array(data1, mask=mask)
-    data2_masked =  ma.array(data2, mask=mask)
+    data1_masked = ma.array(data1, mask=mask)
+    data2_masked = ma.array(data2, mask=mask)
     arg_masked = ma.array(arg, mask=mask)
     clean_data1 = data1_masked.compressed()
     clean_data2 = data2_masked.compressed()
     clean_arg = arg_masked.compressed()
     '...Cleaning Done.'
     return clean_arg, clean_data1, clean_data2
-
 
 def clean_multi_dim_array_trio_using_cutoff(arg, data1, data2, cutoff, mode='less'):
     """
@@ -345,6 +434,7 @@ def interpolate_1Darrays(x, data, xint=None, xnum=None, mode='cubic'):
     """
     xmin, xmax = np.min(x), np.max(x)
     if xint is None and xnum is None:
+        # Default is generate 10 times more data points
         xnum = len(x)*10
         xint = np.abs(xmax-xmin)/float(xnum)
     elif xint is None and xnum is not None:
