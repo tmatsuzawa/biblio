@@ -113,8 +113,10 @@ def plotfunc(func, x, param, fignum=1, label='-', color=None, linestyle='-', sub
 
     fig, ax = set_fig(fignum, subplot, figsize=figsize)
 
-    a, b = param[0], param[1]
-    y = func(x, a, b)
+    # a, b = param[0], param[1]
+    # y = func(x, a, b)
+    a = param[0]
+    y = func(x, a)
 
     if not color==None:
         plt.plot(x, y, color=color, linestyle=linestyle,label=label, **kwargs)
@@ -217,8 +219,8 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
     y = np.array(y)
 
     #ax = ax if ax is not None else plt.gca()
-    if color is None:
-        color = color_cycle.next()
+    # if color is None:
+    #     color = color_cycle.next()
     if np.isscalar(yerr) or len(yerr) == len(y):
         ymin = y - yerr
         ymax = y + yerr
@@ -230,8 +232,12 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
         ymin = y - yerr
         ymax = y + yerr
 
-    ax.plot(x, y, color=color, label=label)
-    ax.fill_between(x, ymax, ymin, color=color, alpha=alpha_fill)
+    if color is not None:
+        ax.plot(x, y, color=color, label=label)
+        ax.fill_between(x, ymax, ymin, color=color, alpha=alpha_fill)
+    else:
+        ax.plot(x, y,label=label)
+        ax.fill_between(x, ymax, ymin, alpha=alpha_fill)
 
     #patch used for legend
     color_patch = mpatches.Patch(color=color, label=label)
@@ -263,13 +269,13 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=__fig
     ydata = np.array(ydata)
 
     if xmin is None:
-        xmin = np.min(xmin)
+        xmin = np.min(xdata)
     if xmax is None:
-        xmax = np.min(xmax)
+        xmax = np.min(xdata)
     x_for_plot = np.linspace(xmin, xmax, 1000)
 
     if func is None or func=='linear':
-        print 'Fitting function was not provided. Fit to a linear function.'
+        print 'Fit to a linear function.'
         popt, pcov = curve_fit(std_func.linear_func, xdata, ydata)
         if color is None:
             fig, ax = plot(x_for_plot, std_func.linear_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
@@ -281,6 +287,21 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=__fig
         if add_equation:
             text = '$y=ax+b$: a=%.2f, b=%.2f' % (popt[0], popt[1])
             addtext(ax, text, option='bc')
+    elif func=='power':
+        print 'Fitting to a power law.'
+        popt, pcov = curve_fit(std_func.power_func, xdata, ydata)
+        if color is None:
+            fig, ax = plot(x_for_plot, std_func.power_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
+                           label='fit', figsize=figsize, linestyle=linestyle)
+            print 'here'
+        else:
+            fig, ax = plot(x_for_plot, std_func.power_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
+                           label='fit', figsize=figsize, color='r', linestyle=linestyle)
+
+        if add_equation:
+            text = '$y=ax^b$: a=%.2f, b=%.2f' % (popt[0], popt[1])
+            addtext(ax, text, option='bc')
+
     else:
         popt, pcov = curve_fit(func, xdata, ydata)
         if color is None:
@@ -289,6 +310,7 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=__fig
         else:
             fig, ax = plot(x_for_plot, func(x_for_plot, *popt), fignum=fignum, subplot=subplot, label='fit', figsize=figsize,
                            color=color, linestyle=linestyle)
+    #plot(x_for_plot, std_func.power_func(x_for_plot, *popt))
     return fig, ax, popt, pcov
 
 
@@ -316,7 +338,7 @@ def color_plot(x, y, z, subplot=None, fignum=1, vmin=0, vmax=0, figsize=__figsiz
     cc QuadMesh class object
 
     """
-    fig, ax = set_fig(fignum, subplot, figsize)
+    fig, ax = set_fig(fignum, subplot, figsize=figsize)
 
     if log10:
         z = np.log10(z)
@@ -411,9 +433,37 @@ def legend(ax, **kwargs):
 
 
 # Colorbar
+def add_colorbar(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=__fontsize__, **kwargs):
+    """
+    Adds a color bar
+    Parameters
+    ----------
+    mappable : image like QuadMesh object to which the color bar applies (NOT a plt.figure instance)
+    ax : Parent axes from which space for a new colorbar axes will be stolen
+    label :
+
+    Returns
+    -------
+    """
+    # Get fig
+    if fig is None:
+        fig = plt.gcf()
+        if fignum is not None:
+            fig = plt.figure(num=fignum)
+    if ax is None:
+        ax = plt.gca()
+
+    # fig.colorbar makes a another ax object which colives with ax in the fig instance.
+    # Therefore, cb has all attributes that ax object has!
+    cb = fig.colorbar(mappable, ax=ax)
+    if not label==None:
+        cb.set_label(label, fontsize=fontsize)
+    return cb
+
+
 def colorbar(fignum=plt.gcf().number, label=None, fontsize=__fontsize__):
     """
-
+    Use is DEPRECIATED. This method is replaced by add_colorbar(mappable)
     Parameters
     ----------
     fignum :
@@ -446,15 +496,16 @@ def setaxes(ax, xmin, xmax, ymin, ymax):
 def tosemilogx(ax=None):
     if ax == None:
         ax = plt.gca()
-    ax.set_xscale("log", nonposx='clip')
+    ax.set_xscale("log")
 def tosemilogy(ax=None):
     if ax == None:
         ax = plt.gca()
-    ax.set_yscale("log", nonposx='clip')
+    ax.set_yscale("log")
 def tologlog(ax=None):
     if ax == None:
         ax = plt.gca()
-    ax.set_xscale("log", nonposx='clip')
+    ax.set_xscale("log")
+    ax.set_yscale("log")
 
 
 ##Title
@@ -491,7 +542,7 @@ def set_standard_pos(ax):
     left, right = xleft + 0.025 * width, xleft + 0.75 * width
     bottom, top = ybottom + 0.1 * height, ybottom + 0.90 * height
     xcenter, ycenter = width/2., height/2.
-    return top, bottom, right, left, xcenter, ycenter
+    return top, bottom, right, left, xcenter, ycenter, height, width
 
 
 def addtext(ax, text='text goes here', x=0, y=0, fontsize=__fontsize__, color='k',
@@ -524,7 +575,9 @@ def addtext(ax, text='text goes here', x=0, y=0, fontsize=__fontsize__, color='k
     -------
 
     """
-    top, bottom, right, left, xcenter, ycenter = set_standard_pos(ax)
+    top, bottom, right, left, xcenter, ycenter, height, width = set_standard_pos(ax)
+    dx, dy = width / 10.,  height / 10.
+
 
     if option == None:
         ax.text(x, y, text, fontsize=fontsize, color=color)
@@ -537,17 +590,21 @@ def addtext(ax, text='text goes here', x=0, y=0, fontsize=__fontsize__, color='k
     if option == 'br':
         ax.text(right, bottom, text, fontsize=fontsize, color=color)
     if option == 'br2':
-        ax.text(right, bottom/0.1*0.175, text, fontsize=fontsize, color=color)
+        ax.text(right, bottom + dy, text, fontsize=fontsize, color=color)
     if option == 'br3':
-        ax.text(right, bottom/0.1*0.10, text, fontsize=fontsize, color=color)
+        ax.text(right, bottom - dy, text, fontsize=fontsize, color=color)
     if option == 'bl':
         ax.text(left, bottom, text, fontsize=fontsize, color=color)
     if option == 'bl2':
-        ax.text(left, bottom/0.1*0.20, text, fontsize=fontsize, color=color)
+        ax.text(left, bottom + dy, text, fontsize=fontsize, color=color)
     if option == 'bl3':
-        ax.text(left, bottom/0.1*0.05, text, fontsize=fontsize, color=color)
+        ax.text(left, bottom - dy, text, fontsize=fontsize, color=color)
     if option == 'bc':
         ax.text(xcenter, bottom, text, fontsize=fontsize, color=color)
+    if option == 'bc2':
+        ax.text(xcenter, bottom + dy, text, fontsize=fontsize, color=color)
+    if option == 'bc3':
+        ax.text(xcenter, bottom - dy, text, fontsize=fontsize, color=color)
     if option == 'cr':
         ax.text(right, ycenter, text, fontsize=fontsize, color=color)
     if option == 'cl':
