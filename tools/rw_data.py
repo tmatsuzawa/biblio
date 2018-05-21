@@ -9,6 +9,7 @@ import numpy as np
 import json
 import csv
 import pickle
+import h5py
 import library.basics.formatdict as fd
 
 ## Read
@@ -73,7 +74,6 @@ def write_json(datafilepath, datadict):
     -------
 
     """
-
     with open(datafilepath, 'w') as fyle:
         try:
             json.dump(datadict, fyle, sort_keys=True, indent=1, separators=(',', ': '))
@@ -84,7 +84,7 @@ def write_json(datafilepath, datadict):
             fyle.close()
     print 'Data was successfully saved as ' + datafilepath
 
-def write_pickle(obj, filepath, verbose=True):
+def write_pickle(filepath, obj, verbose=True):
     """
     Generate a pickle file from obj
     Parameters
@@ -111,5 +111,54 @@ def write_pickle(obj, filepath, verbose=True):
     if verbose:
         print 'Saved data under ' + filepath
     pickle_out.close()
+
+
+def write_hdf5_dict(filepath, data_dict):
+    """
+    Stores data_dict
+    Parameters
+    ----------
+    filepath :  str
+                file name where data will be stored. (Do not include extension- .h5)
+    data_dict : dictionary
+                data should be stored as data_dict[key]= data_arrays
+
+    Returns
+    -------
+
+    """
+    ext = '.h5'
+    filename = filepath + ext
+    hf = h5py.File(filename, 'w')
+    for key in data_dict:
+        hf.create_dataset(key, data=data_dict[key])
+    hf.close()
+    print 'Data was successfully saved as ' + filename
+
+def write_hdf5_simple(filepath, x, y):
+    """
+    Stores data_dict
+    Parameters
+    ----------
+    filepath :  str
+                file name where data will be stored. (Do not include extension- .h5)
+    data_dict : dictionary
+                data should be stored as data_dict[key]= data_arrays
+
+    Returns
+    -------
+
+    """
+    data_dict = {}
+    data_dict['x'] = x
+    data_dict['y'] = y
+
+    ext = '.h5'
+    filename = filepath + ext
+    hf = h5py.File(filename, 'w')
+    for key in data_dict:
+        hf.create_dataset(key, data=data_dict[key])
+    hf.close()
+    print 'Data was successfully saved as ' + filename
 
 
