@@ -416,7 +416,7 @@ def clean_multi_dim_array_trio_using_cutoff(arg, data1, data2, cutoff, mode='les
     '...Cleaning Done.'
     return clean_arg, clean_data1, clean_data2
 
-def interpolate_1Darrays(x, data, xint=None, xnum=None, mode='cubic'):
+def interpolate_1Darrays(x, data, xint=None, xnum=None, xmax=None, xmin=None, mode='cubic'):
     """
     Conduct interpolation on a 1d array (N elements) to generate a 1d array (xnum elements)
     One can also specify x-spacing (xint) instead of the number of elements of the interpolated array
@@ -432,7 +432,17 @@ def interpolate_1Darrays(x, data, xint=None, xnum=None, mode='cubic'):
     -------
 
     """
-    xmin, xmax = np.min(x), np.max(x)
+    if xmax is None:
+        xmax = np.max(x)
+    if xmin is None:
+        xmin = np.min(x)
+    if xmax > np.max(x):
+        x = np.concatenate([x, [xmax]])
+        data = np.concatenate([data, [data[-1]]])
+    if xmin < np.min(x):
+        x = np.concatenate([[xmin], x])
+        data = np.concatenate([ [data[0]], data])
+
     if xint is None and xnum is None:
         # Default is generate 10 times more data points
         xnum = len(x)*10
@@ -444,6 +454,37 @@ def interpolate_1Darrays(x, data, xint=None, xnum=None, mode='cubic'):
         xint = np.abs(xmax - xmin) / float(xnum)
 
     xnew = np.arange(xmin, xmax, xint)
+    # check xnew has a length xnum
+    if xnum is not None:
+        if len(xnew) > xnum:
+            excess = len(xnew) - xnum
+            xnew = xnew[:-excess]
     f = interpolate.interp1d(x, data, kind=mode)
     datanew = f(xnew)
     return xnew, datanew
+
+## get velocity from position, time arrays
+def compute_velocity_simple(time, pos):
+    """
+    Compute velocity given that position and time arrays are provided
+    - Use np.gradient should be enough for most of the purposes, but this method is much simpler, and more versatile
+    - This does not care if time array is not evenly spaced.
+
+    Parameters
+    ----------
+    pos : 1d array with length N
+    time : 1d array with length N
+
+    Returns
+    -------
+    velocity : 1d array with length N-1
+    time_new : 1d array with length N-1
+    """
+    pos, time = np.array(pos), np.array(time)
+    delta_pos = np.ediff1d(pos)
+    delta_time = np.ediff1d(time)
+
+    time_new = (time[1:] + time[:-1]) / 2.
+
+    velocity = delta_pos / delta_time
+    return time_new, velocity
