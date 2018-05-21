@@ -9,6 +9,10 @@ def linear_func(x, a, b):
 def quad_func(x, a, b, c):
     return a*x**2 + b*x + c
 
+def power_func(x, a, b):
+    return a * x ** b
+
+
 def exp_func(x, a, b, c, x0):
     return a * np.exp(-b * (x-x0)) + c
 
