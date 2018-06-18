@@ -57,7 +57,24 @@ def find_max(array):
     -------
 
     """
-    return np.argmax(array), np.amax(array)
+
+    args, maxvalue = np.argmax(array), np.amax(array)
+    args = np.unravel_index(args, array.shape)
+    return args, np.amax(array)
+
+def find_centroid(array):
+    """
+
+    Parameters
+    ----------
+    array: 2d array
+
+    Returns
+    -------
+    indices, array
+
+    """
+    return ndimage.measurements.center_of_mass(array)
 
 def count_occurrences(arr, display=True):
     """
@@ -81,6 +98,24 @@ def count_occurrences(arr, display=True):
 
 
 
+# Array sorting
+def sort_two_arrays_using_order_of_first_array(arr1, arr2):
+    """
+    Sort arr1 and arr2 using the order of arr1
+    e.g. a=[2,1,3], b=[4,1,9]-> a[1,2,3], b=[1,4,9]
+    Parameters
+    ----------
+    arr1
+    arr2
+
+    Returns
+    -------
+
+    """
+    arr1, arr2 = zip(*sorted(zip(arr1, arr2)))
+    return arr1, arr2
+
+
 # Application
 def detect_sign_flip(arr, delete_first_index=True):
     """
@@ -101,7 +136,7 @@ def detect_sign_flip(arr, delete_first_index=True):
     signchange = ((np.roll(arrsign, 1) - arrsign) != 0).astype(int)
     indices = np.array(np.where(signchange == 1))
     # Print indices, indices.shape
-    if indices.shape==(1,0):
+    if indices.shape==(1, 0):
         print 'No sign flip in the array! Returning [0]...'
         return [0]
 
@@ -202,7 +237,7 @@ def get_values_from_multidim_array_at_coord(data_arr, x, y, order=3):
     value
 
     """
-    if not type(x) == 'list' or  type(x) == 'numpy.ndarray':
+    if not type(x) == 'list' or type(x) == 'numpy.ndarray':
         x = [x]
         y = [y]
     # make sure all arrays are numpy arrays
@@ -211,8 +246,8 @@ def get_values_from_multidim_array_at_coord(data_arr, x, y, order=3):
     data_arr = np.array(data_arr)
 
     coord = [x, y]
-
     values = ndimage.map_coordinates(data_arr, coord, order=order)
+
     return values
 
 def extend_1darray_fill(arr, newarrsize, fill_value=np.nan):
@@ -227,6 +262,15 @@ def extend_1darray_fill(arr, newarrsize, fill_value=np.nan):
 
 
 # Array Formatting
+##1D
+# Ignore a certain portion of an array
+def remove_first_n_perc_of_array(arr, percent=0.3):
+    # make it into an array just in case
+    arr = np.array(arr)
+    return arr[int(len(arr)*percent):]
+
+
+# Make chunks from a 1D array
 def array2chunks(l, chunksize):
     """
     Yield successive n-sized chunks from l.
@@ -241,22 +285,8 @@ def array2nchunks(l, n):
     for i in xrange(0, len(l), chunksize):
         yield l[i:i + chunksize]
 
-def sort_two_arrays_using_order_of_first_array(arr1, arr2):
-    """
-    Sort arr1 and arr2 using the order of arr1
-    e.g. a=[2,1,3], b=[4,1,9]-> a[1,2,3], b=[1,4,9]
-    Parameters
-    ----------
-    arr1
-    arr2
-
-    Returns
-    -------
-
-    """
-    arr1, arr2 = zip(*sorted(zip(arr1, arr2)))
-    return arr1, arr2
-
+##2D
+# Make blocks from 2d arrays
 def make_blocks_from_2d_array(arr, nrows, ncols):
     """
     Return an array of shape (n, nrows, ncols) where n * nrows * ncols = arr.size
@@ -281,6 +311,7 @@ def make_blocks_from_2d_array(arr, nrows, ncols):
                .reshape(-1, nrows, ncols))
     return blocks
 
+#Divide a 2D array into four quadrants
 def divide_2d_array_into_four_domains(arr, rx=0.5, ry=0.5):
     """
     Divide m x n matrix into four domains
@@ -315,4 +346,62 @@ def divide_2d_array_into_four_domains(arr, rx=0.5, ry=0.5):
     blocks = [arr1, arr2, arr3, arr4]
     return blocks
 
+#Extract a small region (nx x ny) of arrays around a specified coordinate
+def get_small_grids_around_coord(datagrid, xgrid, ygrid, x, y, nx, ny):
+    """
+
+    gives back a nx x ny matrix around (x, y) from xgrid, ygrid, datagrid
+
+
+    ################################
+    #        -> x
+    #   |              2nx+1
+    # y v            <-------->
+    #           ____________________
+    #          |      ________      |
+    #  2ny+1 ^ |     |        |     |
+    #        | |     |   x    |     |
+    #        v |     |________|     |
+    #          |____________________|
+    #
+    ################################
+
+    Parameters
+    ----------
+    griddata
+    xgrid
+    ygrid
+    x
+    y
+    nx
+    ny
+
+    Returns
+    -------
+
+    """
+
+    def get_proper_indices_for_x(a, ncolumns):
+        if a < 0:
+            return 0
+        elif a >= ncolumns:
+            return int(ncolumns - 1)
+        else:
+            return int(a)
+
+    def get_proper_indices_for_y(a, nrows):
+        if a < 0:
+            return 0
+        elif a >= nrows:
+            return int(nrows - 1)
+        else:
+            return int(a)
+    nrows, ncolumns = datagrid.shape
+    datagrid_around_coord = datagrid[get_proper_indices_for_y(y - ny, nrows): get_proper_indices_for_y(y + ny, nrows),
+                            get_proper_indices_for_x(x - nx, ncolumns): get_proper_indices_for_x(x + nx, ncolumns)]
+    xgrid_around_coord = xgrid[get_proper_indices_for_y(y - ny, nrows): get_proper_indices_for_y(y + ny, nrows),
+                         get_proper_indices_for_x(x - nx, ncolumns): get_proper_indices_for_x(x + nx, ncolumns)]
+    ygrid_around_coord = ygrid[get_proper_indices_for_y(y - ny, nrows): get_proper_indices_for_y(y + ny, nrows),
+                         get_proper_indices_for_x(x - nx, ncolumns): get_proper_indices_for_x(x + nx, ncolumns)]
+    return xgrid_around_coord, ygrid_around_coord, datagrid_around_coord
 

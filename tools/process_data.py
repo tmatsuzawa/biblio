@@ -103,7 +103,7 @@ def get_mask_for_unphysical(U, cutoffU=2000., fill_value=99999., verbose=True):
 
 def get_mask_for_unphysical2(U, low_tld=-2000., high_tld=2000., fill_value=99999., verbose=True):
     """
-    Returns a mask (N-dim boolean array). If elements were below/above a cutoff, np.nan, or np.inf, then they get masked.
+    Returns a mask (N-dim boolean array). If elements were below low_tld OR above high_tld, np.nan, or np.inf, then they get masked.
     Parameters
     ----------
     U: array-like
@@ -158,6 +158,85 @@ def get_mask_for_unphysical2(U, low_tld=-2000., high_tld=2000., fill_value=99999
     print '...total number of unphysical values: ' + str(ma.count_masked(d)) + '  (' + str((float(n_total)/N*100)) + '%)\n'
     return mask
 
+def get_mask_for_unphysical3(U, low_tld=-2000., high_tld=2000., diff_tld=5, fill_value=99999., verbose=True):
+    """
+    Returns a mask (N-dim boolean array). If elements were below low_tld OR above high_tld, np.nan, or np.inf,
+    or the absolute difference between successive values were above diff_tld, then they get masked.
+    Parameters
+    ----------
+    U: array-like
+    cutoffU: float
+        if |value| > cutoff, this method considers those values unphysical.
+    fill_value:
+
+
+    Returns
+    -------
+    mask: multidimensional boolean array
+
+    """
+    U = np.array(U)
+    try:
+        Udiff = np.diff(U)
+        Udiff = np.concatenate((np.array([diff_tld*2]), Udiff))  # Add one element to have the same length as U, which will be deleted later
+    except TypeError:
+        Udiff = np.array([0])
+    #print U, Udiff
+    if verbose:
+        print '...Note that nan/inf values in U are replaced by ' + str(fill_value)
+        print '...number of invalid values (nan and inf) in the array: ' + str(np.isnan(U).sum() + np.isinf(U).sum())
+        print '...number of nan values in U: ' + str(np.isnan(U).sum())
+        print '...number of inf values in U: ' + str(np.isinf(U).sum()) + '\n'
+
+    # Replace all nan and inf values with fill_value.
+    # fix_invalid still enforces a mask on elements with originally invalid values
+    U_fixed = ma.fix_invalid(U, fill_value=fill_value)
+    n_invalid = ma.count_masked(U_fixed)
+    if verbose:
+        print '...number of masked elements by masked_invalid(nan and inf): ' + str(n_invalid)
+    # Update the mask to False (no masking)
+    U_fixed.mask = False
+
+
+
+    # Mask unreasonable values of U_fixed
+    mask_greater = ma.masked_greater(U_fixed, high_tld)
+    mask_less = ma.masked_less(U_fixed, low_tld)
+    mask_diff_greater = ma.masked_greater(Udiff, diff_tld)
+    mask_diff_less = ma.masked_less(Udiff, -diff_tld)
+
+    # Number of elements masked
+    n_greater = ma.count_masked(mask_greater) - n_invalid
+    n_less = ma.count_masked(mask_less)
+    n_diff_greater = ma.count_masked(mask_diff_greater)
+    n__diff_less = ma.count_masked(mask_diff_less)
+    if verbose:
+        print '...number of masked elements greater than cutoff: ' + str(n_greater)
+        print '...number of masked elements less than -cutoff: ' + str(n_less)
+        print '...number of masked elements greater than difference cutoff: ' + str(n_diff_greater)
+        print '...number of masked elements less than -difference cutoff: ' + str(n__diff_less)
+
+    # Generate a mask for all nonsense values in the array U
+    mask = ~(~mask_greater.mask * ~mask_less.mask * ~mask_diff_greater.mask * ~mask_diff_less.mask)
+
+    U_masked_unphysical = ma.array(U_fixed, mask=mask)
+    n_total = ma.count_masked(U_masked_unphysical)
+    # U_filled = ma.filled(d, fill_value)
+
+    #Total number of elements in U
+    N = 1
+    for i in range(len(U.shape)):
+        N *= U.shape[i]
+    if verbose:
+        print '...total number of unphysical values: ' + str(ma.count_masked(U_masked_unphysical)) + '  (' + str((float(n_total)/N*100)) + '%)\n'
+    #print mask
+    #print U_masked_unphysical
+    return mask
+
+def get_mask_for_nan_and_inf(U):
+    U = np.array(U)
+    U_masked_invalid = ma.masked_invalid(U)
+    return U_masked_invalid.mask
 
 def fill_unphysical_with_sth(U, mask, fill_value=np.nan):
     """
@@ -202,7 +281,7 @@ def get_mask_for_unphysical_using_cutoff(U, cutoff=None, mode='less'):
     return U_masked.mask
 
 
-
+# Cleaning M instances
 def clean_vdata(M, cutoffU=2000, fill_value=np.nan, verbose=True):
     """
     Clean M class objects.
@@ -268,7 +347,7 @@ def delete_masked_elements(data, mask):
 
     """
     data_masked = ma.array(data, mask=mask)
-    compressed_data = data_masked.compress()
+    compressed_data = data_masked.compressed()
     '...Reduced data using a given mask'
     return compressed_data
 

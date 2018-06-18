@@ -85,6 +85,16 @@ def update_data_dict(dict, key, subkey, data=[]):
     return dict
 
 def make_default_data_dict(keys_list):
+    """
+    Not quite functioning... why did i write this? 06/10/takumi
+    Parameters
+    ----------
+    keys_list
+
+    Returns
+    -------
+
+    """
     num_keys = len(keys_list)
     nested_dict = lambda: collections.defaultdict(nested_dict)
     datadict = nested_dict()

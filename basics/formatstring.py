@@ -81,7 +81,7 @@ def get_float_from_str(str, start, end):
 
 def get_str_from_str(str, start, end):
     """
-    Extract a number from a string like '_lalala_start5p3end_lalala' -> 5.3 (float)
+    Extract a string from a string like '_lalala_start5p3end_lalala' -> 5.3 (float)
     Parameters
     ----------
     str:

@@ -7,16 +7,15 @@ from scipy.optimize import curve_fit
 import library.basics.std_func as std_func
 
 '''
-Module for plotting and saving data
-Many methods were taken from Stephane's codes,  and I am going to customize it. - Takumi 10/24/17
+Module for plotting and saving figures
 '''
 
-# Define global variables
-__fontsize__ = 8
 
 import os
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.pylab as pylab
 import itertools
 
 #Global variables
@@ -27,6 +26,14 @@ __old_color_cycle__ = itertools.cycle( ['b', 'g', 'r', 'c', 'm', 'y', 'k'])  #ma
 __fontsize__ = 16
 __figsize__ = (8, 8)
 
+# See all available arguments in matplotlibrc
+params = {'figure.figsize': __figsize__,
+          'font.size': __fontsize__,  #text
+        'legend.fontsize': __fontsize__, # legend
+         'axes.labelsize': __fontsize__, # axes
+         'axes.titlesize': __fontsize__,
+         'xtick.labelsize': __fontsize__, # tick
+         'ytick.labelsize': __fontsize__}
 
 
 ## Save a figure
@@ -85,6 +92,24 @@ def save(path, ext='png', close=False, verbose=True, fignum=None, **kwargs):
 
 ## Create a figure and axes
 def set_fig(fignum, subplot=None, dpi=100, figsize=__figsize__, **kwargs):
+    """
+    Make a plt.figure instance and makes an axes as an attribute of the figure instance
+    Returns figure and ax
+    Parameters
+    ----------
+    fignum
+    subplot
+    dpi
+    figsize
+    kwargs
+
+    Returns
+    -------
+    fig
+    ax
+
+    """
+
     if fignum == -1:
         fig = plt.figure(dpi=dpi, figsize=figsize)
     if fignum == 0:
@@ -113,10 +138,17 @@ def plotfunc(func, x, param, fignum=1, label='-', color=None, linestyle='-', sub
 
     fig, ax = set_fig(fignum, subplot, figsize=figsize)
 
-    # a, b = param[0], param[1]
+
     # y = func(x, a, b)
-    a = param[0]
-    y = func(x, a)
+    if len(param)==1:
+        a=param[0]
+        y = func(x, a)
+    if len(param) == 2:
+        a, b = param[0], param[1]
+        y = func(x, a, b)
+    if len(param) == 3:
+        a, b, c = param[0], param[1], param[2]
+        y = func(x, a, b, c)
 
     if not color==None:
         plt.plot(x, y, color=color, linestyle=linestyle,label=label, **kwargs)
@@ -126,7 +158,7 @@ def plotfunc(func, x, param, fignum=1, label='-', color=None, linestyle='-', sub
         plt.legend()
     return fig, ax
 
-def plot(x, y, fignum=1, figsize=__figsize__, label='-', color=None, subplot=None, legend=False, **kwargs):
+def plot(x, y, fignum=1, figsize=__figsize__, label='', color=None, subplot=None, legend=False, **kwargs):
     """
     plot a graph using given x,y
     fignum can be specified
@@ -263,7 +295,8 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=__fig
 
     Returns
     -------
-
+    fig, ax,
+    popt, pcov : fit results
     """
     xdata = np.array(xdata)
     ydata = np.array(ydata)
@@ -271,32 +304,30 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=__fig
     if xmin is None:
         xmin = np.min(xdata)
     if xmax is None:
-        xmax = np.min(xdata)
+        xmax = np.max(xdata)
     x_for_plot = np.linspace(xmin, xmax, 1000)
-
     if func is None or func=='linear':
-        print 'Fit to a linear function.'
+        print 'Fitting to a linear function...'
         popt, pcov = curve_fit(std_func.linear_func, xdata, ydata)
         if color is None:
             fig, ax = plot(x_for_plot, std_func.linear_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
                            label='fit', figsize=figsize, linestyle=linestyle)
         else:
             fig, ax = plot(x_for_plot, std_func.linear_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
-                           label='fit', figsize=figsize, color='r', linestyle=linestyle)
+                           label='fit', figsize=figsize, color=color, linestyle=linestyle)
 
         if add_equation:
             text = '$y=ax+b$: a=%.2f, b=%.2f' % (popt[0], popt[1])
             addtext(ax, text, option='bc')
     elif func=='power':
-        print 'Fitting to a power law.'
+        print 'Fitting to a power law..'
         popt, pcov = curve_fit(std_func.power_func, xdata, ydata)
         if color is None:
             fig, ax = plot(x_for_plot, std_func.power_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
                            label='fit', figsize=figsize, linestyle=linestyle)
-            print 'here'
         else:
             fig, ax = plot(x_for_plot, std_func.power_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
-                           label='fit', figsize=figsize, color='r', linestyle=linestyle)
+                           label='fit', figsize=figsize, color=color, linestyle=linestyle)
 
         if add_equation:
             text = '$y=ax^b$: a=%.2f, b=%.2f' % (popt[0], popt[1])
@@ -315,7 +346,8 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=__fig
 
 
 ## 2D plots
-def color_plot(x, y, z, subplot=None, fignum=1, vmin=0, vmax=0, figsize=__figsize__, log10=False, show=False, cbar=False, cmap='jet'):
+def color_plot(x, y, z, subplot=None, fignum=1, vmin=None, vmax=None, figsize=__figsize__, log10=False, show=False,
+               cbar=False, cmap='jet', **kwargs):
     """  Color plot of 2D array
     Parameters
     ----------
@@ -345,7 +377,7 @@ def color_plot(x, y, z, subplot=None, fignum=1, vmin=0, vmax=0, figsize=__figsiz
 
     # Note that the cc returned is a matplotlib.collections.QuadMesh
     # print('np.shape(z) = ' + str(np.shape(z)))
-    if vmin == vmax == 0:
+    if vmin is None and vmax is None:
         # plt.pcolormesh returns a QuadMesh class object.
         cc = plt.pcolormesh(x, y, z, cmap=cmap)
     else:
@@ -433,7 +465,12 @@ def legend(ax, **kwargs):
 
 
 # Colorbar
-def add_colorbar(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=__fontsize__, **kwargs):
+# Scientific format for Color bar- set format=sfmt to activate it
+sfmt=mpl.ticker.ScalarFormatter(useMathText=True)
+sfmt.set_powerlimits((0, 0))
+
+def add_colorbar(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=__fontsize__,
+                 vmin=None, vmax=None, cmap='jet', option='normal', **kwargs):
     """
     Adds a color bar
     Parameters
@@ -445,7 +482,7 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=
     Returns
     -------
     """
-    # Get fig
+    # Get a Figure instance
     if fig is None:
         fig = plt.gcf()
         if fignum is not None:
@@ -453,11 +490,24 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=
     if ax is None:
         ax = plt.gca()
 
+    # if vmin is not None and vmax is not None:
+    #     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+    # elif vmin is None and vmax is not None:
+    #     print 'vmin was not provided!'
+    # elif vmin is not None and vmax is None:
+    #     print 'vmax was not provided!'
+
     # fig.colorbar makes a another ax object which colives with ax in the fig instance.
     # Therefore, cb has all attributes that ax object has!
-    cb = fig.colorbar(mappable, ax=ax)
+
+    if option == 'scientific':
+        cb = fig.colorbar(mappable, ax=ax, cmap=cmap, format=sfmt, **kwargs)
+    else:
+        cb = fig.colorbar(mappable, ax=ax, cmap=cmap, **kwargs)
+
     if not label==None:
         cb.set_label(label, fontsize=fontsize)
+
     return cb
 
 
@@ -481,9 +531,9 @@ def colorbar(fignum=plt.gcf().number, label=None, fontsize=__fontsize__):
 
 ### Axes
 # Label
-def labelaxes(ax, xlabel, ylabel, fontsize=__fontsize__, **kwargs):
-    ax.set_xlabel(xlabel, fontsize=fontsize, **kwargs)
-    ax.set_ylabel(ylabel, fontsize=fontsize, **kwargs)
+def labelaxes(ax, xlabel, ylabel, **kwargs):
+    ax.set_xlabel(xlabel, **kwargs)
+    ax.set_ylabel(ylabel, **kwargs)
 
 
 # Limits
@@ -509,9 +559,8 @@ def tologlog(ax=None):
 
 
 ##Title
-def title(title, subplot=111):
-    plt.subplot(subplot)
-    plt.title(title, fontsize=__fontsize__)
+def title(ax, title, subplot=111, **kwargs):
+    ax.set_title(title, **kwargs)
 
 def suptitle(title):
     plt.suptitle(title)
@@ -545,7 +594,7 @@ def set_standard_pos(ax):
     return top, bottom, right, left, xcenter, ycenter, height, width
 
 
-def addtext(ax, text='text goes here', x=0, y=0, fontsize=__fontsize__, color='k',
+def addtext(ax, text='text goes here', x=0, y=0, fontsize=params['font.size'], color='k',
             option=None, **kwargs):
     """
     Adds text to a plot. You can specify the position where the texts will appear by 'option'
@@ -639,8 +688,35 @@ def get_first_n_colors_from_color_cycle(n):
         color_list.append(next(__color_cycle__))
     return color_list
 
+# Figure settings
+def update_figure_params(params):
+    """
+    update a default matplotlib setting
+    e.g. params = {'legend.fontsize': 'x-large',
+          'figure.figsize': (15, 5),
+         'axes.labelsize': 'x-large',
+         'axes.titlesize':'x-large',
+         'xtick.labelsize':'x-large',
+         'ytick.labelsize':'x-large'}
+    Parameters
+    ----------
+    params: dictionary
+
+    Returns
+    -------
+
+    """
+    pylab.rcParams.update(params)
+
+def reset_figure_params():
+    pylab.rcParams.update(params)
+
+def default_figure_params():
+    mpl.rcParams.update(mpl.rcParamsDefault)
 
 
+# Use the settings above as a default
+reset_figure_params()
 
 ######################
 ######################
