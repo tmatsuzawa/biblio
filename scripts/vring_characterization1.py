@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-## Script to test modules
 import numpy as np
 import scipy
 import sys

@@ -1,14 +1,49 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Mar 12 18:32:10 2015
-
-@author: stephane
+Module for reading/writing a pickle
+author: takumi
 """
 import pickle
 import os
 import sys
 
-def write(obj,filename):  
+def write(obj, filepath, verbose=True):
+    """
+    Generate a pickle file from obj
+    Parameters
+    ----------
+    obj
+    filepath
+    verbose
+
+    Returns
+    -------
+
+    """
+    # Extract the directory and filename from the given path
+    directory, filename = os.path.split(filepath)[0], os.path.split(filepath)[1]
+    if directory == '':
+        directory = '.'
+
+    # If the directory does not exist, create it
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    pickle_out = open(filepath, "wb")
+    pickle.dump(obj, pickle_out)
+    if verbose:
+        print 'Saved data under ' + filepath
+    pickle_out.close()
+
+def read(filename):
+    pickle_in = open(filename, "rb" )
+    obj = pickle.load(pickle_in)
+    return obj
+
+###################
+# Codes below were written by Stephane
+
+def write_s(obj,filename):
     
     try:
         f=open(filename,'wb')
@@ -23,7 +58,7 @@ def write(obj,filename):
         print('Sdata class has been modified')
     f.close()    
     
-def read(filename):
+def read_s(filename):
     if os.path.isfile(filename):
        # print("Reading Sdata")# from "+filename)
         #has to be secured with a unic identifier.
