@@ -29,7 +29,7 @@ __figsize__ = (8, 8)
 # See all available arguments in matplotlibrc
 params = {'figure.figsize': __figsize__,
           'font.size': __fontsize__,  #text
-        'legend.fontsize': __fontsize__, # legend
+        'legend.fontsize': 12, # legend
          'axes.labelsize': __fontsize__, # axes
          'axes.titlesize': __fontsize__,
          'xtick.labelsize': __fontsize__, # tick
@@ -37,7 +37,7 @@ params = {'figure.figsize': __figsize__,
 
 
 ## Save a figure
-def save(path, ext='png', close=False, verbose=True, fignum=None, **kwargs):
+def save(path, ext='png', close=False, verbose=True, fignum=None, dpi=None, **kwargs):
     """Save a figure from pyplot
     Parameters
     ----------
@@ -58,10 +58,11 @@ def save(path, ext='png', close=False, verbose=True, fignum=None, **kwargs):
         has been saved.
     """
     if fignum == None:
-       fignum = plt.gcf()
+        fig = plt.gcf()
     else:
-        fignum = plt.figure(fignum)
-
+        fig = plt.figure(fignum)
+    if dpi is None:
+        dpi = fig.dpi
 
     # Separate a directory and a filename from the given path
     directory = os.path.split(path)[0]
@@ -80,7 +81,7 @@ def save(path, ext='png', close=False, verbose=True, fignum=None, **kwargs):
         print("Saving figure to '%s'..." % savepath),
 
     # Save the figure
-    plt.savefig(savepath)
+    plt.savefig(savepath, dpi=dpi, **kwargs)
 
     # Close it
     if close:
@@ -128,15 +129,17 @@ def set_fig(fignum, subplot=None, dpi=100, figsize=__figsize__, **kwargs):
         return fig, ax
 
 
-def plotfunc(func, x, param, fignum=1, label='-', color=None, linestyle='-', subplot=111, legend=False, figsize=__figsize__, **kwargs):
+def plotfunc(func, x, param, fignum=1, subplot=111, ax = None, label=None, color=None, linestyle='-', legend=False, figsize=__figsize__, **kwargs):
     """
     plot a graph using the function fun
     fignum can be specified
     any kwargs from plot can be passed
     Use the homemade function refresh() to draw and plot the figure, no matter the way python is called (terminal, script, notebook)
     """
-
-    fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    if ax is None:
+        fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    else:
+        fig = plt.gcf()
 
 
     # y = func(x, a, b)
@@ -149,13 +152,15 @@ def plotfunc(func, x, param, fignum=1, label='-', color=None, linestyle='-', sub
     if len(param) == 3:
         a, b, c = param[0], param[1], param[2]
         y = func(x, a, b, c)
-
+    if len(param) == 4:
+        a, b, c, d = param[0], param[1], param[2], param[3]
+        y = func(x, a, b, c, d)
     if not color==None:
-        plt.plot(x, y, color=color, linestyle=linestyle,label=label, **kwargs)
+        ax.plot(x, y, color=color, linestyle=linestyle, label=label, **kwargs)
     else:
-        plt.plot(x, y, label=label, linestyle=linestyle, **kwargs)
+        ax.plot(x, y, label=label, linestyle=linestyle, **kwargs)
     if legend:
-        plt.legend()
+        ax.legend()
     return fig, ax
 
 def plot(x, y, fignum=1, figsize=__figsize__, label='', color=None, subplot=None, legend=False, **kwargs):
@@ -178,7 +183,7 @@ def plot(x, y, fignum=1, figsize=__figsize__, label='', color=None, subplot=None
     return fig, ax
 
 
-def scatter(x, y, fignum=1, figsize=__figsize__, marker='o', fillstyle='full', label='-', subplot=None, legend=False, **kwargs):
+def scatter(x, y, fignum=1, figsize=__figsize__, marker='o', fillstyle='full', label=None, subplot=None, legend=False, **kwargs):
     """
     plot a graph using given x,y
     fignum can be specified
@@ -203,7 +208,7 @@ def scatter(x, y, fignum=1, figsize=__figsize__, marker='o', fillstyle='full', l
 
 
 
-def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full',label='-', mfc='white', subplot=None, linestyle='None', legend=False, figsize=__figsize__, **kwargs):
+def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full',label=None, mfc='white', subplot=None, linestyle='None', legend=False, figsize=__figsize__, **kwargs):
     """ errorbar plot
 
     Parameters
@@ -243,9 +248,12 @@ def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full',label=
         plt.legend()
     return fig, ax
 
-def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax=None, label='-',
+def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax=None, label=None,
               legend=False, figsize=__figsize__, color_cycle=__color_cycle__, **kwargs):
-    fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    if ax is None:
+        fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    else:
+        fig = plt.gcf()
 
     x = np.array(x)
     y = np.array(y)
@@ -346,6 +354,7 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=__fig
 
 
 ## 2D plots
+# (pcolormesh)
 def color_plot(x, y, z, subplot=None, fignum=1, vmin=None, vmax=None, figsize=__figsize__, log10=False, show=False,
                cbar=False, cmap='jet', **kwargs):
     """  Color plot of 2D array
@@ -387,7 +396,7 @@ def color_plot(x, y, z, subplot=None, fignum=1, vmin=None, vmax=None, figsize=__
         plt.colorbar()
 
     return fig, ax, cc
-
+#imshow
 def imshow(griddata, xmin=0, xmax=1, ymin=0, ymax=1, cbar=True, vmin=0, vmax=0, \
            fignum=1, subplot=111, figsize=__figsize__, interpolation='linear', cmap='bwr'):
     fig, ax = set_fig(fignum, subplot, figsize=figsize)
@@ -514,6 +523,7 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=
 def colorbar(fignum=plt.gcf().number, label=None, fontsize=__fontsize__):
     """
     Use is DEPRECIATED. This method is replaced by add_colorbar(mappable)
+    I keep this method for old codes which might have used this method
     Parameters
     ----------
     fignum :
@@ -534,6 +544,34 @@ def colorbar(fignum=plt.gcf().number, label=None, fontsize=__fontsize__):
 def labelaxes(ax, xlabel, ylabel, **kwargs):
     ax.set_xlabel(xlabel, **kwargs)
     ax.set_ylabel(ylabel, **kwargs)
+# multi-color labels
+def labelaxes_multicolor(ax, list_of_strings, list_of_colors, axis='x', anchorpad=0, **kwargs):
+    """this function creates axes labels with multiple colors
+    ax specifies the axes object where the labels should be drawn
+    list_of_strings is a list of all of the text items
+    list_if_colors is a corresponding list of colors for the strings
+    axis='x', 'y', or 'both' and specifies which label(s) should be drawn"""
+    from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, HPacker, VPacker
+
+    # x-axis label
+    if axis == 'x' or axis == 'both':
+        boxes = [TextArea(text, textprops=dict(color=color, ha='left', va='bottom', **kwargs))
+                 for text, color in zip(list_of_strings, list_of_colors)]
+        xbox = HPacker(children=boxes, align="center", pad=0, sep=5)
+        anchored_xbox = AnchoredOffsetbox(loc=3, child=xbox, pad=anchorpad, frameon=False, bbox_to_anchor=(0.2, -0.09),
+                                          bbox_transform=ax.transAxes, borderpad=0.)
+        ax.add_artist(anchored_xbox)
+
+    # y-axis label
+    if axis == 'y' or axis == 'both':
+        boxes = [TextArea(text, textprops=dict(color=color, ha='left', va='bottom', rotation=90, **kwargs))
+                 for text, color in zip(list_of_strings[::-1], list_of_colors)]
+        ybox = VPacker(children=boxes, align="center", pad=0, sep=5)
+        anchored_ybox = AnchoredOffsetbox(loc=3, child=ybox, pad=anchorpad, frameon=False, bbox_to_anchor=(-0.2, 0.4),
+                                          bbox_transform=ax.transAxes, borderpad=0.)
+        ax.add_artist(anchored_ybox)
+
+
 
 
 # Limits
@@ -594,12 +632,13 @@ def set_standard_pos(ax):
     return top, bottom, right, left, xcenter, ycenter, height, width
 
 
-def addtext(ax, text='text goes here', x=0, y=0, fontsize=params['font.size'], color='k',
+def addtext(ax, text='text goes here', x=0, y=0, color='k',
             option=None, **kwargs):
     """
     Adds text to a plot. You can specify the position where the texts will appear by 'option'
-
+    |        tc2        |
     | tl     tc     tr  |
+    |        tc3        |
     |                   |
     | cl     cc     cr  |
     |                   |
@@ -629,37 +668,41 @@ def addtext(ax, text='text goes here', x=0, y=0, fontsize=params['font.size'], c
 
 
     if option == None:
-        ax.text(x, y, text, fontsize=fontsize, color=color)
+        ax.text(x, y, text, color=color, **kwargs)
     if option == 'tr':
-        ax.text(right, top, text, fontsize=fontsize, color=color)
+        ax.text(right, top, text, color=color, **kwargs)
     if option == 'tl':
-        ax.text(left, top, text, fontsize=fontsize, color=color)
+        ax.text(left, top, text,  color=color, **kwargs)
     if option == 'tc':
-        ax.text(xcenter, top, text, fontsize=fontsize, color=color)
+        ax.text(xcenter, top, text,  color=color, **kwargs)
+    if option == 'tc2':
+        ax.text(xcenter, top + dy, text,  color=color, **kwargs)
+    if option == 'tc3':
+        ax.text(xcenter, top - dy, text,  color=color, **kwargs)
     if option == 'br':
-        ax.text(right, bottom, text, fontsize=fontsize, color=color)
+        ax.text(right, bottom, text,  color=color, **kwargs)
     if option == 'br2':
-        ax.text(right, bottom + dy, text, fontsize=fontsize, color=color)
+        ax.text(right, bottom + dy, text,  color=color, **kwargs)
     if option == 'br3':
-        ax.text(right, bottom - dy, text, fontsize=fontsize, color=color)
+        ax.text(right, bottom - dy, text, color=color, **kwargs)
     if option == 'bl':
-        ax.text(left, bottom, text, fontsize=fontsize, color=color)
+        ax.text(left, bottom, text, color=color, **kwargs)
     if option == 'bl2':
-        ax.text(left, bottom + dy, text, fontsize=fontsize, color=color)
+        ax.text(left, bottom + dy, text,  color=color, **kwargs)
     if option == 'bl3':
-        ax.text(left, bottom - dy, text, fontsize=fontsize, color=color)
+        ax.text(left, bottom - dy, text, color=color, **kwargs)
     if option == 'bc':
-        ax.text(xcenter, bottom, text, fontsize=fontsize, color=color)
+        ax.text(xcenter, bottom, text, color=color, **kwargs)
     if option == 'bc2':
-        ax.text(xcenter, bottom + dy, text, fontsize=fontsize, color=color)
+        ax.text(xcenter, bottom + dy, text, color=color, **kwargs)
     if option == 'bc3':
-        ax.text(xcenter, bottom - dy, text, fontsize=fontsize, color=color)
+        ax.text(xcenter, bottom - dy, text, color=color, **kwargs)
     if option == 'cr':
-        ax.text(right, ycenter, text, fontsize=fontsize, color=color)
+        ax.text(right, ycenter, text, color=color, **kwargs)
     if option == 'cl':
-        ax.text(left, ycenter, text, fontsize=fontsize, color=color)
+        ax.text(left, ycenter, text, olor=color, **kwargs)
     if option == 'cc':
-        ax.text(xcenter, ycenter, text, fontsize=fontsize, color=color)
+        ax.text(xcenter, ycenter, text,  color=color, **kwargs)
     return ax
 
 
@@ -714,10 +757,47 @@ def reset_figure_params():
 def default_figure_params():
     mpl.rcParams.update(mpl.rcParamsDefault)
 
-
 # Use the settings above as a default
 reset_figure_params()
 
+
+# Embedded plots
+def add_subplot_axes(ax, rect, axisbg='w'):
+    """
+    Creates a sub-subplot inside the subplot (ax)
+    Parameters
+    ----------
+    ax
+    rect: list, [x, y, width, height]  e.g. rect = [0.2,0.2,0.7,0.7]
+    axisbg: background color of the newly created axes object
+
+    Returns
+    -------
+    subax, Axes class object
+
+    """
+    fig = plt.gcf()
+    box = ax.get_position()
+    width = box.width
+    height = box.height
+    inax_position  = ax.transAxes.transform(rect[0:2])
+    transFigure = fig.transFigure.inverted()
+    infig_position = transFigure.transform(inax_position)
+    x = infig_position[0]
+    y = infig_position[1]
+    width *= rect[2]
+    height *= rect[3]
+    subax = fig.add_axes([x, y, width,height], axisbg=axisbg)
+    x_labelsize = subax.get_xticklabels()[0].get_size()
+    y_labelsize = subax.get_yticklabels()[0].get_size()
+    x_labelsize *= rect[2]**0.5
+    y_labelsize *= rect[3]**0.5
+    subax.xaxis.set_tick_params(labelsize=x_labelsize)
+    subax.yaxis.set_tick_params(labelsize=y_labelsize)
+    return subax
+
+
+
 ######################
 ######################
 ######################
@@ -725,7 +805,7 @@ reset_figure_params()
 ######################
 ######################
 
-# def plot(fun, x, y, fignum=1, label='-', subplot=None, **kwargs):
+# def plot(fun, x, y, fignum=1, label=None, subplot=None, **kwargs):
 #     """
 #     plot a graph using the function fun
 #     fignum can be specified
@@ -738,7 +818,7 @@ reset_figure_params()
 #     y = fun(x, y, **kwargs)
 #     refresh()
 
-def graph(x, y, fignum=1, label='-', subplot=None, **kwargs):
+def graph(x, y, fignum=1, label=None, subplot=None, **kwargs):
     """
     plot a graph using matplotlib.pyplot.plot function
     fignum can be specified

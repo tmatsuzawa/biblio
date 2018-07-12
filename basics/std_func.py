@@ -8,6 +8,8 @@ def linear_func(x, a, b):
 
 def quad_func(x, a, b, c):
     return a*x**2 + b*x + c
+def quad_func2(x, a, b, c):
+    return a*(x-b)**2 + c
 
 def power_func(x, a, b):
     return a * x ** b

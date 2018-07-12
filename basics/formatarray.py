@@ -18,12 +18,13 @@ def find_nearest(array, value, option='normal'):
     array[idx]: value closest to 'value' in 'array'
 
     """
-    # get the nearest value < 'value'
+    # get the nearest value such that the element in the array is LESS than the specified 'value'
     if option == 'less':
         array_new = copy.copy(array)
         array_new[array_new > value] = np.nan
         idx = np.nanargmin(np.abs(array_new - value))
         return idx, array_new[idx]
+    # get the nearest value such that the element in the array is GREATER than the specified 'value'
     if option == 'greater':
         array_new = copy.copy(array)
         array_new[array_new < value] = np.nan
@@ -31,7 +32,7 @@ def find_nearest(array, value, option='normal'):
         return idx, array_new[idx]
     else:
         idx = (np.abs(array-value)).argmin()
-    return idx, array[idx]
+        return idx, array[idx]
 
 def find_min(array):
     """
@@ -44,23 +45,41 @@ def find_min(array):
     -------
 
     """
-    return np.argmin(array), np.amin(array)
+    # convert it to arrays if list is given
+    if type(array) == list:
+        array = np.array(array)
+    args, minvalue = np.argmin(array), np.amin(array)
+    args = np.unravel_index(args, array.shape)
+    if len(args) == 1:
+        return args[0], np.amin(array)
+    else:
+        return args, np.amin(array)
+
 
 def find_max(array):
     """
     Find where maximum value of array is
     Parameters
     ----------
-    array
+    array: N-d array
 
     Returns
     -------
+    If list or 1d array is given, returns index as an integer;  args[0], np.amax(array)
+    Otherwise, gives back a tuple and the maximum value of the array; args, np.amax(array)
 
+    args: tuple or integer
+    np.amax(array)
     """
-
+    # convert it to arrays if list is given
+    if type(array) == list:
+        array = np.array(array)
     args, maxvalue = np.argmax(array), np.amax(array)
     args = np.unravel_index(args, array.shape)
-    return args, np.amax(array)
+    if len(args) == 1:
+        return args[0], np.amax(array)
+    else:
+        return args, np.amax(array)
 
 def find_centroid(array):
     """
@@ -128,7 +147,7 @@ def detect_sign_flip(arr, delete_first_index=True):
 
     Returns
     -------
-    indices : list   +1 if there is a sign flip. Otherwise, 0.  e.g. [1 0 1 0 0 1 1] (if zero_first_element==True)
+    indices : 1d array   +1 if there is a sign flip. Otherwise, 0.  e.g. [1 0 1 0 0 1 1] (if zero_first_element==True)
 
 """
     arr = np.array(arr)
@@ -138,7 +157,7 @@ def detect_sign_flip(arr, delete_first_index=True):
     # Print indices, indices.shape
     if indices.shape==(1, 0):
         print 'No sign flip in the array! Returning [0]...'
-        return [0]
+        return np.array([0])
 
     if indices[0][0] == 0:
         # Detecting the first element is often a false alarm. Default is to delete the first element from the indices.
@@ -156,10 +175,15 @@ def get_average_data_from_periodic_data(time, periodic_data, freq=1., interpolat
     time: array,
     freq: float
     interpolate_no: number of interpolated points per data point
+    returnChunks: bool If true, it returns averaged arrays and all chunks generated to produce the averaged data
 
     Returns
     -------
+    time_short, data_mean, data_std: arrays of averaged data. These three arrays have the same length.
 
+    Optional:
+    time_chunks, data_chunks, time_chunks_int, data_chunks_int: lists of data separated into multiple chunks.
+                                                                _int refers to interpolated chunks
     """
     data_chunk_2d, time_chunks_int, data_chunks_int = [], [], []
     # make sure that arrays are numpy arrays
@@ -186,9 +210,10 @@ def get_average_data_from_periodic_data(time, periodic_data, freq=1., interpolat
 
     # interpolate data if the length of the chunk is more than a half of the longest chunk
     # otherwise, throw it away
+    # throuw away the last chunk as well
     indices_to_be_deleted = []
     for i in range(numcycles):
-        if len(data_chunks[i]) < max(chunk_length) / 2:
+        if len(data_chunks[i]) < max(chunk_length) / 2 or (i == numcycles-1 and numcycles > 1):
             indices_to_be_deleted.append(i)
             continue
         else:
@@ -198,17 +223,15 @@ def get_average_data_from_periodic_data(time, periodic_data, freq=1., interpolat
             time_chunks_int.append(time_chunk_int)
             data_chunks_int.append(data_chunk_int)
     # delete chunks which did not have more than a half of the longest chunk
-    for i in range(numcycles):
-        if i in indices_to_be_deleted:
-            del data_chunks[i]
-            del time_chunks[i]
-            numcycles = numcycles - 1
+    data_chunks = [data_chunks[i] for i in range(numcycles) if i not in indices_to_be_deleted]
+    numcycles = numcycles - len(indices_to_be_deleted)
 
     # make data_chunk_2d (which is currently 1D) into a 2D array
     data_chunk_2d = np.concatenate(np.transpose(data_chunks_int)).ravel().reshape(max(chunk_length)*interpolate_no,
                                                                                 numcycles)  # <- Now, this is 2d array.
     time_short = time_chunks_int[0]
-    # Calculate average and std for position
+
+    # Calculate average and std
     data_mean = np.nanmean(data_chunk_2d, axis=1)
     data_std = np.nanstd(data_chunk_2d, axis=1)
 
@@ -263,11 +286,16 @@ def extend_1darray_fill(arr, newarrsize, fill_value=np.nan):
 
 # Array Formatting
 ##1D
-# Ignore a certain portion of an array
+# Remove a certain portion of an array
 def remove_first_n_perc_of_array(arr, percent=0.3):
     # make it into an array just in case
     arr = np.array(arr)
     return arr[int(len(arr)*percent):]
+
+def remove_last_n_perc_of_array(arr, percent=0.3):
+    # make it into an array just in case
+    arr = np.array(arr)
+    return arr[:int(len(arr)*(1.-percent))]
 
 
 # Make chunks from a 1D array
@@ -405,3 +433,21 @@ def get_small_grids_around_coord(datagrid, xgrid, ygrid, x, y, nx, ny):
                          get_proper_indices_for_x(x - nx, ncolumns): get_proper_indices_for_x(x + nx, ncolumns)]
     return xgrid_around_coord, ygrid_around_coord, datagrid_around_coord
 
+# Sort arrays
+def sort2arr(arr2, arr1):
+    """
+    Sorted by the order of arr1
+    Parameters
+    ----------
+    arr2
+    arr1
+
+    Returns
+    -------
+    arr2_sorted, arr1_sorted
+
+    """
+    zipped = zip(arr2, arr1)
+    zipped_sorted = sorted(zipped, key=lambda x: x[1])
+    arr2_sorted, arr1_sorted = zip(*zipped_sorted)
+    return arr2_sorted, arr1_sorted
