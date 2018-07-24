@@ -16,7 +16,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.pylab as pylab
+import matplotlib.ticker as ticker
 import itertools
+
 
 #Global variables
 #Default color cycle: iterator which gets repeated if all elements were exhausted
@@ -268,9 +270,12 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
         yerrdown, yerrup = yerr
         ymin = y - yerrdown
         ymax = y + yerrup
-    elif len(yerr) == 1:
+    else:
         ymin = y - yerr
         ymax = y + yerr
+
+    print len(yerr)
+
 
     if color is not None:
         ax.plot(x, y, color=color, label=label)
@@ -573,7 +578,6 @@ def labelaxes_multicolor(ax, list_of_strings, list_of_colors, axis='x', anchorpa
 
 
 
-
 # Limits
 def setaxes(ax, xmin, xmax, ymin, ymax):
     ax.set_xlim(xmin, xmax)
@@ -595,13 +599,43 @@ def tologlog(ax=None):
     ax.set_xscale("log")
     ax.set_yscale("log")
 
+# Ticks
+def set_xtick_interval(ax=plt.gca(), tickint=1.0):
+    """
+    Sets x-tick interval as tickint
+    Parameters
+    ----------
+    ax: Axes object
+    tickint: float, tick interval
+
+    Returns
+    -------
+
+    """
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(tickint))
+
+def set_ytick_interval(ax=plt.gca(), tickint=1.0):
+    """
+    Sets y-tick interval as tickint
+    Parameters
+    ----------
+    ax: Axes object
+    tickint: float, tick interval
+
+    Returns
+    -------
+
+    """
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(tickint))
+
+
 
 ##Title
 def title(ax, title, subplot=111, **kwargs):
     ax.set_title(title, **kwargs)
 
-def suptitle(title):
-    plt.suptitle(title)
+def suptitle(title, **kwargs):
+    plt.suptitle(title, **kwargs)
 
 
 

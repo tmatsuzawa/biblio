@@ -39,10 +39,11 @@ def find_min(array):
     Find where minimum value of array is
     Parameters
     ----------
-    array
+    array: numpy array or list
 
     Returns
     -------
+    args, np.amin(array)
 
     """
     # convert it to arrays if list is given

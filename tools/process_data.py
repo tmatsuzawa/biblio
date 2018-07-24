@@ -13,7 +13,7 @@ from scipy.stats import binned_statistic
 
 def interpolate_using_mask(arr1, mask):
     """
-    Conduct linear interpolation for data points where its mask value is True
+    Conduct linear interpolation for data points where their mask values are True
 
     ... This interpolation is not ideal because this flattens multidimensional array first, and takes a linear interpolation
     for missing values. That is, the interpolated values at the edges of the multidimensional array are nonsense b/c
@@ -45,6 +45,49 @@ def interpolate_using_mask(arr1, mask):
 
     arr = (arr1 + arr2) * 0.5
     return arr
+
+def interpolate_using_mask_new(arr, mask, method='cubic'):
+    """
+    Developing...Too much computation time.
+    Interpolates arr using a boolean mask
+    ... This method flattens an array during interpolation. Therefore, the interpolated values at the edges should not be trusted.
+    Parameters
+    ----------
+    arr: N-d array
+    mask: N-d boolean array
+    method: interpolation method of scipy griddata- linear, cubic
+
+    Returns
+    -------
+    arr_interp: interpolated N-d array
+
+    """
+    dim = len(arr.shape)
+    if dim < 3:
+        x, y = np.arange(arr.shape[1]), np.arange(arr.shape[0])
+        xx, yy = np.meshgrid(x, y)
+        x1, y1, arr1 = xx[~mask], yy[~mask], arr[~mask]
+        arr_interp = interpolate.griddata((x1, y1), arr1, (xx, yy), method=method)
+    elif dim == 3:
+        x, y, t = np.arange(arr.shape[1]), np.arange(arr.shape[0]),  np.arange(arr.shape[2])
+        xx, yy = np.meshgrid(x, y)
+
+        stack_m = lambda p: np.dstack((m, p))
+        for i in range(arr.shape[2]-1):
+            m = xx
+            xx = stack_m(xx)
+            m = yy
+            yy = stack_m(yy)
+        print xx.shape, yy.shape
+
+
+        arr_interp = []
+        for tt in range(arr.shape[2]):
+            x1, y1, arr1 = xx[~mask], yy[~mask], arr[~mask]
+            arr_interp_frac = interpolate.griddata((x1, y1), arr1, (xx, yy), method=method)
+            arr_interp = np.stack((arr_interp, arr_interp_frac), axis=2)
+    return arr_interp
+
 
 def get_mask_for_unphysical(U, cutoffU=2000., fill_value=99999., verbose=True):
     """
@@ -236,6 +279,16 @@ def get_mask_for_unphysical3(U, low_tld=-2000., high_tld=2000., diff_tld=5, fill
     return mask
 
 def get_mask_for_nan_and_inf(U):
+    """
+    Returns a mask for nan and inf values in a multidimensional array U
+    Parameters
+    ----------
+    U: N-d array
+
+    Returns
+    -------
+
+    """
     U = np.array(U)
     U_masked_invalid = ma.masked_invalid(U)
     return U_masked_invalid.mask
@@ -251,7 +304,7 @@ def fill_unphysical_with_sth(U, mask, fill_value=np.nan):
 
     Returns
     -------
-    U_filled  array-like
+    U_filled  numpy array
 
     """
     U_masked = ma.array(U, mask=mask)
@@ -278,12 +331,12 @@ def get_mask_for_unphysical_using_cutoff(U, cutoff=None, mode='less'):
         U_masked = ma.masked_less_equal(U, cutoff)
     elif mode=='greater' or mode=='g':
         U_masked = ma.masked_greater(U, cutoff)
-    elif mode=='greaterequal' or mode=='geq':
+    elif mode=='greateinterpolate_using_maskrequal' or mode=='geq':
         U_masked = ma.masked_greater_equal(U, cutoff)
     return U_masked.mask
 
 
-# Cleaning M instances
+# Cleaning M class objects
 def clean_vdata(M, cutoffU=2000, fill_value=np.nan, verbose=True):
     """
     Clean M class objects.
@@ -341,11 +394,12 @@ def delete_masked_elements(data, mask):
     Deletes elements of data using mask, and returns a 1d array
     Parameters
     ----------
-    data
-    mask
+    data: N-d array
+    mask: N-d array, bool
 
     Returns
     -------
+    compressed_data
 
     """
     data_masked = ma.array(data, mask=mask)
