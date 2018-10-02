@@ -41,7 +41,7 @@ def read_csv(datapath, encoding='utf-8-sig'):
 
     Returns
     -------
-    data_name: list
+    data_names: list
     data: 2d array
 
     """
@@ -118,7 +118,7 @@ def read_hdf5(datapath):
     """
     f = h5py.File(datapath, 'r')
     print 'Successfully read %s' %datapath
-    print 'Make sure to close the file after the usage'
+    print 'Make sure to close the file after usage'
     return f
 
 def read_hdf5_std(datapath):

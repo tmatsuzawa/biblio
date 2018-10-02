@@ -56,7 +56,6 @@ def find_min(array):
     else:
         return args, np.amin(array)
 
-
 def find_max(array):
     """
     Find where maximum value of array is
@@ -116,7 +115,40 @@ def count_occurrences(arr, display=True):
         print occur_dict
     return occur_dict
 
+def get_n_largest_values(arr, n=1):
+    """
+    Return the n largest values of an array in a list
+    Parameters
+    ----------
+    arr
+    n
 
+    Returns
+    -------
+
+    """
+    arr = np.array(arr)
+    arr1 = arr.flatten()
+    if n > len(arr1):
+        print 'n is greater than the array length! Returning an entire array (sorted)...'
+    return arr1[np.argsort(arr1)[-n:]]
+
+def get_n_smallest_values(arr, n=1):
+    """
+    Return the n smallest values of an array in a list
+    Parameters
+    ----------
+    arr
+    n
+
+    Returns
+    -------
+
+    """
+    arr1 = arr.flatten()
+    if n > len(arr1):
+        print 'n is greater than the array length! Returning an entire array (sorted)...'
+    return arr1[np.argsort(arr1)[:n]]
 
 # Array sorting
 def sort_two_arrays_using_order_of_first_array(arr1, arr2):
@@ -134,6 +166,25 @@ def sort_two_arrays_using_order_of_first_array(arr1, arr2):
     """
     arr1, arr2 = zip(*sorted(zip(arr1, arr2)))
     return arr1, arr2
+
+def sort2arr(arr2, arr1):
+    """
+    DEPRECIATED. USE sort_two_arrays_using_order_of_first_array
+    Sorted by an order of arr1
+    Parameters
+    ----------
+    arr2
+    arr1
+
+    Returns
+    -------
+    arr2_sorted, arr1_sorted
+
+    """
+    zipped = zip(arr2, arr1)
+    zipped_sorted = sorted(zipped, key=lambda x: x[1])
+    arr2_sorted, arr1_sorted = zip(*zipped_sorted)
+    return arr2_sorted, arr1_sorted
 
 
 # Application
@@ -275,13 +326,61 @@ def get_values_from_multidim_array_at_coord(data_arr, x, y, order=3):
     return values
 
 def extend_1darray_fill(arr, newarrsize, fill_value=np.nan):
-    """"""
+    """
+    Make a longer 1d array by filling somethings on the right
+    e.g. [0.1, 1.2, -23.2] -> [0.1, 1.2, -23.2, np.nan, np.nan, np.nan] (newarrsize = 6)
+
+    Parameters
+    ----------
+    arr
+    newarrsize
+    fill_value
+
+    Returns
+    -------
+    arr, entended array
+
+    """
     arr = np.array(arr)
     if len(arr) < newarrsize:
         return np.pad(arr, (0, newarrsize - len(arr)), 'constant', constant_values=(np.nan, np.nan))
     else:
         print 'Original array is bigger than new array. Returning the original array...'
         return arr
+
+def extend_2darray_fill(arr, newarrshape, fill_value=np.nan):
+    """
+    Resize a 2d array while keeping the physical shape of the original array and fill the rest with something
+    e.g.-
+    arr
+array([[ 0,  1,  2,  3,  4],
+       [ 5,  6,  7,  8,  9],
+       [10, 11, 12, 13, 14],
+       [15, 16, 17, 18, 19]])
+
+    -> arr_ext with newarrshape = (6,6)
+array([[  0.,   1.,   2.,   3.,   4.,  nan],
+       [  5.,   6.,   7.,   8.,   9.,  nan],
+       [ 10.,  11.,  12.,  13.,  14.,  nan],
+       [ 15.,  16.,  17.,  18.,  19.,  nan],
+       [ nan,  nan,  nan,  nan,  nan,  nan],
+       [ nan,  nan,  nan,  nan,  nan,  nan]])
+    Parameters
+    ----------
+    arr: 2d numpy array
+    newarrshape: tuple, new array shape ... (nrows, ncols)
+    fill_value:
+
+    Returns
+    -------
+
+    """
+    arr = np.array(arr)
+    shape = arr.shape
+    arr_ext = np.full(newarrshape, np.nan)
+    arr_ext[0:shape[0], 0:shape[1]] = arr
+    return arr_ext
+
 
 
 
@@ -360,8 +459,8 @@ def divide_2d_array_into_four_domains(arr, rx=0.5, ry=0.5):
     Parameters
     ----------
     arr: 2d array
-    rx : float [0,1]
-    ry : float [0,1]
+    rx : float [0,1] fraction used to split the columns
+    ry : float [0,1] fraction used to split the rows
 
     Returns
     -------
@@ -434,21 +533,115 @@ def get_small_grids_around_coord(datagrid, xgrid, ygrid, x, y, nx, ny):
                          get_proper_indices_for_x(x - nx, ncolumns): get_proper_indices_for_x(x + nx, ncolumns)]
     return xgrid_around_coord, ygrid_around_coord, datagrid_around_coord
 
-# Sort arrays
-def sort2arr(arr2, arr1):
+
+
+## Coarse-grain 2D arrays
+def coarse_grain_2darr(arr, nrows_sub, ncolumns_sub):
     """
-    Sorted by the order of arr1
+    Coarse-grain 2D arrays
+
     Parameters
     ----------
-    arr2
-    arr1
+    arr:
+    nrows_sub: int, Number of rows of blocks (over which values are averaged)
+    ncolumns_sub: int, Number of columns of blocks
 
     Returns
     -------
-    arr2_sorted, arr1_sorted
+    arr_coarse: coarse-grained 2d arr
 
     """
-    zipped = zip(arr2, arr1)
-    zipped_sorted = sorted(zipped, key=lambda x: x[1])
-    arr2_sorted, arr1_sorted = zip(*zipped_sorted)
-    return arr2_sorted, arr1_sorted
+    nrows, ncols = np.array(arr).shape
+
+    # If the 2d array cannot be separated into blocks, then extend/pad the 2d array
+    remainder_row = nrows % nrows_sub
+    remainder_column = ncols % ncolumns_sub
+    if not remainder_row == 0 or not remainder_column == 0:
+        print 'Shape is not an integer multiple of (nrows_sub, ncolumns_sub)!'
+        print 'Will extend the array with np.nan, and average...'
+        nrows = int(np.ceil(arr.shape[0]/float(nrows_sub))*nrows_sub)
+        ncols = int(np.ceil(arr.shape[1] / float(ncolumns_sub)) * ncolumns_sub)
+        arr = extend_2darray_fill(arr, (nrows, ncols), fill_value='np.nan')
+
+    nrows_coarse, ncolumns_corarse = nrows / nrows_sub, ncols / ncolumns_sub
+
+    # make blocks from 2d array (nrows, ncols) -> (nblocks, nrows_sub, ncolumns_sub)
+    arr_blocks = make_blocks_from_2d_array(arr, nrows_sub, ncolumns_sub)
+    # Average inside the blocks, and reshape the array
+    arr_coarse = np.nanmean(arr_blocks, axis=(1, 2)).reshape(nrows_coarse, ncolumns_corarse)
+
+    return arr_coarse
+
+def coarse_grain_2darr_overwrap(arr, nrows_sub, ncolumns_sub, overwrap=0.5):
+    """
+    Coarse-grain 2D arrays with overwrap (mimics how PIVLab processes a velocity field)
+
+arr= [[ 0  1  2  3  4  5]
+     [ 6  7  8  9 10 11]
+     [12 13 14 15 16 17]
+     [18 19 20 21 22 23]
+     [24 25 26 27 28 29]
+     [30 31 32 33 34 35]]
+
+    -> Make a new array. (nrows_sub=4, ncolumns_sub=4, overwrap=0.5)
+array([[  0.,   1.,   2.,   3.,   2.,   3.,   4.,   5.],
+       [  6.,   7.,   8.,   9.,   8.,   9.,  10.,  11.],
+       [ 12.,  13.,  14.,  15.,  14.,  15.,  16.,  17.],
+       [ 18.,  19.,  20.,  21.,  20.,  21.,  22.,  23.],
+       [ 12.,  13.,  14.,  15.,  14.,  15.,  16.,  17.],
+       [ 18.,  19.,  20.,  21.,  20.,  21.,  22.,  23.],
+       [ 24.,  25.,  26.,  27.,  26.,  27.,  28.,  29.],
+       [ 30.,  31.,  32.,  33.,  32.,  33.,  34.,  35.]])
+
+    -> Coarse-grain (output)
+array([[ 10.5,  12.5],
+       [ 22.5,  24.5]])
+
+    Parameters
+    ----------
+    arr:
+    nrows_sub: int, Number of rows of blocks (over which values are averaged)
+    ncolumns_sub: int, Number of columns of blocks
+    overwrap: fraction of overwrap
+
+    Returns
+    -------
+    arr_coarse: coarse-grained 2d arr
+
+    """
+    nrows, ncols = np.array(arr).shape
+    rowstep, colstep = int(nrows_sub * overwrap), int(ncolumns_sub * overwrap)
+    #nrows_new, ncols_new = (nrows-1) * nrows_sub, (ncols-1) * ncolumns_sub
+    # number of overwrapped regions
+    nrow_ow, ncol_ow = int(np.ceil((nrows - nrows_sub)/(nrows_sub * (1-overwrap)))), int(np.ceil((ncols - ncolumns_sub)/(ncolumns_sub * (1-overwrap))))
+    # shape of new array
+    nrows_new, ncols_new = nrows_sub * (nrow_ow + 1), ncolumns_sub * (ncol_ow + 1)
+    arr_new = np.empty((nrows_new, ncols_new))
+    arr_new[...] = np.nan
+
+    # Make a new array to coarse grain
+    for i in range(0, nrows_new, nrows_sub):
+        for j in range(0, ncols_new, ncolumns_sub):
+            ii, jj = int(np.ceil(i*(1-overwrap))), int(np.ceil(j*(1-overwrap)))
+            if i % nrows_sub == 0 and j % ncolumns_sub == 0:
+                # print (i, j), (ii, jj)
+                # print arr[ii:ii+nrows_sub, jj:jj+ncolumns_sub]
+                try:
+                    arr_new[i:i+nrows_sub, j:j+ncolumns_sub] = arr[ii:ii+nrows_sub, jj:jj+ncolumns_sub]
+                except ValueError:
+                    arr_new[i:i + nrows_sub, j:j + ncolumns_sub] = extend_2darray_fill(arr[ii:ii+nrows_sub, jj:jj+ncolumns_sub], (nrows_sub, ncolumns_sub))
+            else:
+                # print (i, j), (ii, jj), 'skip'
+                continue
+            # print arr_new
+
+    # Coarse-grain
+    # Make blocks from 2d array (nrows, ncols) -> (nblocks, nrows_sub, ncolumns_sub)
+    arr_blocks = make_blocks_from_2d_array(arr_new, nrows_sub, ncolumns_sub)
+    # Average inside the blocks, and reshape the array
+    nrows_coarse, ncolumns_corarse = nrows_new / nrows_sub, ncols_new / ncolumns_sub
+    arr_coarse = np.nanmean(arr_blocks, axis=(1, 2)).reshape(nrows_coarse, ncolumns_corarse)
+
+    return arr_coarse
+
+

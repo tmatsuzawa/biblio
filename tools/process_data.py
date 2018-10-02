@@ -11,7 +11,7 @@ from scipy.stats import binned_statistic
 
 # Data cleaning (Masking / Filtering)
 
-def interpolate_using_mask(arr1, mask):
+def interpolate_using_mask(arr, mask):
     """
     Conduct linear interpolation for data points where their mask values are True
 
@@ -31,7 +31,8 @@ def interpolate_using_mask(arr1, mask):
     arr : array-like (n x m), float
         array with unphysical values replaced by appropriate values
     """
-    arr2T = copy.deepcopy(arr1).T
+    arr1 = copy.deepcopy(arr)
+    arr2T = copy.deepcopy(arr).T
 
     f0 = np.flatnonzero(mask)
     f1 = np.flatnonzero(~mask)
@@ -654,10 +655,43 @@ def smooth(x, window_len=11, window='hanning'):
     y = np.convolve(w / w.sum(), s, mode='valid')
     return y
 
+
+
+# PDF
+def pdf(data, nbins=10):
+    """
+    Returns a pdf of data (bins and hist with the same length)
+    Parameters
+    ----------
+    data
+    nbins
+
+    Returns
+    -------
+    bins
+    hist
+
+    """
+    data = np.asarray(data)
+
+    if np.isnan(data).any():
+        mask = get_mask_for_nan_and_inf(data)
+        data = delete_masked_elements(data, mask) # returns a 1d array
+
+    # Get a normalized histogram
+    hist, bins = np.histogram(data.flatten(), bins=nbins, density=True)
+    # len(bins) = len(hist) + 1
+    # Get middle points for plotting sake.
+    bins1 = np.roll(bins, 1)
+    bins = (bins1 + bins) / 2.
+    bins = np.delete(bins, 0)
+    return bins, hist
+
+
 ## Binning data
 def bin_data(arg, data, nbins=25):
     """
-    Bins 1d data, and returns 1d data (arguments, data, std).
+    Bins a pair of 1d data, and returns 1d data (binned_arguments, binned_data, std).
     One can plot these using axes.errorbar(arguments, data, std) or errorfill(arguments, data, std).
     Link: https://mycourses.aalto.fi/pluginfile.php/146910/mod_resource/content/1/binning_tutorial.pdf
     Parameters
@@ -668,12 +702,20 @@ def bin_data(arg, data, nbins=25):
 
     Returns
     -------
+    bin_centers: an array of centers of bins
+    bin_averages: an array of magnitudes (average of data points in each bin)
+    bin_stdevs: an array of stds for each bin
 
     """
     bin_centers, _, _ = binned_statistic(arg, arg, statistic='mean', bins=nbins)
     bin_averages, _, _ = binned_statistic(arg, data, statistic='mean', bins=nbins)
     bin_stdevs, _, _ = binned_statistic(arg, data, statistic='std', bins=nbins)
     return bin_centers, bin_averages, bin_stdevs
+
+
+
+
+
 
 
 ## get velocity from position, time arrays

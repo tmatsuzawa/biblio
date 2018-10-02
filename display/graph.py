@@ -1,9 +1,5 @@
 import numpy as np
-import os
-from math import *
-# import library.tools.fitting as fitting
 from scipy.optimize import curve_fit
-#import library.hdf5.h5py_s as h5py_s
 import library.basics.std_func as std_func
 
 '''
@@ -17,6 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.pylab as pylab
 import matplotlib.ticker as ticker
+import mpl_toolkits.axes_grid as axes_grid
 import itertools
 
 
@@ -39,7 +36,7 @@ params = {'figure.figsize': __figsize__,
 
 
 ## Save a figure
-def save(path, ext='png', close=False, verbose=True, fignum=None, dpi=None, **kwargs):
+def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, **kwargs):
     """Save a figure from pyplot
     Parameters
     ----------
@@ -71,7 +68,6 @@ def save(path, ext='png', close=False, verbose=True, fignum=None, dpi=None, **kw
     filename = "%s.%s" % (os.path.split(path)[1], ext)
     if directory == '':
         directory = '.'
-
     # If the directory does not exist, create it
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -94,7 +90,7 @@ def save(path, ext='png', close=False, verbose=True, fignum=None, dpi=None, **kw
 
 
 ## Create a figure and axes
-def set_fig(fignum, subplot=None, dpi=100, figsize=__figsize__, **kwargs):
+def set_fig(fignum, subplot=None, dpi=100, figsize=None, **kwargs):
     """
     Make a plt.figure instance and makes an axes as an attribute of the figure instance
     Returns figure and ax
@@ -114,12 +110,18 @@ def set_fig(fignum, subplot=None, dpi=100, figsize=__figsize__, **kwargs):
     """
 
     if fignum == -1:
-        fig = plt.figure(dpi=dpi, figsize=figsize)
+        if figsize is not None:
+            fig = plt.figure(dpi=dpi, figsize=figsize)
+        else:
+            fig = plt.figure(dpi=dpi)
     if fignum == 0:
         fig = plt.cla()  #clear axis
     if fignum > 0:
-        fig = plt.figure(num=fignum, dpi=dpi, figsize=figsize)
-        fig.set_size_inches(figsize[0], figsize[1])
+        if figsize is not None:
+            fig = plt.figure(num=fignum, dpi=dpi, figsize=figsize)
+            fig.set_size_inches(figsize[0], figsize[1])
+        else:
+            fig = plt.figure(num=fignum, dpi=dpi)
         fig.set_dpi(dpi)
 
     if subplot is not None:
@@ -165,7 +167,7 @@ def plotfunc(func, x, param, fignum=1, subplot=111, ax = None, label=None, color
         ax.legend()
     return fig, ax
 
-def plot(x, y, fignum=1, figsize=__figsize__, label='', color=None, subplot=None, legend=False, **kwargs):
+def plot(x, y, fignum=1, figsize=None, label='', color=None, subplot=None, legend=False, **kwargs):
     """
     plot a graph using given x,y
     fignum can be specified
@@ -185,14 +187,17 @@ def plot(x, y, fignum=1, figsize=__figsize__, label='', color=None, subplot=None
     return fig, ax
 
 
-def scatter(x, y, fignum=1, figsize=__figsize__, marker='o', fillstyle='full', label=None, subplot=None, legend=False, **kwargs):
+def scatter(x, y, ax=None, fignum=1, figsize=None, marker='o', fillstyle='full', label=None, subplot=None, legend=False, **kwargs):
     """
     plot a graph using given x,y
     fignum can be specified
     any kwargs from plot can be passed
     Use the homemade function refresh() to draw and plot the figure, no matter the way python is called (terminal, script, notebook)
     """
-    fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    if ax is None:
+        fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    else:
+        fig = ax.get_figure()
     x, y = np.array(x), np.array(y)
     if len(x.flatten()) > len(y.flatten()):
         print("Warning : x and y data do not have the same length")
@@ -209,8 +214,36 @@ def scatter(x, y, fignum=1, figsize=__figsize__, marker='o', fillstyle='full', l
     return fig, ax
 
 
+def pdf(data, nbins=10, return_data=False,  fignum=1, figsize=None, subplot=None, density=True, **kwargs):
+    def compute_pdf(data, nbins=10):
+        data = np.asarray(data)
+        # Get a normalized histogram
+        # exclude nans from statistics
+        hist, bins = np.histogram(data.flatten()[~np.isnan(data.flatten())], bins=nbins, density=density)
+        # len(bins) = len(hist) + 1
+        # Get middle points for plotting sake.
+        bins1 = np.roll(bins, 1)
+        bins = (bins1 + bins) / 2.
+        bins = np.delete(bins, 0)
+        return bins, hist
 
-def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full',label=None, mfc='white', subplot=None, linestyle='None', legend=False, figsize=__figsize__, **kwargs):
+    # # Clean data if necessary (np.histogram requires array not to contain nan)
+    # if np.isnan(data).any():
+    #     # Delete nans
+    #     import library.tools.process_data as process
+    #     mask = process.get_mask_for_unphysical(data, cutoffU=99999., fill_value=99999., verbose=True)
+    #     data = process.delete_masked_elements(data, mask) # returns a 1d array
+
+
+    bins, hist = compute_pdf(data, nbins=nbins)
+    fig, ax = plot(bins, hist, fignum=fignum, figsize=figsize, subplot=subplot, **kwargs)
+    if not return_data:
+        return fig, ax
+    else:
+        return fig, ax, bins, hist
+
+
+def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full', linestyle='None', label=None, mfc='white', subplot=None, legend=False, figsize=None, **kwargs):
     """ errorbar plot
 
     Parameters
@@ -251,7 +284,7 @@ def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full',label=
     return fig, ax
 
 def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax=None, label=None,
-              legend=False, figsize=__figsize__, color_cycle=__color_cycle__, **kwargs):
+              legend=False, figsize=None, color_cycle=__color_cycle__, **kwargs):
     if ax is None:
         fig, ax = set_fig(fignum, subplot, figsize=figsize)
     else:
@@ -274,8 +307,6 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
         ymin = y - yerr
         ymax = y + yerr
 
-    print len(yerr)
-
 
     if color is not None:
         ax.plot(x, y, color=color, label=label)
@@ -294,8 +325,8 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
 
 
 ## Plot a fit curve
-def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=__figsize__, linestyle='-',
-                   xmin=None, xmax=None, add_equation=True, color=None, **kwargs):
+def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None, linestyle='--',
+                   xmin=None, xmax=None, add_equation=True, eq_loc='bl', color=None, label='fit', **kwargs):
     """
     Plots a fit curve given xdata and ydata
     Parameters
@@ -324,44 +355,44 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=__fig
         popt, pcov = curve_fit(std_func.linear_func, xdata, ydata)
         if color is None:
             fig, ax = plot(x_for_plot, std_func.linear_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
-                           label='fit', figsize=figsize, linestyle=linestyle)
+                           label=label, figsize=figsize, linestyle=linestyle)
         else:
             fig, ax = plot(x_for_plot, std_func.linear_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
-                           label='fit', figsize=figsize, color=color, linestyle=linestyle)
+                           label=label, figsize=figsize, color=color, linestyle=linestyle, **kwargs)
 
         if add_equation:
             text = '$y=ax+b$: a=%.2f, b=%.2f' % (popt[0], popt[1])
-            addtext(ax, text, option='bc')
+            addtext(ax, text, option=eq_loc)
     elif func=='power':
         print 'Fitting to a power law..'
         popt, pcov = curve_fit(std_func.power_func, xdata, ydata)
         if color is None:
             fig, ax = plot(x_for_plot, std_func.power_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
-                           label='fit', figsize=figsize, linestyle=linestyle)
+                           label=label, figsize=figsize, linestyle=linestyle, **kwargs)
         else:
             fig, ax = plot(x_for_plot, std_func.power_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
-                           label='fit', figsize=figsize, color=color, linestyle=linestyle)
+                           label=label, figsize=figsize, color=color, linestyle=linestyle, **kwargs)
 
         if add_equation:
             text = '$y=ax^b$: a=%.2f, b=%.2f' % (popt[0], popt[1])
-            addtext(ax, text, option='bc')
+            addtext(ax, text, option=eq_loc)
 
     else:
         popt, pcov = curve_fit(func, xdata, ydata)
         if color is None:
-            fig, ax = plot(x_for_plot, func(x_for_plot, *popt), fignum=fignum, subplot=subplot, label='fit', figsize=figsize,
-                           linestyle=linestyle)
+            fig, ax = plot(x_for_plot, func(x_for_plot, *popt), fignum=fignum, subplot=subplot, label=label, figsize=figsize,
+                           linestyle=linestyle, **kwargs)
         else:
-            fig, ax = plot(x_for_plot, func(x_for_plot, *popt), fignum=fignum, subplot=subplot, label='fit', figsize=figsize,
-                           color=color, linestyle=linestyle)
+            fig, ax = plot(x_for_plot, func(x_for_plot, *popt), fignum=fignum, subplot=subplot, label=label, figsize=figsize,
+                           color=color, linestyle=linestyle, **kwargs)
     #plot(x_for_plot, std_func.power_func(x_for_plot, *popt))
     return fig, ax, popt, pcov
 
 
-## 2D plots
+## 2D plotsFor the plot you showed at group meeting of lambda converging with resolution, can you please make a version with two x axes (one at the top, one below) one pixel spacing, other PIV pixel spacing, and add a special tick on each for the highest resolution point.
 # (pcolormesh)
-def color_plot(x, y, z, subplot=None, fignum=1, vmin=None, vmax=None, figsize=__figsize__, log10=False, show=False,
-               cbar=False, cmap='jet', **kwargs):
+def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, vmin=None, vmax=None, log10=False, show=False,
+               cbar=False, cmap='magma', aspect='equal', linewidth=0,  **kwargs):
     """  Color plot of 2D array
     Parameters
     ----------
@@ -384,7 +415,7 @@ def color_plot(x, y, z, subplot=None, fignum=1, vmin=None, vmax=None, figsize=__
     cc QuadMesh class object
 
     """
-    fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    fig, ax = set_fig(fignum, subplot, figsize=figsize, aspect=aspect)
 
     if log10:
         z = np.log10(z)
@@ -393,14 +424,20 @@ def color_plot(x, y, z, subplot=None, fignum=1, vmin=None, vmax=None, figsize=__
     # print('np.shape(z) = ' + str(np.shape(z)))
     if vmin is None and vmax is None:
         # plt.pcolormesh returns a QuadMesh class object.
-        cc = plt.pcolormesh(x, y, z, cmap=cmap)
+        cc = plt.pcolormesh(x, y, z, cmap=cmap, **kwargs)
     else:
-        cc = plt.pcolormesh(x, y, z, cmap=cmap, vmin=vmin, vmax=vmax)
+        cc = plt.pcolormesh(x, y, z, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
 
     if cbar:
         plt.colorbar()
 
+    if aspect == 'equal':
+        ax.set_aspect('equal')
+    # set edge color to face color
+    cc.set_edgecolor('face')
+
     return fig, ax, cc
+
 #imshow
 def imshow(griddata, xmin=0, xmax=1, ymin=0, ymax=1, cbar=True, vmin=0, vmax=0, \
            fignum=1, subplot=111, figsize=__figsize__, interpolation='linear', cmap='bwr'):
@@ -422,7 +459,7 @@ def show():
     plt.show()
 
 ## Lines
-def axhline(ax, y, x=None, color='black', linestyle='--', **kwargs):
+def axhline(ax, y, x0=None, x1=None, color='black', linestyle='--', **kwargs):
     """
     Draw a horizontal line at y=y from xmin to xmax
     Parameters
@@ -434,13 +471,14 @@ def axhline(ax, y, x=None, color='black', linestyle='--', **kwargs):
     -------
 
     """
-    if x is not None:
-        xmin, xmax = np.max(x), np.min(x)
+    if x0 is not None:
+        xmin, xmax = ax.get_xlim()
+        xmin_frac, xmax_frac = x0 / float(xmax), x1 / float(xmax)
     else:
-        xmin, xmax= ax.get_xlim()
-    ax.axhline(y, xmin, xmax, color=color, linestyle=linestyle, **kwargs)
+        xmin_frac, xmax_frac= 0, 1
+    ax.axhline(y, xmin_frac, xmax_frac, color=color, linestyle=linestyle, **kwargs)
 
-def axvline(ax, x, y=None,  color='black', linestyle='--', **kwargs):
+def axvline(ax, x, y0=None, y1=None,  color='black', linestyle='--', **kwargs):
     """
     Draw a vertical line at x=x from ymin to ymax
     Parameters
@@ -452,16 +490,27 @@ def axvline(ax, x, y=None,  color='black', linestyle='--', **kwargs):
     -------
 
     """
-    if y is not None:
-        ymin, ymax = np.max(y), np.min(y)
+    if y0 is not None:
+        ymin, ymax = ax.get_ylim()
+        ymin_frac, ymax_frac = y0 / float(ymax), y1 / float(ymax)
     else:
-        ymin, ymax= ax.get_ylim()
-    ax.axvline(x, ymin, ymax, color=color, linestyle=linestyle, **kwargs)
+        ymin_frac, ymax_frac= 0, 1
+    ax.axvline(x, ymin_frac, ymax_frac, color=color, linestyle=linestyle, **kwargs)
 
+## Bands
+def axhband(ax, y0, y1, x0=None, x1=None, color='C1', alpha=0.2, **kwargs):
+    if x0 is None and x1 is None:
+        x0, x1 = ax.get_xlim()
+    ax.fill_between(np.arange(x0, x1), y0, y1, alpha=alpha, color=color, **kwargs)
+
+def axvband(ax, x0, x1, y0=None, y1=None, color='C1', alpha=0.2, **kwargs):
+    if y0 is None and y1 is None:
+        y0, y1 = ax.get_ylim()
+    ax.fill_between(np.arange(x0, x1), y0, y1, alpha=alpha, color=color, **kwargs)
 
 ## Legend
 # Legend
-def legend(ax, **kwargs):
+def legend(ax, remove=False, **kwargs):
     """
     loc:
     best	0, upper right	1, upper left	2, lower left	3, lower right	4, right	5,
@@ -475,7 +524,9 @@ def legend(ax, **kwargs):
     -------
 
     """
-    ax.legend(**kwargs)
+    leg = ax.legend(**kwargs)
+    if remove:
+        leg.get_frame().set_facecolor('none')
 
 
 # Colorbar
@@ -483,10 +534,10 @@ def legend(ax, **kwargs):
 sfmt=mpl.ticker.ScalarFormatter(useMathText=True)
 sfmt.set_powerlimits((0, 0))
 
-def add_colorbar(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=__fontsize__,
+def add_colorbar_old(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=__fontsize__,
                  vmin=None, vmax=None, cmap='jet', option='normal', **kwargs):
     """
-    Adds a color bar
+    Adds a color bar (Depricated. replaced by add_colorbar)
     Parameters
     ----------
     mappable : image like QuadMesh object to which the color bar applies (NOT a plt.figure instance)
@@ -519,13 +570,71 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=
     else:
         cb = fig.colorbar(mappable, ax=ax, cmap=cmap, **kwargs)
 
-    if not label==None:
+    if not label == None:
         cb.set_label(label, fontsize=fontsize)
 
     return cb
 
 
-def colorbar(fignum=plt.gcf().number, label=None, fontsize=__fontsize__):
+def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', label=None, fontsize=None, option='normal',
+                 tight_layout=True, ticklabelsize=None, **kwargs):
+    """
+    Adds a color bar
+
+    e.g.
+        fig = plt.figure()
+        img = fig.add_subplot(111)
+        ax = img.imshow(im_data)
+        colorbar(ax)
+    Parameters
+    ----------
+    mappable
+    location
+
+    Returns
+    -------
+
+    """
+    # ax = mappable.axes
+    # fig = ax.figure
+    # Get a Figure instance
+    if fig is None:
+        fig = plt.gcf()
+        if fignum is not None:
+            fig = plt.figure(num=fignum)
+    if ax is None:
+        ax = plt.gca()
+    if fig is None:
+        fig = plt.gcf()
+
+
+    divider = axes_grid.make_axes_locatable(ax)
+    cax = divider.append_axes(location, size='5%', pad=0.15)
+    if option == 'scientific':
+        cb = fig.colorbar(mappable, cax=cax, format=sfmt, **kwargs)
+    else:
+        cb = fig.colorbar(mappable, cax=cax, **kwargs)
+
+    if not label is None:
+        if fontsize is None:
+            cb.set_label(label)
+        else:
+            cb.set_label(label, fontsize=fontsize)
+    if ticklabelsize is not None:
+        cb.ax.tick_params(labelsize=ticklabelsize)
+
+    # Adding a color bar may distort the aspect ratio. Fix it.
+    ax.set_aspect('equal')
+
+    # Adding a color bar may disport the overall balance of the figure. Fix it.
+    if tight_layout:
+        fig.tight_layout()
+
+    return cb
+
+
+
+def colorbar(fignum=None, label=None, fontsize=__fontsize__):
     """
     Use is DEPRECIATED. This method is replaced by add_colorbar(mappable)
     I keep this method for old codes which might have used this method
@@ -600,7 +709,7 @@ def tologlog(ax=None):
     ax.set_yscale("log")
 
 # Ticks
-def set_xtick_interval(ax=plt.gca(), tickint=1.0):
+def set_xtick_interval(ax, tickint):
     """
     Sets x-tick interval as tickint
     Parameters
@@ -614,7 +723,7 @@ def set_xtick_interval(ax=plt.gca(), tickint=1.0):
     """
     ax.xaxis.set_major_locator(ticker.MultipleLocator(tickint))
 
-def set_ytick_interval(ax=plt.gca(), tickint=1.0):
+def set_ytick_interval(ax, tickint):
     """
     Sets y-tick interval as tickint
     Parameters
@@ -634,9 +743,29 @@ def set_ytick_interval(ax=plt.gca(), tickint=1.0):
 def title(ax, title, subplot=111, **kwargs):
     ax.set_title(title, **kwargs)
 
-def suptitle(title, **kwargs):
+def suptitle(title, fignum=None, **kwargs):
+    """
+    Add a centered title to the figure.
+    If fignum is given, it adds a title, then it reselects the figure which selected before this method was called.
+    ... this is because figure class does not have a suptitle method.
+    Parameters
+    ----------
+    title
+    fignum
+    kwargs
+
+    Returns
+    -------
+
+    """
+    if fignum is not None:
+        gcf_num = plt.gcf().number
+        plt.figure(fignum)
+
     plt.suptitle(title, **kwargs)
 
+    if fignum is not None:
+        plt.figure(gcf_num)
 
 
 
@@ -662,19 +791,21 @@ def set_standard_pos(ax):
 
     left, right = xleft + 0.025 * width, xleft + 0.75 * width
     bottom, top = ybottom + 0.1 * height, ybottom + 0.90 * height
-    xcenter, ycenter = width/2., height/2.
+    xcenter, ycenter = xleft + width/2., ybottom + height/2.
     return top, bottom, right, left, xcenter, ycenter, height, width
 
 
 def addtext(ax, text='text goes here', x=0, y=0, color='k',
-            option=None, **kwargs):
+            option=None, npartition=10, **kwargs):
     """
     Adds text to a plot. You can specify the position where the texts will appear by 'option'
-    |        tc2        |
+    | tl2    tc2    tr2 |
     | tl     tc     tr  |
-    |        tc3        |
+    | tl3    tc3    tr3 |
     |                   |
+    | cl2               |
     | cl     cc     cr  |
+    | cl3               |
     |                   |
     | bl2           br2 |
     | bl      bc    br  |
@@ -689,7 +820,7 @@ def addtext(ax, text='text goes here', x=0, y=0, color='k',
     y
     fontsize
     color
-    option
+    option: default locations
     kwargs
 
     Returns
@@ -698,15 +829,25 @@ def addtext(ax, text='text goes here', x=0, y=0, color='k',
 
     """
     top, bottom, right, left, xcenter, ycenter, height, width = set_standard_pos(ax)
-    dx, dy = width / 10.,  height / 10.
+    dx, dy = width / npartition,  height / npartition
+
 
 
     if option == None:
         ax.text(x, y, text, color=color, **kwargs)
     if option == 'tr':
         ax.text(right, top, text, color=color, **kwargs)
+    if option == 'tr2':
+        ax.text(right, top + dy, text,  color=color, **kwargs)
+    if option == 'tr3':
+        ax.text(right, top - dy, text,  color=color, **kwargs)
     if option == 'tl':
         ax.text(left, top, text,  color=color, **kwargs)
+    if option == 'tl2':
+        ax.text(left, top + dy, text,  color=color, **kwargs)
+    if option == 'tl3':
+        ax.text(left, top - dy, text,  color=color, **kwargs)
+
     if option == 'tc':
         ax.text(xcenter, top, text,  color=color, **kwargs)
     if option == 'tc2':
@@ -734,7 +875,11 @@ def addtext(ax, text='text goes here', x=0, y=0, color='k',
     if option == 'cr':
         ax.text(right, ycenter, text, color=color, **kwargs)
     if option == 'cl':
-        ax.text(left, ycenter, text, olor=color, **kwargs)
+        ax.text(left, ycenter, text, color=color, **kwargs)
+    if option == 'cl2':
+        ax.text(left, ycenter + dy, text, color=color, **kwargs)
+    if option == 'cl3':
+        ax.text(left, ycenter - dy, text, color=color, **kwargs)
     if option == 'cc':
         ax.text(xcenter, ycenter, text,  color=color, **kwargs)
     return ax
@@ -743,7 +888,7 @@ def addtext(ax, text='text goes here', x=0, y=0, color='k',
 
 
 ##Clear plot
-def clf(fignum=plt.gcf().number):
+def clf(fignum=None):
     plt.figure(fignum)
     plt.clf()
 
@@ -1537,7 +1682,7 @@ def hist(Y, Nvec=1, fignum=1, num=100, step=None, label='o-', log=False, normali
     return xbin, n
 
 
-def pdf(M, field, frame, Dt=10, Dx=1024, label='ko-', fignum=1, a=15., norm=True, sign=1):
+def pdf_s(M, field, frame, Dt=10, Dx=1024, label='ko-', fignum=1, a=15., norm=True, sign=1):
     import library.manager.access as access
     Up = access.get(M, field, frame, Dt=Dt)
 
@@ -1663,3 +1808,4 @@ def distribution(Y, normfactor=1, a=10., label='k', fignum=1, norm=True):
     # for i in range(10,5000,1):
     #    vfield_plot(M_log[4],i,1)
     # input()
+

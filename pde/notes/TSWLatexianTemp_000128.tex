@@ -1,0 +1,92 @@
+\documentclass[]{article}
+
+\usepackage[margin=1.5in]{geometry}
+\usepackage{hyperref}
+\usepackage{csvsimple}
+\usepackage{arydshln}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+\usepackage{cleveref}
+\usepackage{empheq}
+
+\newcommand*\widefbox[1]{\fbox{\hspace{2em}#1\hspace{2em}}}
+
+
+\newcommand{\ds}{\displaystyle}
+\newcommand{\sm}{\sum_{n=1}^\infty}
+\newcommand{\be}{\begin{enumerate}}
+\newcommand{\ee}{\end{enumerate}}
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\GG}{\mathcal{G}}
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\qq}{\mathbb{Q}}
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\uu}{\mathbf{u}}
+\newcommand{\vv}{\mathbf{v}}
+\newcommand{\rr}{\mathbf{r}}
+\newcommand{\xx}{\mathbf{x}}
+\newcommand{\om}{\omega}
+\newcommand{\omm}{\vec{\omega}}
+\newcommand{\x}{\times}
+\newcommand{\curl}{\nabla \times}
+\newcommand{\dvr}{\nabla \cdot}
+\newcommand{\grad}{\nabla}
+\newcommand{\pt}{\partial}
+\newcommand{\cross}{\times}
+\newcommand{\trm}{\textrm}
+\newcommand{\EE}{\mathbf{E}}
+\newcommand{\BB}{\mathbf{B}}
+\newcommand{\laplace}{\nabla^2}
+\newcommand{\ldarrow}{\longleftrightarrow}
+\newcommand{\darrow}{\leftrightarrow}
+\newcommand{\eq}{\begin{equation}}
+\newcommand{\qe}{\end{equation}}
+\newcommand{\eqnref}[1]{eqn.~\ref{#1}}
+\newcommand{\figref}[1]{Fig.~\ref{#1}}
+
+\newcommand{\eps}{\varepsilon}
+\newcommand{\ab}{\alpha \beta}
+\newcommand{\ttau}{\bm{ \tau}}
+\begin{document}
+
+\title{FE Stokes equations}
+\author{Noah}
+\maketitle
+
+Stokes can be written as 
+\begin{align}
+- \dvr (\grad \mathbf{u} + p I) &= \mathbf{f} \\
+\dvr \mathbf{u} &= 0.
+\end{align}
+
+The na\"ive finite element approach to solving the Stokes equations is as follows. 
+Find $(u,p) \in W$ such that
+\eq
+a((\mathbf{u}, p), (\mathbf{v}, q)) = L((\mathbf{v},q))
+\qe
+for all $(v, q) \in W$, where
+\begin{align}\label{prob0a}
+a ((\mathbf{u},p), (\mathbf{v},q)) &= \int_\Omega \grad \mathbf{u} \cdot \grad \mathbf{v} - \grad \cdot \mathbf{v} p + \grad \cdot \mathbf{u} q \, \dif x,
+\\ 
+\label{prob0b}
+L((\mathbf{v},q)) &= \int_\Omega \mathbf{f} \cdot \mathbf{v} \, \dif x.
+\end{align}
+
+Using first order elements in both velocity and pressure leads to stability problems for reasons that are unclear to me but clear to some in the FEA community.
+Replace equations~\ref{prob0a} and~\ref{prob0b} with 
+\begin{align}
+a ((\mathbf{u}, p), (\mathbf{v},q)) &= \int_\Omega \grad \mathbf{u} \cdot \grad \mathbf{v} - \grad \cdot \mathbf{v} p + \grad \cdot \mathbf{u} q  + \delta \grad q \cdot \grad p \, \dif x,
+\\
+L((\mathbf{v},q)) &= \int_\Omega \mathbf{f} \cdot \mathbf{v} \, \dif x 
++ \int_\Omega \grad q \cdot \mathbf{f} \, \dif x.
+\end{align}
+We then implement this on FEniCS with a mixed function space method.
+
+
+
+\end{document}
