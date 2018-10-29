@@ -97,9 +97,12 @@ def curl(udata):
     """
     Compute a curl of a velocity field using a rate of strain tensor
     ... For dim=3, the sign might need to be flipped... not tested
+    ... if you already have velocity data as ux = array with shape (m, n) and uy = array with shape (m, n),
+        udata = np.stack((ugrid1, vgrid1))
+        omega = vec.curl(udata)
     Parameters
     ----------
-    udata
+    udata: (ux, uy)
 
     Returns
     -------

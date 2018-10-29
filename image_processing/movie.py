@@ -4,6 +4,8 @@ import os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 import re
+import argparse
+import sys
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -57,8 +59,8 @@ def make_movie_noah(imgname, movname, indexsz='05', framerate=10, imgdir=None, r
             subprocess.call(['rm', '-r', imgdir + imgname + '*.png'])
 
 
-def make_movie(imgname, movname, indexsz='05', framerate=10, imgdir=None, rm_images=False,
-               save_into_subdir=False, start_number=0, framestep=1, ext='png', option='normal'):
+def make_movie(imgname=None, imgdir=None, movname=None, indexsz='05', framerate=10, rm_images=False,
+               save_into_subdir=False, start_number=0, framestep=1, ext='png', option='normal', overwrite=False):
     """Create a movie from a sequence of images using the ffmpeg supplied with ilpm.
     Options allow for deleting folder automatically after making movie.
     Will run './ffmpeg', '-framerate', str(int(framerate)), '-i', imgname + '%' + indexsz + 'd.png', movname + '.mov',
@@ -71,15 +73,14 @@ def make_movie(imgname, movname, indexsz='05', framerate=10, imgdir=None, rm_ima
     Parameters
     ----------
     imgname : str
-        path and filename for the images to turn into a movie
+        ... path and filename for the images to turn into a movie
+        ... could be a name of directory where images are stored if option is 'glob'
     movname : str
-        path and filename for output movie
+        path and filename for output movie (movie name)
     indexsz : str
         string specifier for the number of indices at the end of each image (ie 'file_000.png' would merit '03')
     framerate : int (float may be allowed)
         The frame rate at which to write the movie
-    imgdir : str or None
-        folder to delete if rm_images and save_into_subdir are both True, ie folder containing the images
     rm_images : bool
         Remove the images from disk after writing to movie
     save_into_subdir : bool
@@ -89,24 +90,68 @@ def make_movie(imgname, movname, indexsz='05', framerate=10, imgdir=None, rm_ima
         If "glob", it globs all images with the extention in the directory.
         Therefore, the images does not have to be numbered.
     """
+    # if movie name is not given, name it as same as the name of the img directory
+    if movname is None:
+        if os.path.isdir(imgname):
+            if imgname[-1] == '/':
+                movname = imgname[:-1]
+            else:
+                movname = imgname
+        else:
+            pdir, filename = os.path.split(imgname)
+            movname = pdir
+
     if not option=='glob':
-        subprocess.call(
-            [ffmpeg_path,
-             '-framerate', str(int(framerate)),
-             '-start_number', str(start_number),
-             '-i', imgname + '%' + indexsz + 'd.' + ext,
-             movname + '.mov',
-             '-vcodec', 'libx264', '-profile:v', 'main', '-crf', '12', '-threads', '0', '-r', '100', '-pix_fmt', 'yuv420p'])
+        if overwrite:
+            subprocess.call(
+                [ffmpeg_path, '-y',
+                 '-framerate', str(int(framerate)),
+                 '-start_number', str(start_number),
+                 '-i', imgname + '%' + indexsz + 'd.' + ext,
+                 movname + '.mp4',
+                 '-vcodec', 'libx264', '-profile:v', 'main', '-crf', '12', '-threads', '0', '-r', '100', '-pix_fmt',
+                 'yuv420p'])
+        else:
+            subprocess.call(
+                [ffmpeg_path,
+                 '-framerate', str(int(framerate)),
+                 '-start_number', str(start_number),
+                 '-i', imgname + '%' + indexsz + 'd.' + ext,
+                 movname + '.mp4',
+                 '-vcodec', 'libx264', '-profile:v', 'main', '-crf', '12', '-threads', '0', '-r', '100', '-pix_fmt', 'yuv420p'])
     else:
         # If images are not numbered or not labeled in a sequence, you can use the glob feature.
-        subprocess.call(
-            [ffmpeg_path,
-             '-pattern_type', 'glob',
-             '-framerate', str(int(framerate)),
-             '-i', imgname + '*.' + ext,
-             movname + '.mov',
-             '-vcodec', 'libx264', '-profile:v', 'main', '-crf', '12', '-threads', '0', '-r', '100', '-pix_fmt',
-             'yuv420p'])
+        # On command line,
+        # ffmpeg -r 1
+        # -pattern_type glob
+        # -i '/Users/stephane/Documents/git/takumi/library/image_processing/images2/*.png'  ## It is CRITICAL to include '' on the command line!!!!!
+        # -vcodec libx264 -crf 25  -pix_fmt yuv420p /Users/stephane/Documents/git/takumi/library/image_processing/images2/sample.mp4
+
+        if overwrite:
+            subprocess.call(
+                [ffmpeg_path, '-y',
+                 '-pattern_type', 'glob',  # Use glob feature
+                 '-framerate', str(int(framerate)),  # framerate
+                 '-i', imgname + '/*.' + ext,  # images
+                 '-vcodec', 'libx264',  # codec
+                 '-crf', '12',  # quality
+                 '-pix_fmt', 'yuv420p',
+                 movname + '.mp4'  # output name and extension)
+                 ]
+            )
+        else:
+            subprocess.call(
+                [ffmpeg_path,
+                 '-pattern_type', 'glob', # Use glob feature
+                 '-framerate', str(int(framerate)), # framerate
+                 '-i', imgname + '/*.' + ext,  # images
+                 '-vcodec', 'libx264', #codec
+                 '-crf', '12',    #quality
+                 '-pix_fmt', 'yuv420p',
+                 movname + '.mp4' # output name and extension)
+                 ]
+        )
+
     # Delete the original images
     if rm_images:
         print 'Deleting the original images...'
@@ -230,3 +275,18 @@ def make_movie_with_time_stamp(imgname, movname, indexsz='05', framerate=10, img
 
     make_movie(os.path.join(tmpdir, 'tmp_'), movname, indexsz=indexsz, framerate=framerate, imgdir=imgdir, rm_images=rm_images,
                save_into_subdir=save_into_subdir, start_number=start_number, framestep=framestep, ext=ext, option=option)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Make an avi using images in a specified directory using ffmpeg')
+    parser.add_argument('-imgdir', '--imgdir', help='Directory where images are stored', type=str, default=None)
+    parser.add_argument('-imgtype', '--imgtype', help='Extension of images in the directory. default: png', type=str, default='png')
+    parser.add_argument('-framerate', '--framerate', help='Frame rate default: 3', type=int, default=3)
+    args = parser.parse_args()
+
+    if args.imgdir is None:
+        print 'SPECIFY a directory where images are stored! Exiting...'
+        sys.exit(1)
+    else:
+        print 'make a movie with glob option using a natural sorting...'
+        make_movie(args.imgdir + '/', args.imgdir, framerate=args.framerate, rm_images=False, ext=args.imgtype, option='glob')

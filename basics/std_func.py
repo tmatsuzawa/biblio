@@ -28,6 +28,10 @@ def gaussian_norm(x, x0, sigma):
 def double_gaussian(x, a1, x1, sigma1, b1, a2, x2, sigma2, b2):
     return a1 * np.exp(- (x - x1) ** 2. / (2. * sigma1)) + b1 + a2 * np.exp(- (x - x2) ** 2. / (2. * sigma2)) + b2
 
+
+def lorentzian(x, x0, gamma, alpha):
+    return alpha * gamma / ((x-x0)**2 + gamma ** 2)
+
 def lorentzian_norm(x, x0, gamma):
     return 1. / np.pi * gamma / ((x-x0)**2 + gamma ** 2)
 
