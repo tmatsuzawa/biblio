@@ -214,9 +214,8 @@ def scatter(x, y, ax=None, fignum=1, figsize=None, marker='o', fillstyle='full',
     return fig, ax
 
 
-def pdf(data, nbins=10, return_data=False,  fignum=1, figsize=None, subplot=None, density=True, **kwargs):
+def pdf(data, nbins=10, return_data=False, vmax=None, vmin=None, fignum=1, figsize=None, subplot=None, density=True, **kwargs):
     def compute_pdf(data, nbins=10):
-        data = np.asarray(data)
         # Get a normalized histogram
         # exclude nans from statistics
         hist, bins = np.histogram(data.flatten()[~np.isnan(data.flatten())], bins=nbins, density=density)
@@ -227,14 +226,20 @@ def pdf(data, nbins=10, return_data=False,  fignum=1, figsize=None, subplot=None
         bins = np.delete(bins, 0)
         return bins, hist
 
-    # # Clean data if necessary (np.histogram requires array not to contain nan)
-    # if np.isnan(data).any():
-    #     # Delete nans
-    #     import library.tools.process_data as process
-    #     mask = process.get_mask_for_unphysical(data, cutoffU=99999., fill_value=99999., verbose=True)
-    #     data = process.delete_masked_elements(data, mask) # returns a 1d array
+    data = np.asarray(data)
 
+    # Use data where values are between vmin and vmax
+    if vmax is not None:
+        cond1 = np.asarray(data) < vmax # if nan exists in data, the condition always gives False for that data point
+    else:
+        cond1 = np.ones(data.shape, dtype=bool)
+    if vmin is not None:
+        cond2 = np.asarray(data) > vmin
+    else:
+        cond2 = np.ones(data.shape, dtype=bool)
+    data = data[cond1 * cond2]
 
+    # compute a pdf
     bins, hist = compute_pdf(data, nbins=nbins)
     fig, ax = plot(bins, hist, fignum=fignum, figsize=figsize, subplot=subplot, **kwargs)
     if not return_data:
@@ -309,10 +314,10 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
 
 
     if color is not None:
-        ax.plot(x, y, color=color, label=label)
+        ax.plot(x, y, color=color, label=label, **kwargs)
         ax.fill_between(x, ymax, ymin, color=color, alpha=alpha_fill)
     else:
-        ax.plot(x, y,label=label)
+        ax.plot(x, y,label=label, **kwargs)
         ax.fill_between(x, ymax, ymin, alpha=alpha_fill)
 
     #patch used for legend
@@ -339,16 +344,27 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
 
     Returns
     -------
-    fig, ax,
-    popt, pcov : fit results
+    fig, ax
+    popt, pcov : fit results, covariance matrix
     """
     xdata = np.array(xdata)
     ydata = np.array(ydata)
+
+    if any(np.isnan(ydata)) or any(np.isnan(xdata)):
+        print 'Original data contains np.nans! Delete them for curve fitting'
+        condx, condy = np.isnan(xdata), np.isnan(ydata)
+        cond = (~condx * ~condy)
+        print 'No of deleted data points %d / %d' % (np.sum(~cond), len(xdata))
+        if np.sum(~cond) == len(xdata):
+            print 'No data points for fitting!'
+            raise RuntimeError
+        xdata, ydata = xdata[cond], ydata[cond]
 
     if xmin is None:
         xmin = np.min(xdata)
     if xmax is None:
         xmax = np.max(xdata)
+
     x_for_plot = np.linspace(xmin, xmax, 1000)
     if func is None or func=='linear':
         print 'Fitting to a linear function...'
@@ -415,7 +431,8 @@ def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, vmin=None, vmax=No
     cc QuadMesh class object
 
     """
-    fig, ax = set_fig(fignum, subplot, figsize=figsize, aspect=aspect)
+    fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    # fig, ax = set_fig(fignum, subplot, figsize=figsize, aspect=aspect)
 
     if log10:
         z = np.log10(z)
@@ -499,14 +516,51 @@ def axvline(ax, x, y0=None, y1=None,  color='black', linestyle='--', **kwargs):
 
 ## Bands
 def axhband(ax, y0, y1, x0=None, x1=None, color='C1', alpha=0.2, **kwargs):
+    """
+        Make a horizontal band between y0 and y1 (highlighting effect)
+        Parameters
+        ----------
+        ax: plt.axes.axes object
+        x0: x-coordinate of the left of a band  (x0 < x1). As a default, x0, x1 = ax.get_xlim()
+        x1: x-coordinate of the right of a band (x0 < x1)
+        y0: y-coordinate of the bottom of a band  (y0 < y1)
+        y1: y-coordinate of the top of a band  (y0 < y1)
+        color: color of a band
+        alpha: alpha of a band
+        kwargs: kwargs for ax.fill_between()
+
+        Returns
+        -------
+
+        """
     if x0 is None and x1 is None:
         x0, x1 = ax.get_xlim()
     ax.fill_between(np.arange(x0, x1), y0, y1, alpha=alpha, color=color, **kwargs)
 
 def axvband(ax, x0, x1, y0=None, y1=None, color='C1', alpha=0.2, **kwargs):
+    """
+    Make a vertical band between x0 and x1 (highlighting effect)
+    Parameters
+    ----------
+    ax: plt.axes.axes object
+    x0: x-coordinate of the left of a band  (x0 < x1)
+    x1: x-coordinate of the right of a band (x0 < x1)
+    y0: y-coordinate of the bottom of a band  (y0 < y1)
+    y1: y-coordinate of the top of a band  (y0 < y1). As a default, y0, y1 = ax.get_ylim()
+    color: color of a band
+    alpha: alpha of a band
+    kwargs: kwargs for ax.fill_between()
+
+    Returns
+    -------
+
+    """
+    xmin, xmax = ax.get_xlim()
     if y0 is None and y1 is None:
         y0, y1 = ax.get_ylim()
     ax.fill_between(np.arange(x0, x1), y0, y1, alpha=alpha, color=color, **kwargs)
+    ax.set_ylim(y0, y1)
+    ax.set_xlim(xmin, xmax)
 
 ## Legend
 # Legend
@@ -577,7 +631,7 @@ def add_colorbar_old(mappable, fig=None, ax=None, fignum=None, label=None, fonts
 
 
 def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', label=None, fontsize=None, option='normal',
-                 tight_layout=True, ticklabelsize=None, **kwargs):
+                 tight_layout=True, ticklabelsize=None, aspect='equal', **kwargs):
     """
     Adds a color bar
 
@@ -624,7 +678,8 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
         cb.ax.tick_params(labelsize=ticklabelsize)
 
     # Adding a color bar may distort the aspect ratio. Fix it.
-    ax.set_aspect('equal')
+    if aspect=='equal':
+        ax.set_aspect('equal')
 
     # Adding a color bar may disport the overall balance of the figure. Fix it.
     if tight_layout:
@@ -764,8 +819,6 @@ def suptitle(title, fignum=None, **kwargs):
 
     plt.suptitle(title, **kwargs)
 
-    if fignum is not None:
-        plt.figure(gcf_num)
 
 
 
@@ -1047,6 +1100,7 @@ def time_label(M, frame):
 
 def pause(time=3):
     plt.pause(time)
+
 
 
 def refresh(hold=True, block=False, ipython=True):

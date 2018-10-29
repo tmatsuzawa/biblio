@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import ndimage
 import copy
+import re
 import library.tools.process_data as process
 
 # Basics
@@ -186,6 +187,22 @@ def sort2arr(arr2, arr1):
     arr2_sorted, arr1_sorted = zip(*zipped_sorted)
     return arr2_sorted, arr1_sorted
 
+
+def natural_sort(arr):
+    def atoi(text):
+        'natural sorting'
+        return int(text) if text.isdigit() else text
+
+    def natural_keys(text):
+        '''
+        natural sorting
+        alist.sort(key=natural_keys) sorts in human order
+        http://nedbatchelder.com/blog/200712/human_sorting.html
+        (See Toothy's implementation in the comments)
+        '''
+        return [atoi(c) for c in re.split('(\d+)', text)]
+
+    return sorted(arr, key=natural_keys)
 
 # Application
 def detect_sign_flip(arr, delete_first_index=True):
@@ -432,11 +449,11 @@ def make_blocks_from_2d_array(arr, nrows, ncols):
     blocks: numpy array with shape (n, nrows, ncols)
     """
 
-    arr = np.array(arr)
+    arr = np.asarray(arr)
     h, w = arr.shape
     blocks = (arr.reshape(h//nrows, nrows, -1, ncols)
-               .swapaxes(1,2)
-               .reshape(-1, nrows, ncols))
+              .swapaxes(1, 2)
+              .reshape(-1, nrows, ncols))
     return blocks
 
 #Divide a 2D array into four quadrants
@@ -496,16 +513,19 @@ def get_small_grids_around_coord(datagrid, xgrid, ygrid, x, y, nx, ny):
 
     Parameters
     ----------
-    griddata
-    xgrid
-    ygrid
-    x
-    y
+    griddata 2d arr
+    xgrid 2d arr
+    ygrid 2d arr
+    x x-coordinate of a point of interest
+    y y-coordinate of a point of interest
     nx
     ny
 
     Returns
     -------
+    xgrid_around_coord: 2d arr with shape (2nx+1, 2ny+1)
+    ygrid_around_coord: 2d arr with shape (2nx+1, 2ny+1)
+    datagrid_around_coord: 2d arr with shape (2nx+1, 2ny+1)
 
     """
 
@@ -551,7 +571,8 @@ def coarse_grain_2darr(arr, nrows_sub, ncolumns_sub):
     arr_coarse: coarse-grained 2d arr
 
     """
-    nrows, ncols = np.array(arr).shape
+    arr = np.asrray(arr)
+    nrows, ncols = arr.shape
 
     # If the 2d array cannot be separated into blocks, then extend/pad the 2d array
     remainder_row = nrows % nrows_sub
@@ -627,9 +648,9 @@ array([[ 10.5,  12.5],
                 # print (i, j), (ii, jj)
                 # print arr[ii:ii+nrows_sub, jj:jj+ncolumns_sub]
                 try:
-                    arr_new[i:i+nrows_sub, j:j+ncolumns_sub] = arr[ii:ii+nrows_sub, jj:jj+ncolumns_sub]
+                    arr_new[i:i+nrows_sub, j: j+ncolumns_sub] = arr[ii:ii+nrows_sub, jj:jj+ncolumns_sub]
                 except ValueError:
-                    arr_new[i:i + nrows_sub, j:j + ncolumns_sub] = extend_2darray_fill(arr[ii:ii+nrows_sub, jj:jj+ncolumns_sub], (nrows_sub, ncolumns_sub))
+                    arr_new[i:i + nrows_sub, j: j + ncolumns_sub] = extend_2darray_fill(arr[ii:ii+nrows_sub, jj:jj+ncolumns_sub], (nrows_sub, ncolumns_sub))
             else:
                 # print (i, j), (ii, jj), 'skip'
                 continue
