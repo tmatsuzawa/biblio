@@ -116,6 +116,13 @@ def count_occurrences(arr, display=True):
         print occur_dict
     return occur_dict
 
+def count_nans(arr):
+    nnans = np.count_nonzero(~np.isnan(arr))
+    print 'no. of nans: %d / %d' % (nnans, np.asarray(arr).size)
+    return nnans
+
+
+
 def get_n_largest_values(arr, n=1):
     """
     Return the n largest values of an array in a list
