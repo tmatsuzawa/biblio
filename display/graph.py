@@ -15,13 +15,18 @@ import matplotlib.pylab as pylab
 import matplotlib.ticker as ticker
 import mpl_toolkits.axes_grid as axes_grid
 import itertools
+from scipy import stats
+import library.basics.formatarray as fa
+import numpy as np
+import glob
 
 
 #Global variables
 #Default color cycle: iterator which gets repeated if all elements were exhausted
 #__color_cycle__ = itertools.cycle(iter(plt.rcParams['axes.prop_cycle'].by_key()['color']))
+__def_colors__ = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 __color_cycle__ = itertools.cycle(['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'])  #matplotliv v2.0
-__old_color_cycle__ = itertools.cycle( ['b', 'g', 'r', 'c', 'm', 'y', 'k'])  #matplotliv classic
+__old_color_cycle__ = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])  #matplotliv classic
 __fontsize__ = 16
 __figsize__ = (8, 8)
 
@@ -36,7 +41,7 @@ params = {'figure.figsize': __figsize__,
 
 
 ## Save a figure
-def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, **kwargs):
+def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, overwrite=True, **kwargs):
     """Save a figure from pyplot
     Parameters
     ----------
@@ -74,6 +79,12 @@ def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, **kw
 
     # path where the figure is saved
     savepath = os.path.join(directory, filename)
+    # if a figure already exists AND you'd like to overwrite, name a figure differently
+    ver_no = 0
+    while os.path.exists(savepath) and not overwrite:
+        savepath = directory + os.path.split(path)[1] + '_{n:03d.}'.format(n=ver_no) + ext
+        ver_no += 1
+
 
     if verbose:
         print("Saving figure to '%s'..." % savepath),
@@ -214,7 +225,7 @@ def scatter(x, y, ax=None, fignum=1, figsize=None, marker='o', fillstyle='full',
     return fig, ax
 
 
-def pdf(data, nbins=10, return_data=False, vmax=None, vmin=None, fignum=1, figsize=None, subplot=None, density=True, **kwargs):
+def pdf(data, nbins=10, return_data=False, vmax=None, vmin=None, fignum=1, figsize=None, subplot=None, density=True, analyze=False, **kwargs):
     def compute_pdf(data, nbins=10):
         # Get a normalized histogram
         # exclude nans from statistics
@@ -242,6 +253,19 @@ def pdf(data, nbins=10, return_data=False, vmax=None, vmin=None, fignum=1, figsi
     # compute a pdf
     bins, hist = compute_pdf(data, nbins=nbins)
     fig, ax = plot(bins, hist, fignum=fignum, figsize=figsize, subplot=subplot, **kwargs)
+
+    if analyze:
+        bin_width = float(bins[1]-bins[0])
+        mean = np.nansum(bins * hist * bin_width)
+        mode = bins[np.argmax(hist)]
+        var = np.nansum(bins**2 * hist * bin_width)
+        text2 = 'mean: %.2f' % mean
+        text1 = 'mode: %.2f' % mode
+        text3 = 'variance: %.2f' % var
+        addtext(ax, text=text2, option='tc2')
+        addtext(ax, text=text1, option='tc')
+        addtext(ax, text=text3, option='tc3')
+
     if not return_data:
         return fig, ax
     else:
@@ -331,7 +355,8 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
 
 ## Plot a fit curve
 def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None, linestyle='--',
-                   xmin=None, xmax=None, add_equation=True, eq_loc='bl', color=None, label='fit', **kwargs):
+                   xmin=None, xmax=None, add_equation=True, eq_loc='bl', color=None, label='fit',
+                   show_r2=False, **kwargs):
     """
     Plots a fit curve given xdata and ydata
     Parameters
@@ -347,6 +372,7 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
     fig, ax
     popt, pcov : fit results, covariance matrix
     """
+
     xdata = np.array(xdata)
     ydata = np.array(ydata)
 
@@ -379,6 +405,7 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
         if add_equation:
             text = '$y=ax+b$: a=%.2f, b=%.2f' % (popt[0], popt[1])
             addtext(ax, text, option=eq_loc)
+        y_fit = std_func.linear_func(xdata, *popt)
     elif func=='power':
         print 'Fitting to a power law..'
         popt, pcov = curve_fit(std_func.power_func, xdata, ydata)
@@ -392,7 +419,7 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
         if add_equation:
             text = '$y=ax^b$: a=%.2f, b=%.2f' % (popt[0], popt[1])
             addtext(ax, text, option=eq_loc)
-
+        y_fit = std_func.power_func(xdata, *popt)
     else:
         popt, pcov = curve_fit(func, xdata, ydata)
         if color is None:
@@ -401,7 +428,21 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
         else:
             fig, ax = plot(x_for_plot, func(x_for_plot, *popt), fignum=fignum, subplot=subplot, label=label, figsize=figsize,
                            color=color, linestyle=linestyle, **kwargs)
+        y_fit = func(xdata, *popt)
     #plot(x_for_plot, std_func.power_func(x_for_plot, *popt))
+
+    if show_r2:
+        # compute R^2
+        # residual sum of squares
+        ss_res = np.sum((ydata - y_fit) ** 2)
+        # total sum of squares
+        ss_tot = np.sum((ydata - np.mean(ydata)) ** 2)
+        # r-squared
+        r2 = 1 - (ss_res / ss_tot)
+        addtext(ax, '$R^2: %.2f$' % r2, option='bl3')
+
+
+
     return fig, ax, popt, pcov
 
 
@@ -687,6 +728,52 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
 
     return cb
 
+def add_discrete_colorbar(ax, colors, vmin=0, vmax=None, label=None, fontsize=None, option='normal',
+                 tight_layout=True, ticklabelsize=None, ticklabel=None,
+                 aspect = None, **kwargs):
+    fig = ax.get_figure()
+    if vmax is None:
+        vmax = len(colors)
+    tick_spacing = (vmax - vmin) / float(len(colors))
+    ticks = np.linspace(vmin, vmax, len(colors)+1) + tick_spacing / 2. # tick positions
+
+    # if there are too many ticks, just use 3 ticks
+    if len(ticks) > 10:
+        n = len(ticks)
+        ticks = [ticks[0], ticks[n/2], ticks[-2]]
+
+
+    cmap = mpl.colors.ListedColormap(colors)
+    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+    sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+    sm.set_array([])  # dummy mappable
+
+    if option == 'scientific':
+        cb = fig.colorbar(sm, ticks=ticks, format=sfmt, **kwargs)
+    else:
+        cb = fig.colorbar(sm, ticks=ticks, **kwargs)
+
+    if ticklabel is not None:
+        cb.ax.set_yticklabels(ticklabel)
+
+    if not label is None:
+        if fontsize is None:
+            cb.set_label(label)
+        else:
+            cb.set_label(label, fontsize=fontsize)
+    if ticklabelsize is not None:
+        cb.ax.tick_params(labelsize=ticklabelsize)
+
+    # Adding a color bar may distort the aspect ratio. Fix it.
+    if aspect=='equal':
+        ax.set_aspect('equal')
+
+    # Adding a color bar may disport the overall balance of the figure. Fix it.
+    if tight_layout:
+        fig.tight_layout()
+
+    return cb
+
 
 
 def colorbar(fignum=None, label=None, fontsize=__fontsize__):
@@ -814,8 +901,8 @@ def suptitle(title, fignum=None, **kwargs):
 
     """
     if fignum is not None:
-        gcf_num = plt.gcf().number
         plt.figure(fignum)
+
 
     plt.suptitle(title, **kwargs)
 
@@ -838,18 +925,32 @@ def set_standard_pos(ax):
     top, bottom, right, left, xcenter, ycenter: float, position
 
     """
+    left_margin, right_margin, bottom_margin, top_margin = 0.025, 0.75, 0.1, 0.90
+
     xleft, xright = ax.get_xlim()
     ybottom, ytop = ax.get_ylim()
     width, height = np.abs(xright - xleft), np.abs(ytop - ybottom)
 
-    left, right = xleft + 0.025 * width, xleft + 0.75 * width
-    bottom, top = ybottom + 0.1 * height, ybottom + 0.90 * height
-    xcenter, ycenter = xleft + width/2., ybottom + height/2.
+    if ax.get_xscale() == 'linear':
+        left, right = xleft + left_margin * width, xleft + right_margin * width
+        xcenter = xleft + width/2.
+    if ax.get_yscale() == 'linear':
+        bottom, top = ybottom + bottom_margin * height, ybottom + top_margin * height
+        ycenter = ybottom + height / 2.
+
+    if ax.get_xscale() == 'log':
+        left, right = xleft + np.log10(left_margin * width), xleft + np.log10(right_margin * width)
+        xcenter = xleft + np.log10(width/2.)
+
+    if ax.get_yscale() == 'log':
+        bottom, top = ybottom + np.log10(bottom_margin * height), ybottom + np.log10(top_margin * height)
+        ycenter = ybottom + np.log10(height / 2.)
+
     return top, bottom, right, left, xcenter, ycenter, height, width
 
 
 def addtext(ax, text='text goes here', x=0, y=0, color='k',
-            option=None, npartition=10, **kwargs):
+            option=None, npartition=15, **kwargs):
     """
     Adds text to a plot. You can specify the position where the texts will appear by 'option'
     | tl2    tc2    tr2 |
@@ -883,6 +984,7 @@ def addtext(ax, text='text goes here', x=0, y=0, color='k',
     """
     top, bottom, right, left, xcenter, ycenter, height, width = set_standard_pos(ax)
     dx, dy = width / npartition,  height / npartition
+
 
 
 
@@ -962,6 +1064,91 @@ def get_first_n_colors_from_color_cycle(n):
     for i in range(n):
         color_list.append(next(__color_cycle__))
     return color_list
+
+def get_color_list_gradient(color1='greenyellow', color2='darkgreen', n=10):
+    """
+    Returns a list of colors in RGB between color1 and color2
+    Input (color1 and color2) can be RGB or color names set by matplotlib
+    Parameters
+    ----------
+    color1
+    color2
+    n: length of the returning list
+
+    Returns
+    -------
+
+    """
+    # convert color names to rgb if rgb is not given as arguments
+    if not color1[0] == '#':
+        color1 = cname2hex(color1)
+    if not color2[0] == '#':
+        color2 = cname2hex(color2)
+    color1_rgb = hex2rgb(color1) / 255.  # np array
+    color2_rgb = hex2rgb(color2) / 255.  # np array
+
+    r = np.linspace(color1_rgb[0], color2_rgb[0], n)
+    g = np.linspace(color1_rgb[1], color2_rgb[1], n)
+    b = np.linspace(color1_rgb[2], color2_rgb[2], n)
+    color_list = zip(r, g, b)
+    return color_list
+
+
+def hex2rgb(hex):
+    """
+
+    Parameters
+    ----------
+    hex: str, hex code. e.g. #B4FBB8
+
+    Returns
+    -------
+    rgb: numpy array. RGB
+
+    """
+    h = hex.lstrip('#')
+    rgb = np.asarray(list(int(h[i:i + 2], 16) for i in (0, 2, 4)))
+    return rgb
+
+def cname2hex(cname):
+    """
+
+    Parameters
+    ----------
+    hex: str, hex code. e.g. #B4FBB8
+
+    Returns
+    -------
+    rgb: numpy array. RGB
+
+    """
+    colors = dict(mpl.colors.BASE_COLORS, **mpl.colors.CSS4_COLORS) # dictionary. key: names, values: hex codes
+    try:
+        hex = colors[cname]
+        return hex
+    except NameError:
+        print cname, ' is not registered as default colors by matplotlib!'
+        return None
+
+def set_color_cycle(ax, colors=__def_colors__):
+    """
+    Sets a color cycle using a list
+    Parameters
+    ----------
+    ax
+    colors: list of colors in rgb/cnames/hex codes
+
+    Returns
+    -------
+
+    """
+    ax.set_prop_cycle(color=colors)
+
+def set_color_cycle_gradient(ax, color1='greenyellow', color2='navy', n=10):
+    colors = get_color_list_gradient(color1, color2, n=n)
+    ax.set_prop_cycle(color=colors)
+
+
 
 # Figure settings
 def update_figure_params(params):

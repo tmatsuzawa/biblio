@@ -117,7 +117,7 @@ def count_occurrences(arr, display=True):
     return occur_dict
 
 def count_nans(arr):
-    nnans = np.count_nonzero(~np.isnan(arr))
+    nnans = np.count_nonzero(np.isnan(arr))
     print 'no. of nans: %d / %d' % (nnans, np.asarray(arr).size)
     return nnans
 

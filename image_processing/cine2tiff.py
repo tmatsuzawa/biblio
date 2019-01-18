@@ -2,7 +2,6 @@ import argparse
 import cine
 from scipy import misc
 import os
-import library.basics.formatstring as fs
 import numpy as np
 import tqdm
 
@@ -47,7 +46,7 @@ def cine2tiff(cinefile, step, start=0, end=None, ctime=1, folder='/Tiff_folder',
         return None
 
     print('Length : ' + str(len(c)))
-    cinefile_short = fs.get_filename_wo_ext(cinefile)
+    cinefile_short = get_filename_wo_ext(cinefile)
     savedir = os.path.dirname(cinefile) + folder + '/' + cinefile_short + '/'
     if not os.path.exists(savedir):
         try:
@@ -58,13 +57,33 @@ def cine2tiff(cinefile, step, start=0, end=None, ctime=1, folder='/Tiff_folder',
     if end is None:
         end = len(c)
     frames = np.arange(start, end, step)
-    for i in tqdm.trange(len(frames), desc='cine2tiff_step%d'%step):
+    for i in tqdm.trange(len(frames), desc='cine2tiff_step%d' % step):
         frame = frames[i]
-        filename = savedir + imroot + "%06d" %frame + '.tiff'
+        filename = savedir + imroot + "%06d" % frame + '.tiff'
         if not os.path.exists(filename):
             imarr = c.get_frame(frame)  # 2d array at each frame
             misc.imsave(filename, imarr, 'tiff')
     print '... Done'
+
+def get_filename_wo_ext(filename):
+    """
+    Returns only the base of the file without its extention
+    e.g. .../.../filename.ext -> filename
+    Parameters
+    ----------
+    filename: str
+
+    Returns
+    -------
+    filename_short[1]: str stripped filename
+
+    """
+    # Returns only the base of the file without its extention
+    # e.g. .../.../filename.ext -> filename
+    filename_no_ext, ext = os.path.splitext(filename)
+    filename_short = os.path.split(filename_no_ext)
+    return filename_short[1]
+
 
 
 
@@ -79,4 +98,4 @@ args = parser.parse_args()
 
 
 if __name__ == '__main__':
-    cine2tiff(args.filepath, args.step, start=args.start)
+    cine2tiff(args.filepath, args.step, start=args.start, end=args.end)
