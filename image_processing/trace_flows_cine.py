@@ -3,18 +3,19 @@ import numpy as np
 from PIL import Image
 import library.image_processing.movie as movies
 import argparse
-import os
+import os, sys
 import cine
 import PIL
-import sys
-
-
+import tqdm
+import library.display.graph as graph
+from scipy.ndimage.filters import gaussian_filter
 '''
 Make a flowtrace movie.
    - Sum n adjacent images every step.
 Example usage:
 python trace_flows.py -step 2 -ftm 25 -subtract_median -brighten 5 -overwrite -beta 0.8
 '''
+
 
 def fix_frame(raw_frame_data, bit_depth):
     """
@@ -34,11 +35,11 @@ def fix_frame(raw_frame_data, bit_depth):
         raw_frame_data = (raw_frame_data >> (cc.real_bpp - 8)).astype('u1')
     return raw_frame_data
 
-def change_contrast(imgarr, level):
-    factor = (259 * (level + 255)) / (255 * (259 - level))
-    def contrast(c):
-        return 128 + factor * (c - 128)
-    return img.point(contrast)
+def gamma(imgarr, gamma, bitdepth=8):
+    int_max = 2 ** bitdepth - 1
+    im = ((imgarr / int_max) ** (1 / gamma)) * int_max
+    return im
+
 
 
 
@@ -46,25 +47,45 @@ def change_contrast(imgarr, level):
 
 
 parser = argparse.ArgumentParser(description='Sum n images around each frame, and make a movie')
-parser.add_argument('-check', '--check', help='Display intermediate results', action='store_true')
-parser.add_argument('-overwrite', '--overwrite', help='Overwrite previous flow tracing results', action='store_true')
+
+# Cine location
+parser.add_argument('-cine', '--cine', help='', type=str,
+                    default='/Volumes/bigraid/takumi/turbulence/3dprintedbox/PIV_Dp120p0mm_Do25p6mm/2019_01_16/' +
+                            'PIV_fv_vp_left_macro55mm_fps200_Dp120p0mm_D25p6mm_piston7p9mm_freq5Hz_v400mms_setting1_inj1p0s_trig1p0s.cine')
+
+# Flowtrace parameters
 parser.add_argument('-brighten', '--brighten', help='Brighten all images by this factor', type=float, default=1.0)
 parser.add_argument('-fps', '--fps', help='Frames per second of the generated movie', type=int, default=10)
 parser.add_argument('-step', '--step', help='Sum the adjacement frames at every n step', type=int, default=10)
 parser.add_argument('-ftm', '--ftm', help='Number of adjacement frames to sum/merge', type=int, default=30)
+parser.add_argument('-gamma', '--gamma', help='Gamma contrast level', type=float, default=1)
+
+
+# Background correction
 parser.add_argument('-subtract_median', '--subtract_median', help='Subtract median of images. Increasing brightness to ~5'
                                                                   'is recommended when you use this feature.', action='store_true')
 parser.add_argument('-subtract_mean', '--subtract_mean', help='Subtract mean of images. Increasing brightness to ~5'
                                                                   'is recommended when you use this feature.', action='store_true')
 parser.add_argument('-subtract_first_im', '--subtract_first_im', help='Subtract the first image', action='store_true')
+parser.add_argument('-subtract_ref', '--subtract_ref', help='Subtract the ref', action='store_true')
+parser.add_argument('-ref_cine', '--ref_cine', help='Reference image location',type=str,
+                    default='/Volumes/bigraid/takumi/turbulence/3dprintedbox/PIV_Dp120p0mm_Do25p6mm/2019_01_17/Reference.cine')
 parser.add_argument('-beta', '--beta', help='Alpha for medioan/mean image. If you subtract median, you may choose to subtract BETA*median. def=0.9', type=float, default=0.9)
 
+# Options (Invert, Diff)
+parser.add_argument('-invert', '--invert', help='Invert', action='store_true')
+parser.add_argument('-diff', '--diff', help='Sum differences of successive images', action='store_true')
+parser.add_argument('-diff_interval', '--diff_interval', help='If diff is True, take difference of two images at frame n and frame n + diff_interval. Default 5.',
+                    type=int, default=5)
+
+
+
+# Duration of movie
 parser.add_argument('-start', '--start', help=' def=0', type=int, default=0)
 parser.add_argument('-end', '--end', help=' def=None', type=int, default=None)
 
-parser.add_argument('-cine', '--cine', help='', type=str,
-                    default='/Volumes/bigraid/takumi/turbulence/3dprintedbox/PIV_Dp120p0mm_Do25p6mm/2019_01_16/' +
-                            'PIV_fv_vp_left_macro55mm_fps200_Dp120p0mm_D25p6mm_piston7p9mm_freq5Hz_v400mms_setting1_inj1p0s_trig1p0s.cine')
+# Overwrite setting
+parser.add_argument('-overwrite', '--overwrite', help='Overwrite previous flow tracing results', action='store_true')
 
 args = parser.parse_args()
 
@@ -93,7 +114,7 @@ todo = np.arange(args.start, end-args.ftm, step)
 
 # File architecture
 root = os.path.splitext(args.cine)[0] + '/'
-outdir = root + 'flowtrace_step%d_ftm%d_fps%d_subtractmed_%r_subtactmean%r/' % (args.step, args.ftm, args.fps, args.subtract_median, args.subtract_mean)
+outdir = root + 'flowtrace_step%d_ftm%d_fps%d_diff%r_subtractmed_%r_subtactmean%r_subtactref%r/' % (args.step, args.ftm, args.fps, args.diff,  args.subtract_median, args.subtract_mean, args.subtract_ref)
 if not os.path.exists(outdir):
     os.makedirs(outdir)
 
@@ -120,6 +141,11 @@ if args.subtract_median or args.subtract_mean:
 elif args.subtract_first_im:
     first_im = np.asarray(cc.get_frame(0))
     first_im = fix_frame(first_im, cc.real_bpp)
+elif args.subtract_ref:
+    cc_ref = cine.Cine(args.ref_cine)  # cc is a Cine Class object
+    ref = np.asarray(cc_ref.get_frame(0))
+    ref = fix_frame(ref, cc_ref.real_bpp)
+
 
 
 # If the frames are not already saved, or if we are to overwrite, go through and sum adjacent frames
@@ -133,23 +159,43 @@ if len(glob.glob(outdir + 'trace_flows*.png')) < len(todo) or args.overwrite:
         for frame in range(start, end):
             im = np.asarray(cc.get_frame(frame))
             im = fix_frame(cc.get_frame(frame), cc.real_bpp)
-            if args.subtract_median:
-                im = im - im_med
-            elif args.subtract_mean:
-                im = im - im_mean
-            elif args.subtract_first_im:
-                im = im - first_im
+
+            if args.diff:
+                im_next = np.asarray(cc.get_frame(frame + args.diff_interval))
+                im_next = fix_frame(cc.get_frame(frame + args.diff_interval), cc.real_bpp)
+                im = im_next - im
+                # graph.pdf(im, nbins=100)
+                # graph.show()
+
+            else:
+                if args.subtract_median:
+                    im = im - im_med
+                elif args.subtract_mean:
+                    im = im - im_mean
+                elif args.subtract_first_im:
+                    im = im - first_im
+                elif args.subtract_ref:
+                    im = im - ref
+
             count += 1
             imsum += im
-        imsum *= args.brighten / float(count)
-        imsum = imsum.astype('uint8')
-        imsum[imsum > 255] = 255
+        # Brighten
+        im = imsum * args.brighten / float(count)
+        # Contrast
+        im = gamma(im, args.gamma)
+        im = im.astype('uint8')
+        im = gaussian_filter(im, sigma=2) # gaussian filter
+        im[im > 255] = 255
+        im[im < 50] = 0
 
 
-        result = Image.fromarray(imsum)
+        result = Image.fromarray(im)
         result.save(outdir + 'trace_flows_{0:06d}'.format(kk) + '.png')
+# Close cine file
+cc.close()
 
 # Make movie
 imgname = outdir + 'trace_flows_'
-movname = root + 'flowtrace_step%d_ftm%d_fps%d_subtractmed_%r_subtactmean%r' % (args.step, args.ftm, args.fps, args.subtract_median, args.subtract_mean)
-movies.make_movie(imgname, movname, indexsz='06', framerate=args.fps)
+movname = root + 'flowtrace_step%d_ftm%d_fps%d_diff%r_subtractmed_%r_subtactmean%r_subtactref%r_invert%r'\
+                 % (args.step, args.ftm, args.fps, args.diff, args.subtract_median, args.subtract_mean, args.subtract_ref, args.invert)
+movies.make_movie(imgname, movname, indexsz='06', framerate=args.fps, overwrite=args.overwrite, invert=args.invert)

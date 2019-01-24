@@ -60,7 +60,8 @@ def make_movie_noah(imgname, movname, indexsz='05', framerate=10, imgdir=None, r
 
 
 def make_movie(imgname=None, imgdir=None, movname=None, indexsz='05', framerate=10, rm_images=False,
-               save_into_subdir=False, start_number=0, framestep=1, ext='png', option='normal', overwrite=False):
+               save_into_subdir=False, start_number=0, framestep=1, ext='png', option='normal', overwrite=False,
+               invert=False):
     """Create a movie from a sequence of images using the ffmpeg supplied with ilpm.
     Options allow for deleting folder automatically after making movie.
     Will run './ffmpeg', '-framerate', str(int(framerate)), '-i', imgname + '%' + indexsz + 'd.png', movname + '.mov',
@@ -101,24 +102,14 @@ def make_movie(imgname=None, imgdir=None, movname=None, indexsz='05', framerate=
             pdir, filename = os.path.split(imgname)
             movname = pdir
 
+
     if not option=='glob':
-        if overwrite:
-            subprocess.call(
-                [ffmpeg_path, '-y',
-                 '-framerate', str(int(framerate)),
-                 '-start_number', str(start_number),
-                 '-i', imgname + '%' + indexsz + 'd.' + ext,
-                 movname + '.mp4',
-                 '-vcodec', 'libx264', '-profile:v', 'main', '-crf', '12', '-threads', '0', '-r', '100', '-pix_fmt',
-                 'yuv420p'])
-        else:
-            subprocess.call(
-                [ffmpeg_path,
-                 '-framerate', str(int(framerate)),
-                 '-start_number', str(start_number),
-                 '-i', imgname + '%' + indexsz + 'd.' + ext,
-                 movname + '.mp4',
-                 '-vcodec', 'libx264', '-profile:v', 'main', '-crf', '12', '-threads', '0', '-r', '100', '-pix_fmt', 'yuv420p'])
+        command = [ffmpeg_path,
+                   '-framerate', str(int(framerate)),
+                   '-start_number', str(start_number),
+                   '-i', imgname + '%' + indexsz + 'd.' + ext,
+                   '-pix_fmt', 'yuv420p',
+                   '-vcodec', 'libx264', '-profile:v', 'main', '-crf', '12', '-threads', '0', '-r', '100']
     else:
         # If images are not numbered or not labeled in a sequence, you can use the glob feature.
         # On command line,
@@ -126,31 +117,22 @@ def make_movie(imgname=None, imgdir=None, movname=None, indexsz='05', framerate=
         # -pattern_type glob
         # -i '/Users/stephane/Documents/git/takumi/library/image_processing/images2/*.png'  ## It is CRITICAL to include '' on the command line!!!!!
         # -vcodec libx264 -crf 25  -pix_fmt yuv420p /Users/stephane/Documents/git/takumi/library/image_processing/images2/sample.mp4
-
-        if overwrite:
-            subprocess.call(
-                [ffmpeg_path, '-y',
+        command = [ffmpeg_path,
                  '-pattern_type', 'glob',  # Use glob feature
                  '-framerate', str(int(framerate)),  # framerate
                  '-i', imgname + '/*.' + ext,  # images
                  '-vcodec', 'libx264',  # codec
                  '-crf', '12',  # quality
-                 '-pix_fmt', 'yuv420p',
-                 movname + '.mp4'  # output name and extension)
-                 ]
-            )
-        else:
-            subprocess.call(
-                [ffmpeg_path,
-                 '-pattern_type', 'glob', # Use glob feature
-                 '-framerate', str(int(framerate)), # framerate
-                 '-i', imgname + '/*.' + ext,  # images
-                 '-vcodec', 'libx264', #codec
-                 '-crf', '12',    #quality
-                 '-pix_fmt', 'yuv420p',
-                 movname + '.mp4' # output name and extension)
-                 ]
-        )
+                 '-pix_fmt', 'yuv420p']
+    if overwrite:
+        command.append('-y')
+    if invert:
+        command.append('-vf')
+        command.append('negate')
+    print command
+
+    command.append(movname + '.mp4')
+    subprocess.call(command)
 
     # Delete the original images
     if rm_images:
