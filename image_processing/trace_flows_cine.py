@@ -9,6 +9,7 @@ import PIL
 import tqdm
 import library.display.graph as graph
 from scipy.ndimage.filters import gaussian_filter
+import scipy.ndimage.filters as filters
 '''
 Make a flowtrace movie.
    - Sum n adjacent images every step.
@@ -40,11 +41,60 @@ def gamma(imgarr, gamma, bitdepth=8):
     im = ((imgarr / int_max) ** (1 / gamma)) * int_max
     return im
 
+def fix_contrast(imgarr, min=None, max=None, option='auto', ratio=0.8):
+    if min is None:
+        min = np.nanmin(imgarr)
+    else:
+        imgarr[imgarr < min] = min
+    if max is None:
+        max = np.nanmax(imgarr)
+        imgarr[imgarr > max] = max
+
+    if option=='enforce':
+        bins, hist = compute_pdf(imgarr.flatten(), nbins=100)
+        ind = np.argmax(np.cumsum(hist) * (bins[1]-bins[0]) > ratio)
+        max = bins[ind]
+        imgarr[imgarr > max] = max
 
 
+    slope = 255./ (max - min)
+    im = (imgarr - min) * slope
+    return im
 
+def apply_sobel_filter(im):
+    """
+    Applies Sobel operator (Edge detection filter)
+    Standard ImageJ edge detection filter
+    Parameters
+    ----------
+    im
 
+    Returns
+    -------
+    im
 
+    """
+    derivative_x = np.array([[1, 0, -1],
+                             [2, 0, -2],
+                             [1, 0, -1]]) / np.sqrt(2)
+    derivative_y = np.array([[1, 2, 1],
+                             [0, 0, 0],
+                             [-1, -2, -1]]) / np.sqrt(2)
+    im1 = filters.convolve(im, derivative_x)
+    im2 = filters.convolve(im, derivative_y)
+    im = np.sqrt(im1 ** 2 + im2 ** 2)
+    return im
+
+def compute_pdf(data, nbins=10):
+    # Get a normalized histogram
+    # exclude nans from statistics
+    hist, bins = np.histogram(data.flatten()[~np.isnan(data.flatten())], bins=nbins, density=True)
+    # len(bins) = len(hist) + 1
+    # Get middle points for plotting sake.
+    bins1 = np.roll(bins, 1)
+    bins = (bins1 + bins) / 2.
+    bins = np.delete(bins, 0)
+    return bins, hist
 
 parser = argparse.ArgumentParser(description='Sum n images around each frame, and make a movie')
 
@@ -59,6 +109,7 @@ parser.add_argument('-fps', '--fps', help='Frames per second of the generated mo
 parser.add_argument('-step', '--step', help='Sum the adjacement frames at every n step', type=int, default=10)
 parser.add_argument('-ftm', '--ftm', help='Number of adjacement frames to sum/merge', type=int, default=30)
 parser.add_argument('-gamma', '--gamma', help='Gamma contrast level', type=float, default=1)
+parser.add_argument('-delta', '--delta', help='Contrast level parameter. Portion of data points included to maximize the contrast if enforce option is selected for fix_contrast()', type=float, default=0.9)
 
 
 # Background correction
@@ -74,9 +125,13 @@ parser.add_argument('-beta', '--beta', help='Alpha for medioan/mean image. If yo
 
 # Options (Invert, Diff)
 parser.add_argument('-invert', '--invert', help='Invert', action='store_true')
+parser.add_argument('-edge', '--edge', help='Apply Sobel edge detection algorithm', action='store_true')
 parser.add_argument('-diff', '--diff', help='Sum differences of successive images', action='store_true')
 parser.add_argument('-diff_interval', '--diff_interval', help='If diff is True, take difference of two images at frame n and frame n + diff_interval. Default 5.',
                     type=int, default=5)
+parser.add_argument('-uppercutoff', '--uppercutoff', help='Upper cutoff of raw image. im[im > uppercutoff] = uppercutoff',
+                    type=int, default=255)
+
 
 
 
@@ -160,12 +215,13 @@ if len(glob.glob(outdir + 'trace_flows*.png')) < len(todo) or args.overwrite:
             im = np.asarray(cc.get_frame(frame))
             im = fix_frame(cc.get_frame(frame), cc.real_bpp)
 
+
             if args.diff:
+                # graph.pdf(im, nbins=100)
                 im_next = np.asarray(cc.get_frame(frame + args.diff_interval))
                 im_next = fix_frame(cc.get_frame(frame + args.diff_interval), cc.real_bpp)
                 im = im_next - im
-                # graph.pdf(im, nbins=100)
-                # graph.show()
+                # graph.pdf(im_next, nbins=100)
 
             else:
                 if args.subtract_median:
@@ -179,16 +235,28 @@ if len(glob.glob(outdir + 'trace_flows*.png')) < len(todo) or args.overwrite:
 
             count += 1
             imsum += im
+            # graph.pdf(imsum, nbins=100, fignum=2)
         # Brighten
         im = imsum * args.brighten / float(count)
         # Contrast
         im = gamma(im, args.gamma)
+
+        # Apply a Gaussian filter
+        # im = gaussian_filter(im, sigma=2) # gaussian filter
+
+        # Intensity cut
+        im[im > args.uppercutoff] = args.uppercutoff
+        # im[im < 50] = 0
+
+        # Edge detection (Sobel filter)
+        if args.edge:
+            im = apply_sobel_filter(im)
+
+        # Optimize contrast before saving
+        im = fix_contrast(im, min=np.nanmedian(im)/2., option='enforce', ratio=args.delta) # this might be useful but this will not perform uniform contrast adjustment for all frames
+        # im = fix_contrast(im, min=np.nanmedian(im) / 2.,  max=255) # this is recommended since it will perform uniform contrast adjustment for all frames
+
         im = im.astype('uint8')
-        im = gaussian_filter(im, sigma=2) # gaussian filter
-        im[im > 255] = 255
-        im[im < 50] = 0
-
-
         result = Image.fromarray(im)
         result.save(outdir + 'trace_flows_{0:06d}'.format(kk) + '.png')
 # Close cine file
