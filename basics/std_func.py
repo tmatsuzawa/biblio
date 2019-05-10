@@ -16,6 +16,9 @@ def power_func(x, a, b):
 def power_func2(x, x0, a, b):
     return a * (x-x0) ** b
 
+def exp(x, a, b):
+    return a * np.exp(-b * x)
+
 def exp_func(x, a, b, c, x0):
     return a * np.exp(-b * (x-x0)) + c
 

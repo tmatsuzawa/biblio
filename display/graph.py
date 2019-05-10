@@ -29,6 +29,7 @@ __color_cycle__ = itertools.cycle(['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '
 __old_color_cycle__ = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])  #matplotliv classic
 __fontsize__ = 16
 __figsize__ = (8, 8)
+cmap = 'magma'
 
 # See all available arguments in matplotlibrc
 params = {'figure.figsize': __figsize__,
@@ -41,7 +42,7 @@ params = {'figure.figsize': __figsize__,
 
 
 ## Save a figure
-def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, overwrite=True, **kwargs):
+def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, overwrite=True, tight_layout=False, **kwargs):
     """Save a figure from pyplot
     Parameters
     ----------
@@ -67,6 +68,9 @@ def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, over
         fig = plt.figure(fignum)
     if dpi is None:
         dpi = fig.dpi
+
+    if tight_layout:
+        fig.tight_layout()
 
     # Separate a directory and a filename from the given path
     directory = os.path.split(path)[0]
@@ -144,7 +148,7 @@ def set_fig(fignum, subplot=None, dpi=100, figsize=None, **kwargs):
         return fig, ax
 
 
-def plotfunc(func, x, param, fignum=1, subplot=111, ax = None, label=None, color=None, linestyle='-', legend=False, figsize=__figsize__, **kwargs):
+def plotfunc(func, x, param, fignum=1, subplot=111, ax = None, label=None, color=None, linestyle='-', legend=False, figsize=None, **kwargs):
     """
     plot a graph using the function fun
     fignum can be specified
@@ -185,7 +189,6 @@ def plot(x, y, fignum=1, figsize=None, label='', color=None, subplot=None, legen
     any kwargs from plot can be passed
     """
     fig, ax = set_fig(fignum, subplot, figsize=figsize)
-
     if len(x) > len(y):
         print("Warning : x and y data do not have the same length")
         x = x[:len(y)]
@@ -407,7 +410,8 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
             addtext(ax, text, option=eq_loc)
         y_fit = std_func.linear_func(xdata, *popt)
     elif func=='power':
-        print 'Fitting to a power law..'
+        print 'Fitting to a power law...'
+
         popt, pcov = curve_fit(std_func.power_func, xdata, ydata)
         if color is None:
             fig, ax = plot(x_for_plot, std_func.power_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
@@ -448,7 +452,7 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
 
 ## 2D plotsFor the plot you showed at group meeting of lambda converging with resolution, can you please make a version with two x axes (one at the top, one below) one pixel spacing, other PIV pixel spacing, and add a special tick on each for the highest resolution point.
 # (pcolormesh)
-def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, vmin=None, vmax=None, log10=False, show=False,
+def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None, vmax=None, log10=False, show=False,
                cbar=False, cmap='magma', aspect='equal', linewidth=0,  **kwargs):
     """  Color plot of 2D array
     Parameters
@@ -472,8 +476,11 @@ def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, vmin=None, vmax=No
     cc QuadMesh class object
 
     """
-    fig, ax = set_fig(fignum, subplot, figsize=figsize)
-    # fig, ax = set_fig(fignum, subplot, figsize=figsize, aspect=aspect)
+    if ax is None:
+        fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    else:
+        fig = plt.gcf()
+        # fig, ax = set_fig(fignum, subplot, figsize=figsize, aspect=aspect)
 
     if log10:
         z = np.log10(z)
@@ -482,9 +489,9 @@ def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, vmin=None, vmax=No
     # print('np.shape(z) = ' + str(np.shape(z)))
     if vmin is None and vmax is None:
         # plt.pcolormesh returns a QuadMesh class object.
-        cc = plt.pcolormesh(x, y, z, cmap=cmap, **kwargs)
+        cc = ax.pcolormesh(x, y, z, cmap=cmap, **kwargs)
     else:
-        cc = plt.pcolormesh(x, y, z, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
+        cc = ax.pcolormesh(x, y, z, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
 
     if cbar:
         plt.colorbar()
@@ -574,9 +581,12 @@ def axhband(ax, y0, y1, x0=None, x1=None, color='C1', alpha=0.2, **kwargs):
         -------
 
         """
+    ymin, ymax = ax.get_ylim()
     if x0 is None and x1 is None:
         x0, x1 = ax.get_xlim()
-    ax.fill_between(np.arange(x0, x1), y0, y1, alpha=alpha, color=color, **kwargs)
+    ax.fill_between(np.linspace(x0, x1, 2), y0, y1, alpha=alpha, color=color, **kwargs)
+    ax.set_xlim(x0, x1)
+    ax.set_ylim(ymin, ymax)
 
 def axvband(ax, x0, x1, y0=None, y1=None, color='C1', alpha=0.2, **kwargs):
     """
@@ -599,9 +609,9 @@ def axvband(ax, x0, x1, y0=None, y1=None, color='C1', alpha=0.2, **kwargs):
     xmin, xmax = ax.get_xlim()
     if y0 is None and y1 is None:
         y0, y1 = ax.get_ylim()
-    ax.fill_between(np.arange(x0, x1), y0, y1, alpha=alpha, color=color, **kwargs)
-    ax.set_ylim(y0, y1)
+    ax.fill_between(np.linspace(x0, x1, 2), y0, y1, alpha=alpha, color=color, **kwargs)
     ax.set_xlim(xmin, xmax)
+    ax.set_ylim(y0, y1)
 
 ## Legend
 # Legend
@@ -741,6 +751,8 @@ def add_discrete_colorbar(ax, colors, vmin=0, vmax=None, label=None, fontsize=No
     if len(ticks) > 10:
         n = len(ticks)
         ticks = [ticks[0], ticks[n/2], ticks[-2]]
+        if ticklabel is not None:
+            ticklabel = [ticklabel[0], ticklabel[n/2], ticklabel[-1]]
 
 
     cmap = mpl.colors.ListedColormap(colors)
@@ -773,6 +785,42 @@ def add_discrete_colorbar(ax, colors, vmin=0, vmax=None, label=None, fontsize=No
         fig.tight_layout()
 
     return cb
+
+def add_colorbar_alone(fig=None, ax=None, ax_loc=[0.05, 0.80, 0.9, 0.15], vmin=0, vmax=1, cmap=cmap, orientation='horizontal',
+                       label=None, fontsize=__fontsize__, *kwargs):
+    """
+    Add a colorbar alone to a canvas.
+    Use a specified figure and axis object if given. Otherwise, create one at location "ax_loc"
+    Parameters
+    ----------
+    fig
+    ax
+    ax_loc
+    vmin
+    vmax
+    cmap
+    orientation
+    label
+
+    Returns
+    -------
+    ax: axis object
+    cb: colorbarbase object
+
+    """
+
+
+    if fig is None:
+        fig = plt.gcf()
+    if ax is None:
+        ax = fig.add_axes(ax_loc)
+    norm = ax.Normalize(vmin=vmin, vmax=vmax)
+    cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap,
+                                    norm=norm,
+                                    orientation=orientation)
+    if label is not None:
+        cb.set_label('$u_i$ (mm/s)', fontsize=fontsize)
+    return ax, cb
 
 
 
@@ -836,19 +884,19 @@ def setaxes(ax, xmin, xmax, ymin, ymax):
     return ax
 
 ## Set axes to semilog or loglog
-def tosemilogx(ax=None):
+def tosemilogx(ax=None, **kwargs):
     if ax == None:
         ax = plt.gca()
-    ax.set_xscale("log")
-def tosemilogy(ax=None):
+    ax.set_xscale("log", **kwargs)
+def tosemilogy(ax=None, **kwargs):
     if ax == None:
         ax = plt.gca()
-    ax.set_yscale("log")
-def tologlog(ax=None):
+    ax.set_yscale("log", **kwargs)
+def tologlog(ax=None, **kwargs):
     if ax == None:
         ax = plt.gca()
-    ax.set_xscale("log")
-    ax.set_yscale("log")
+    ax.set_xscale("log", **kwargs)
+    ax.set_yscale("log", **kwargs)
 
 # Ticks
 def set_xtick_interval(ax, tickint):
@@ -1096,7 +1144,7 @@ def get_color_list_gradient(color1='greenyellow', color2='darkgreen', n=10):
 
 def hex2rgb(hex):
     """
-
+    Converts HEX code to RGB in a numpy array
     Parameters
     ----------
     hex: str, hex code. e.g. #B4FBB8
@@ -1214,6 +1262,15 @@ def add_subplot_axes(ax, rect, axisbg='w'):
     subax.xaxis.set_tick_params(labelsize=x_labelsize)
     subax.yaxis.set_tick_params(labelsize=y_labelsize)
     return subax
+
+
+# sketches
+def draw_rectangle(ax, x, y, width, height, angle=0.0, linewidth=1, edgecolor='r', facecolor='none', **kwargs):
+    rect = mpatches.Rectangle((x, y), width, height, angle=angle, linewidth=linewidth, edgecolor=edgecolor,
+                              facecolor=facecolor, **kwargs)
+    ax.add_patch(rect)
+    return rect
+
 
 
 

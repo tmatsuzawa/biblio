@@ -143,10 +143,10 @@ def curl_2d(ux, uy):
     xx, yy = ux.shape[0], uy.shape[1]
 
     omega = np.zeros((xx, yy))
-    duxdx = np.gradient(ux, axis=1)
+    # duxdx = np.gradient(ux, axis=1)
     duxdy = np.gradient(ux, axis=0)
     duydx = np.gradient(uy, axis=1)
-    duydy = np.gradient(uy, axis=0)
+    # duydy = np.gradient(uy, axis=0)
 
     omega = duydx - duxdy
 

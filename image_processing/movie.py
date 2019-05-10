@@ -8,6 +8,7 @@ import argparse
 import sys
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 '''Module with functions for making movies
 '''
@@ -61,7 +62,7 @@ def make_movie_noah(imgname, movname, indexsz='05', framerate=10, imgdir=None, r
 
 def make_movie(imgname=None, imgdir=None, movname=None, indexsz='05', framerate=10, rm_images=False,
                save_into_subdir=False, start_number=0, framestep=1, ext='png', option='normal', overwrite=False,
-               invert=False):
+               invert=False, add_commands=[]):
     """Create a movie from a sequence of images using the ffmpeg supplied with ilpm.
     Options allow for deleting folder automatically after making movie.
     Will run './ffmpeg', '-framerate', str(int(framerate)), '-i', imgname + '%' + indexsz + 'd.png', movname + '.mov',
@@ -90,6 +91,10 @@ def make_movie(imgname=None, imgdir=None, movname=None, indexsz='05', framerate=
     option: str
         If "glob", it globs all images with the extention in the directory.
         Therefore, the images does not have to be numbered.
+    add_commands: list
+        A list to add extra commands for ffmpeg. The list will be added before output name
+        i.e. ffmpeg -i images command add_commands movie_name
+        exmaple: add_commands=['-vf', ' pad=ceil(iw/2)*2:ceil(ih/2)*2']
     """
     # if movie name is not given, name it as same as the name of the img directory
     if movname is None:
@@ -129,7 +134,17 @@ def make_movie(imgname=None, imgdir=None, movname=None, indexsz='05', framerate=
     if invert:
         command.append('-vf')
         command.append('negate')
+    # check if image has dimensions divisibly by 2 (if not ffmpeg raises an error... why ffmpeg...)
+    # ffmpeg raises an error if image has dimension indivisible by 2. Always make sure that this is not the case.
+    # image_paths = glob.glob(imgname + '/*.' + ext)
+    # img = mpimg.imread(image_paths[0])
+    # height, width = img.shape
+    # if not (height % 2 == 0 and width % 2 == 0):
+    command += ['-vf', ' pad=ceil(iw/2)*2:ceil(ih/2)*2']
+
+
     print command
+    command += add_commands
 
     command.append(movname + '.mp4')
     subprocess.call(command)
@@ -257,6 +272,22 @@ def make_movie_with_time_stamp(imgname, movname, indexsz='05', framerate=10, img
 
     make_movie(os.path.join(tmpdir, 'tmp_'), movname, indexsz=indexsz, framerate=framerate, imgdir=imgdir, rm_images=rm_images,
                save_into_subdir=save_into_subdir, start_number=start_number, framestep=framestep, ext=ext, option=option)
+
+def command_ffmpeg(command):
+    """
+    command must be a list
+    Parameters
+    ----------
+    command
+
+    Returns
+    -------
+
+    """
+    command0 = [ffmpeg_path]
+    command = command0 + command
+    subprocess.call(command)
+    print command
 
 
 if __name__ == "__main__":

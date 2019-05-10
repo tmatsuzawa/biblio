@@ -80,11 +80,14 @@ def get_float_from_str(str, start, end):
     """
     if str.find(start) < 0 and start != '':
         print 'ERROR: ' + start + ' is not in ' + str
-        raise NameError('issues with ' + start)
+        return None
+        # raise NameError('issues with ' + start)
         #sys.exit(1)
+
     if str.find(end) < 0 and end != '':
         print 'ERROR: ' + end + ' is not in ' + str
-        raise NameError('issues with ' + end)
+        return None
+        # raise NameError('issues with ' + end)
         #sys.exit(1)
     if start == '':
         start_ind = 0

@@ -116,9 +116,10 @@ def count_occurrences(arr, display=True):
         print occur_dict
     return occur_dict
 
-def count_nans(arr):
+def count_nans(arr, verbose=True):
     nnans = np.count_nonzero(np.isnan(arr))
-    print 'no. of nans: %d / %d' % (nnans, np.asarray(arr).size)
+    if verbose:
+        print 'no. of nans: %d / %d' % (nnans, np.asarray(arr).size)
     return nnans
 
 
@@ -286,7 +287,7 @@ def get_average_data_from_periodic_data(time, periodic_data, freq=1., interpolat
 
     # interpolate data if the length of the chunk is more than a half of the longest chunk
     # otherwise, throw it away
-    # throuw away the last chunk as well
+    # throw away the last chunk as well
     indices_to_be_deleted = []
     for i in range(numcycles):
         if len(data_chunks[i]) < max(chunk_length) / 2 or (i == numcycles-1 and numcycles > 1):
@@ -672,4 +673,83 @@ array([[ 10.5,  12.5],
 
     return arr_coarse
 
+
+# coordinate transformation
+
+def cart2pol(x, y):
+    """
+    Cartesian coord to polar coord
+    Parameters
+    ----------
+    x
+    y
+
+    Returns
+    -------
+    r
+    phi
+    """
+    r = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    return r, phi
+
+def pol2cart(r, phi):
+    """
+    Polar coord to Cartesian coord
+    Parameters
+    ----------
+    r: float radius
+    phi: float angle
+
+    Returns
+    -------
+    x, y
+
+    """
+
+    x = r * np.cos(phi)
+    y = r * np.sin(phi)
+    return x, y
+
+def cart2sph(x, y, z):
+    """
+
+    Parameters
+    ----------
+    x
+    y
+    z
+
+    Returns
+    -------
+    r: radius
+    theta: elevetaion angle [-pi/2, pi/2]
+    phi: azimuthal angle [-pi, pi]
+
+    """
+    r = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+    theta = np.arccos(z/r)
+    phi = np.arctan2(y, x)
+    return r, theta, phi
+
+def sph2cart(r, theta, phi):
+    """
+
+    Parameters
+    ----------
+    r: radius
+    theta: elevetaion angle
+    phi: azimuthal angle
+
+    Returns
+    -------
+    x
+    y
+    z
+
+    """
+    x = r * np.sin(theta) * np.cos(phi)
+    y = r * np.sin(theta) * np.sin(phi)
+    z = r * np.cos(theta)
+    return x, y, z
 
