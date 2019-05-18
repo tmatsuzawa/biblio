@@ -248,15 +248,48 @@ def get_energy(udata):
 
 def get_enstrophy(udata):
     dim = udata.shape[0]
-
     omega = curl(udata)
     shape = omega.shape # shape=(dim, nrows, ncols, nstacks, duration) if nstacks=0, shape=(dim, nrows, ncols, duration)
-    enstrophy = np.zeros(shape[1:])
-
-    for d in range(dim):
-        enstrophy += omega[d, ...] ** 2
-    enstrophy /= 2.
+    if dim == 2:
+        enstrophy = omega ** 2 / 2.
+    elif dim == 3:
+        enstrophy = np.zeros(shape[1:])
+        for d in range(dim):
+            enstrophy += omega[d, ...] ** 2
+        enstrophy /= 2.
     return enstrophy
+
+def get_time_avg_energy(udata):
+    """
+    Returns time-averaged-energy
+    Parameters
+    ----------
+    udata
+
+    Returns
+    -------
+
+    """
+    dim = udata.shape[0]
+    energy = get_energy(udata)
+    energy_avg = np.nanmean(energy, axis=dim)
+    return energy_avg
+
+def get_time_avg_enstrophy(udata):
+    """
+    Returns time-averaged-enstrophy
+    Parameters
+    ----------
+    udata
+
+    Returns
+    -------
+
+    """
+    dim = udata.shape[0]
+    enstrophy = get_enstrophy(udata)
+    enstrophy_avg = np.nanmean(enstrophy, axis=dim)
+    return enstrophy_avg
 
 def fft_nd(field, dx=1, dy=1, dz=1):
     """
@@ -299,7 +332,9 @@ def fft_nd(field, dx=1, dy=1, dz=1):
         kz = kz * 2 * np.pi / (dz * height)
         return field_fft, np.asarray([kx, ky, kz])
 
-def get_energy_spectrum_nd(udata, dx=1, dy=1, dz=1):
+def get_energy_spectrum_nd(udata, x0=0, x1=None, y0=0, y1=None,
+                           z0=0, z1=None, dx=None, dy=None, dz=None):
+
     """
     Returns nd energy spectrum from velocity data
     Parameters
@@ -311,8 +346,57 @@ def get_energy_spectrum_nd(udata, dx=1, dy=1, dz=1):
 
     Returns
     -------
+    energy_fft: nd array with shape (height, width, duration) or (height, width, depth, duration)
+    ks: nd array with shape (ncomponents, height, width, duration) or (ncomponents, height, width, depth, duration)
+        ...
+
+
+
+    Example
+    -----------------
+    nx, ny = 100, 100
+    x = np.linspace(0, 2*np.pi, nx)
+    y = np.linspace(0, 4*np.pi, ny)
+    dx, dy = x[1]- x[0], y[1]-y[0]
+
+    # Position grid
+    xx, yy = np.meshgrid(x, y)
+
+    # In Fourier space, energy will have a peak at (kx, ky) = (+/- 5, +/- 2)
+    ux = np.sin(2.5*xx + yy)
+    uy = np.sin(yy) * 0
+    udata_test = np.stack((ux, uy))
+    ek, ks = vel.get_energy_spectrum_nd(udata_test, dx=dx, dy=dy)
+    graph.color_plot(xx, yy, (ux**2 + uy**2 ) /2., fignum=2, subplot=121)
+    fig22, ax22, cc22 = graph.color_plot(ks[0], ks[1], ek.real[..., 0], fignum=2, subplot=122, figsize=(16, 8))
+    graph.setaxes(ax22, -10, 10, -10, 10)
 
     """
+    if dx is None or dy is None:
+        print 'ERROR: dx or dy is not provided! dx is grid spacing in real space.'
+        print '... k grid will be computed based on this spacing! Please provide.'
+        raise ValueError
+    if x1 is None:
+        x1 = udata[0].shape[1]
+    if y1 is None:
+        y1 = udata[0].shape[0]
+
+
+    udata = udata[y0:y1, x0:x1]
+
+    dim = len(udata)
+
+    if dim==2:
+        udata = udata[y0:y1, x0:x1]
+    elif dim == 3:
+        if z1 is None:
+            z1 = udata[0].shape[2]
+        if dz is None:
+            print 'ERROR: dz is not provided! dx is grid spacing in real space.'
+            print '... k grid will be computed based on this spacing! Please provide.'
+            raise ValueError
+        udata = udata[:, y0:y1, x0:x1, z0:z1]
+
     udata = fix_udata_shape(udata)
 
     energy = get_energy(udata)
@@ -324,29 +408,36 @@ def get_energy_spectrum_nd(udata, dx=1, dy=1, dz=1):
 
     if dim == 2:
         height, width, duration = energy.shape
-        lx, ly = dx * width, dy * height
-        # volume = lx * ly
+        kx = np.fft.fftfreq(width, d=dx)  # this returns FREQUENCY (JUST INVERSE LENGTH) not ANGULAR FREQUENCY
+        ky = np.fft.fftfreq(height, d=dy)
+        kx = np.fft.fftshift(kx)
+        ky = np.fft.fftshift(ky)
+        kxx, kyy = np.meshgrid(kx, ky)
+        kxx, kyy = kxx * 2 * np.pi, kyy * 2 * np.pi # Convert inverse length into wavenumber
 
-        kyy, kxx = np.mgrid[-height / 2: height / 2: complex(0, height),  #[-512, -511, ... , 511, 512]
-                 -width / 2: width / 2: complex(0, width)]
-
-        kx = 2. * np.pi * kxx / (2*np.pi * width)
-        ky = 2. * np.pi * kyy / (2*np.pi * height)
-        return energy_fft, np.asarray([kx, ky])
+        return energy_fft, np.asarray([kxx, kyy])
 
     elif dim == 3:
         height, width, depth, duration = energy.shape
-        lx, ly, lz = dx * width, dy * height, dz * depth
-        # volume = lx * ly * lz
-        kyy, kxx, kzz = np.mgrid[-height / 2: height / 2: complex(0, height),
-                     -width / 2: width / 2: complex(0, width),
-                     -depth / 2: depth / 2: complex(0, depth)]
-        kx = 2. * np.pi * kxx / (2*np.pi * width)
-        ky = 2. * np.pi * kyy / (2*np.pi * height)
-        kz = 2. * np.pi * kzz / (2*np.pi * depth)
-        return energy_fft, np.asarray([kx, ky, kz])
+        kx = np.fft.fftfreq(width, d=dx)
+        ky = np.fft.fftfreq(height, d=dy)
+        kz = np.fft.fftfreq(depth, d=dz)
+        kx = np.fft.fftshift(kx)
+        ky = np.fft.fftshift(ky)
+        kz = np.fft.fftshift(kz)
+        kxx, kyy, kzz = np.meshgrid(ky, kx, kz)
+        kxx, kyy, kzz = kxx * 2 * np.pi, kyy * 2 * np.pi, kzz * 2 * np.pi
 
-def get_energy_spectrum(udata, z=0, dx=1, dy=1, dz=1, nkout=40):
+        # ind_yy, ind_xx, ind_zz = np.mgrid[-height / 2: height / 2: complex(0, height),
+        #              -width / 2: width / 2: complex(0, width),
+        #              -depth / 2: depth / 2: complex(0, depth)]
+        # # kx = 2. * np.pi * ind_xx / (2*np.pi * width)
+        # # ky = 2. * np.pi * ind_yy / (2*np.pi * height)
+        # # kz = 2. * np.pi * ind_zz / (2*np.pi * depth)
+        return energy_fft, np.asarray([kxx, kyy, kzz])
+
+def get_energy_spectrum(udata, x0=0, x1=None, y0=0, y1=None,
+                           z0=0, z1=None, z=0, dx=None, dy=None, dz=None, nkout=40):
     def delete_masked_elements(data, mask):
         """
         Deletes elements of data using mask, and returns a 1d array
@@ -408,7 +499,6 @@ def get_energy_spectrum(udata, z=0, dx=1, dy=1, dz=1, nkout=40):
         jj = 0
         okinds_nn = []
         for ii in range(nn):
-            #         print 'ii = ', ii
             indices[:, ii] = np.logical_and(np.logical_and(kk >= nbin[ii], kk < nbin[ii + 1]),
                                             np.logical_and(np.abs(kx_1d) >= epsilon, np.abs(ky_1d) >= epsilon))
 
@@ -419,9 +509,7 @@ def get_energy_spectrum(udata, z=0, dx=1, dy=1, dz=1, nkout=40):
                 jj += 1
 
         s_k = np.zeros((nn, nt))
-        # s_part = np.zeros(nx * ny)
 
-        #     print('Fourier.spectrum_2d_to_1d_convert(): Compute 1d fft from 2d')
         for t in range(nt):
             s_part = s_e[:, t]
             jj = 0
@@ -436,32 +524,42 @@ def get_energy_spectrum(udata, z=0, dx=1, dy=1, dz=1, nkout=40):
         return s_k, kbin
 
 
-    e_ks, ks = get_energy_spectrum_nd(udata, dx=dx, dy=dy, dz=dz)
+    dim = len(udata)
+    e_ks, ks = get_energy_spectrum_nd(udata, x0=x0, x1=x1, y0=y0, y1=y1,
+                           z0=z0, z1=z1, dx=dx, dy=dy, dz=dz)
 
-    if len(udata) == 3:
+    if dim == 3:
         kx, ky, kz = ks[0], ks[1], ks[2]
         ######################################################################
         # Currently, I haven't cleaned up a code to 3d power spectra into 1d.
-        # The currently implemented solution is just use a 2D slice of the 3D data.
+        # The currently implemented solution is just use a 2D slice of the 3D data. <- boo
         ######################################################################
         kx, ky = kx[..., 0], ky[..., 0]
-    elif len(udata) == 2:
+    elif dim == 2:
         kx, ky = ks[0], ks[1]
 
-    e_k, kk = convert_2d_spec_to_1d(e_ks[:, :, 0, :], kx, ky, nkout=nkout)
+    if dim == 3:
+        e_ks = e_ks[:, :, z, :]
+
+    e_k, kk = convert_2d_spec_to_1d(e_ks, kx, ky, nkout=nkout)
 
 
 
     return e_k, kk
 
-def get_rescaled_energy_spectrum(udata, epsilon=10**5, nu=1.0034, z=0, dx=1, dy=1, dz=1, nkout=40):
+def get_rescaled_energy_spectrum(udata, epsilon=10**5, nu=1.0034,x0=0, x1=None,
+                                 y0=0, y1=None, z0=0, z1=None, z=0,
+                                 dx=1, dy=1, dz=1, nkout=40):
     # get energy spectrum
-    e_k, kk = get_energy_spectrum(udata, z=z, dx=dx, dy=dy, dz=dz, nkout=nkout)
+    e_k, kk = get_energy_spectrum(udata, x0=x0, x1=x1,
+                                 y0=y0, y1=y1, z0=z0, z1=z1,
+                                  z=z, dx=dx, dy=dy, dz=dz, nkout=nkout)
 
     # Kolmogorov length scale
     eta = (nu ** 3 / epsilon) ** (0.25)  # mm
+    print 'dissipation rate, Kolmogorov scale: ', epsilon, eta
 
-    k_norm =kk * eta
+    k_norm = kk * eta
     e_k_norm = e_k[...] / ((epsilon * nu ** 5.) ** (0.25))
     return e_k_norm, k_norm
 
@@ -616,6 +714,8 @@ def compute_spatial_autocorr(ui, x, y, roll_axis=1, n_bins=None, x0=None, x1=Non
 
 
 # Sample velocity field
+
+# sample velocity fields
 def rankine_vortex_2d(xx, yy, x0=0, y0=0, gamma=1., a=1.):
     """
     Reutrns a 2D velocity field with a single Rankine vortex at (x0, y0)
@@ -721,7 +821,7 @@ def get_rescaled_energy_spectrum_saddoughi():
     """
     k = np.asarray([1.27151, 0.554731, 0.21884, 0.139643, 0.0648844, 0.0198547, 0.00558913, 0.00128828, 0.000676395, 0.000254346])
     e = np.asarray([0.00095661, 0.0581971, 2.84666, 11.283, 59.4552, 381.78, 2695.48, 30341.9, 122983, 728530])
-    return k, e
+    return e, k
 
 
 # misc
@@ -792,3 +892,5 @@ def get_equally_spaced_grid(udata, spacing=1):
         xx, yy, zz = np.meshgrid(y, x, z)
         return xx * spacing, yy * spacing, zz * spacing
 
+def kolmogorov_53(k, k0=50):
+    return k0*k**(-5./3)

@@ -332,7 +332,7 @@ def get_mask_for_unphysical_using_cutoff(U, cutoff=None, mode='less'):
         U_masked = ma.masked_less_equal(U, cutoff)
     elif mode=='greater' or mode=='g':
         U_masked = ma.masked_greater(U, cutoff)
-    elif mode=='greateinterpolate_using_maskrequal' or mode=='geq':
+    elif mode=='greaterequal' or mode=='geq':
         U_masked = ma.masked_greater_equal(U, cutoff)
     return U_masked.mask
 
@@ -430,7 +430,7 @@ def clean_multi_dim_array_using_median(data, cutoffratio=0.4, mode='less'):
     """
     mask = get_mask_for_unphysical_using_median(data, cutoffratio, mode)
     data_masked =  ma.array(data, mask=mask)
-    clean_data = data_masked.compress()
+    clean_data = data_masked.compressed()
     '...Cleaning Done.'
     return clean_data, data_masked, mask
 
