@@ -257,7 +257,7 @@ def make_movie_with_time_stamp(imgname, movname, indexsz='05', framerate=10, img
         img = img.convert('RGB')
         width, height = img.size
         txt_pos = get_std_pos(width, height, loc=timestamp_loc)
-        timestamp = 't={0:0.3f}'.format(timelist[i]) + unit
+        timestamp = 't={0:0.4f}'.format(timelist[i]) + unit
 
         draw = ImageDraw.Draw(img)
         try:
@@ -267,10 +267,10 @@ def make_movie_with_time_stamp(imgname, movname, indexsz='05', framerate=10, img
             print '... Use white as a default'
             red, blue, green = ImageColor.getrgb('w')
         draw.text(txt_pos, timestamp, font=fnt, fill=(red, blue, green, int(255*alpha)))
-        outputfile = os.path.join(tmpdir, 'tmp' + '_{0:04d}.'.format(i) + ext)
+        outputfile = os.path.join(tmpdir, 'tmp' + '_{0:05d}.'.format(i) + ext)
         img.save(outputfile)
 
-    make_movie(os.path.join(tmpdir, 'tmp_'), movname, indexsz=indexsz, framerate=framerate, imgdir=imgdir, rm_images=rm_images,
+    make_movie(os.path.join(tmpdir, 'tmp_'), movname, indexsz='05', framerate=framerate, rm_images=rm_images,
                save_into_subdir=save_into_subdir, start_number=start_number, framestep=framestep, ext=ext, option=option)
 
 def command_ffmpeg(command):
