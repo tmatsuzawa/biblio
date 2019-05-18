@@ -137,3 +137,17 @@ def make_default_data_dict(keys_list):
                                         for subsubsubsubkey in datadict[key][subkey][subsubkey][subsubsubkey]:
                                             datadict[key][subkey][subsubkey][subsubsubkey][subsubsubsubkey] = dict(datadict[key][subkey][subsubkey][subsubsubkey][subsubsubsubkey])
     return datadict
+
+def class2dict(class_instance):
+    """Put all attributes of a class into a dictionary, with their names as keys. Note that this would make a Java user
+    cringe, but seems fine to do in python.
+    Parameters
+    ----------
+    class_instance : instance of a class
+        class instance for which to store all non-built-in attributes as key,val pairs in an output dictionary
+    """
+    dict = {}
+    attrlist = [a for a in dir(class_instance) if not a.startswith('__') and not callable(getattr(class_instance, a))]
+    for attr in attrlist:
+        dict[attr] = class_instance.attr
+    return dict

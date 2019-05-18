@@ -1,1 +1,0 @@
-python make_windows_executable.py v4d_shader.py

@@ -7,10 +7,13 @@ import numpy as np
 import copy
 import numpy.ma as ma
 from scipy import interpolate
+from scipy.stats import binned_statistic
 
-def interpolate_using_mask(arr1, mask):
+# Data cleaning (Masking / Filtering)
+
+def interpolate_using_mask(arr, mask):
     """
-    Conduct linear interpolation for data points where its mask value is True
+    Conduct linear interpolation for data points where their mask values are True
 
     ... This interpolation is not ideal because this flattens multidimensional array first, and takes a linear interpolation
     for missing values. That is, the interpolated values at the edges of the multidimensional array are nonsense b/c
@@ -28,7 +31,8 @@ def interpolate_using_mask(arr1, mask):
     arr : array-like (n x m), float
         array with unphysical values replaced by appropriate values
     """
-    arr2T = copy.deepcopy(arr1).T
+    arr1 = copy.deepcopy(arr)
+    arr2T = copy.deepcopy(arr).T
 
     f0 = np.flatnonzero(mask)
     f1 = np.flatnonzero(~mask)
@@ -42,6 +46,48 @@ def interpolate_using_mask(arr1, mask):
 
     arr = (arr1 + arr2) * 0.5
     return arr
+
+def interpolate_using_mask_new(arr, mask, method='cubic'):
+    """
+    Developing...Too much computation time.
+    Interpolates arr using a boolean mask
+    ... This method flattens an array during interpolation. Therefore, the interpolated values at the edges should not be trusted.
+    Parameters
+    ----------
+    arr: N-d array
+    mask: N-d boolean array
+    method: interpolation method of scipy griddata- linear, cubic
+
+    Returns
+    -------
+    arr_interp: interpolated N-d array
+
+    """
+    dim = len(arr.shape)
+    if dim < 3:
+        x, y = np.arange(arr.shape[1]), np.arange(arr.shape[0])
+        xx, yy = np.meshgrid(x, y)
+        x1, y1, arr1 = xx[~mask], yy[~mask], arr[~mask]
+        arr_interp = interpolate.griddata((x1, y1), arr1, (xx, yy), method=method)
+    elif dim == 3:
+        x, y, t = np.arange(arr.shape[1]), np.arange(arr.shape[0]),  np.arange(arr.shape[2])
+        xx, yy = np.meshgrid(x, y)
+
+        stack_m = lambda p: np.dstack((m, p))
+        for i in range(arr.shape[2]-1):
+            m = xx
+            xx = stack_m(xx)
+            m = yy
+            yy = stack_m(yy)
+        print xx.shape, yy.shape
+
+
+        arr_interp = []
+        for tt in range(arr.shape[2]):
+            x1, y1, arr1 = xx[~mask], yy[~mask], arr[~mask]
+            arr_interp_frac = interpolate.griddata((x1, y1), arr1, (xx, yy), method=method)
+            arr_interp = np.stack((arr_interp, arr_interp_frac), axis=2)
+    return arr_interp
 
 
 def get_mask_for_unphysical(U, cutoffU=2000., fill_value=99999., verbose=True):
@@ -234,6 +280,16 @@ def get_mask_for_unphysical3(U, low_tld=-2000., high_tld=2000., diff_tld=5, fill
     return mask
 
 def get_mask_for_nan_and_inf(U):
+    """
+    Returns a mask for nan and inf values in a multidimensional array U
+    Parameters
+    ----------
+    U: N-d array
+
+    Returns
+    -------
+
+    """
     U = np.array(U)
     U_masked_invalid = ma.masked_invalid(U)
     return U_masked_invalid.mask
@@ -249,7 +305,7 @@ def fill_unphysical_with_sth(U, mask, fill_value=np.nan):
 
     Returns
     -------
-    U_filled  array-like
+    U_filled  numpy array
 
     """
     U_masked = ma.array(U, mask=mask)
@@ -276,12 +332,12 @@ def get_mask_for_unphysical_using_cutoff(U, cutoff=None, mode='less'):
         U_masked = ma.masked_less_equal(U, cutoff)
     elif mode=='greater' or mode=='g':
         U_masked = ma.masked_greater(U, cutoff)
-    elif mode=='greaterequal' or mode=='geq':
+    elif mode=='greateinterpolate_using_maskrequal' or mode=='geq':
         U_masked = ma.masked_greater_equal(U, cutoff)
     return U_masked.mask
 
 
-# Cleaning M instances
+# Cleaning M class objects
 def clean_vdata(M, cutoffU=2000, fill_value=np.nan, verbose=True):
     """
     Clean M class objects.
@@ -339,11 +395,12 @@ def delete_masked_elements(data, mask):
     Deletes elements of data using mask, and returns a 1d array
     Parameters
     ----------
-    data
-    mask
+    data: N-d array
+    mask: N-d array, bool
 
     Returns
     -------
+    compressed_data
 
     """
     data_masked = ma.array(data, mask=mask)
@@ -541,6 +598,125 @@ def interpolate_1Darrays(x, data, xint=None, xnum=None, xmax=None, xmin=None, mo
     f = interpolate.interp1d(x, data, kind=mode)
     datanew = f(xnew)
     return xnew, datanew
+
+
+## Filter
+def smooth(x, window_len=11, window='hanning'):
+    """smooth the data using a window with requested size.
+
+    This method is based on the convolution of a scaled window with the signal.
+    The signal is prepared by introducing reflected copies of the signal
+    (with the window size) in both ends so that transient parts are minimized
+    in the begining and end part of the output signal.
+
+    input:
+        x: the input signal
+        window_len: the dimension of the smoothing window; should be an odd integer
+        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
+            flat window will produce a moving average smoothing.
+
+    output:
+        the smoothed signal
+
+    example:
+
+    t=linspace(-2,2,0.1)
+    x=sin(t)+randn(len(t))*0.1
+    y=smooth(x)
+
+    see also:
+
+    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
+    scipy.signal.lfilter
+
+    TODO: the window parameter could be the window itself if an array instead of a string
+    NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
+    """
+
+    if x.ndim != 1:
+        raise ValueError, "smooth only accepts 1 dimension arrays."
+
+    if x.size < window_len:
+        raise ValueError, "Input vector needs to be bigger than window size."
+
+    if window_len < 3:
+        return x
+
+    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+
+    s = np.r_[x[window_len - 1:0:-1], x, x[-2:-window_len - 1:-1]]
+    # print(len(s))
+    if window == 'flat':  # moving average
+        w = np.ones(window_len, 'd')
+    else:
+        w = eval('np.' + window + '(window_len)')
+
+    y = np.convolve(w / w.sum(), s, mode='valid')
+    return y
+
+
+
+# PDF
+def pdf(data, nbins=10):
+    """
+    Returns a pdf of data (bins and hist with the same length)
+    Parameters
+    ----------
+    data
+    nbins
+
+    Returns
+    -------
+    bins
+    hist
+
+    """
+    data = np.asarray(data)
+
+    if np.isnan(data).any():
+        mask = get_mask_for_nan_and_inf(data)
+        data = delete_masked_elements(data, mask) # returns a 1d array
+
+    # Get a normalized histogram
+    hist, bins = np.histogram(data.flatten(), bins=nbins, density=True)
+    # len(bins) = len(hist) + 1
+    # Get middle points for plotting sake.
+    bins1 = np.roll(bins, 1)
+    bins = (bins1 + bins) / 2.
+    bins = np.delete(bins, 0)
+    return bins, hist
+
+
+## Binning data
+def bin_data(arg, data, nbins=25):
+    """
+    Bins a pair of 1d data, and returns 1d data (binned_arguments, binned_data, std).
+    One can plot these using axes.errorbar(arguments, data, std) or errorfill(arguments, data, std).
+    Link: https://mycourses.aalto.fi/pluginfile.php/146910/mod_resource/content/1/binning_tutorial.pdf
+    Parameters
+    ----------
+    arg
+    data
+    nbins
+
+    Returns
+    -------
+    bin_centers: an array of centers of bins
+    bin_averages: an array of magnitudes (average of data points in each bin)
+    bin_stdevs: an array of stds for each bin
+
+    """
+    bin_centers, _, _ = binned_statistic(arg, arg, statistic='mean', bins=nbins)
+    bin_averages, _, _ = binned_statistic(arg, data, statistic='mean', bins=nbins)
+    bin_stdevs, _, _ = binned_statistic(arg, data, statistic='std', bins=nbins)
+    return bin_centers, bin_averages, bin_stdevs
+
+
+
+
+
+
 
 ## get velocity from position, time arrays
 def compute_velocity_simple(time, pos):

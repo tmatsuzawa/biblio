@@ -31,13 +31,17 @@ def read_csv(datapath, encoding='utf-8-sig'):
     """
     Returns data_name (1st line of a csv file) as a list and data as a 2d array
 
+    Assumes that the data is stored in the following format
+    x,  y,  z, ...
+    0.1, -9.2, 2.3, ...
+    8.1, -2.2, 5.3, ...
     Parameters
     ----------
     datapath: str, location of csv data
 
     Returns
     -------
-    data_name: list
+    data_names: list
     data: 2d array
 
     """
@@ -66,7 +70,7 @@ def read_data(datapath, delimiter=',', skiprows=0,  **kwargs):
     Versatile method to read data
     Parameters
     ----------
-    datafilepathpath
+    datapath
     delimiter
 
     Returns
@@ -77,29 +81,49 @@ def read_data(datapath, delimiter=',', skiprows=0,  **kwargs):
     data = np.loadtxt(datapath, delimiter=delimiter, skiprows=skiprows, **kwargs)
     return data
 
-# read data and return a data_dict
-def make_data_dict_from_csv(datapath, key_from_data_name, subkey_from_data_name, data_from_data_name, **kwargs):
+# # read data and return a data_dict (Undone)
+# def make_data_dict_from_csv(datapath, key, subkey, data, **kwargs):
+#     """
+#     Assumes that the data is stored in the following format
+#     x,  y,  z, ...
+#     0.1, -9.2, 2.3, ...
+#     8.1, -2.2, 5.3, ...
+#     Parameters
+#     ----------
+#     datapath
+#     delimiter
+#     skiprows
+#     kwargs
+#
+#     Returns
+#     -------
+#
+#     """
+#     datadict = {}
+#     data_names, data = read_csv(datapath)
+#     for data_name in data_names:
+#         datadict = fd.update_data_dict(datadict, key, subkey, data)
+
+def read_hdf5(datapath):
     """
-    Assumes that the data is stored in the following format
-    x,  y,  z, ...
-    0.1, -9.2, 2.3, ...
-    8.1, -2.2, 5.3, ...
+
     Parameters
     ----------
-    datapath
-    delimiter
-    skiprows
-    kwargs
+    datapath: str, path to the hdf5 file
 
     Returns
     -------
+    f: hdf5
 
     """
-    datadict = {}
-    data_names, data = read_csv(datapath)
-    for data_name in data:
-        key = key_from_data_name + str()
-        datadict = fd.update_data_dict(datadict, key, subkey, data)
+    f = h5py.File(datapath, 'r')
+    print 'Successfully read %s' %datapath
+    print 'Make sure to close the file after usage'
+    return f
+
+def read_hdf5_std(datapath):
+    f = h5py.File(datapath, 'r')
+
 
 
 
@@ -162,7 +186,7 @@ def write_hdf5_dict(filepath, data_dict):
     Parameters
     ----------
     filepath :  str
-                file name where data will be stored. (Do not include extension- .h5)
+                file path where data will be stored. (Do not include extension- .h5)
     data_dict : dictionary
                 data should be stored as data_dict[key]= data_arrays
 
@@ -170,6 +194,10 @@ def write_hdf5_dict(filepath, data_dict):
     -------
 
     """
+    filedir = os.path.split(filepath)[0]
+    if not os.path.exists(filedir):
+        os.makedirs(filedir)
+
     ext = '.h5'
     filename = filepath + ext
     hf = h5py.File(filename, 'w')
@@ -185,8 +213,8 @@ def write_hdf5_simple(filepath, x, y):
     ----------
     filepath :  str
                 file name where data will be stored. (Do not include extension- .h5)
-    data_dict : dictionary
-                data should be stored as data_dict[key]= data_arrays
+    x : anything
+        data stored in the hdf5
 
     Returns
     -------
