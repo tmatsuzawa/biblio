@@ -25,3 +25,8 @@ def roundup(x):
     return number * 10 ** exponent
 
 
+
+# Vortex ring: formation number (Gharib)
+def compute_form_no(span, orifice_d=25.6, piston_d=160., num_orifices=1):
+    LD = (piston_d / orifice_d)**2 * span / orifice_d / num_orifices
+    return LD
