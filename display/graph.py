@@ -86,7 +86,8 @@ def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, over
     # if a figure already exists AND you'd like to overwrite, name a figure differently
     ver_no = 0
     while os.path.exists(savepath) and not overwrite:
-        savepath = directory + os.path.split(path)[1] + '_{n:03d.}'.format(n=ver_no) + ext
+        # this needs to be fixed. right now, it keeps saving to _000.png
+        savepath = directory + os.path.split(path)[1] + '_%03d' % ver_no + ext
         ver_no += 1
 
 
@@ -523,7 +524,31 @@ def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None
 
 #imshow
 def imshow(griddata, xmin=0, xmax=1, ymin=0, ymax=1, cbar=True, vmin=0, vmax=0, \
-           fignum=1, subplot=111, figsize=__figsize__, interpolation='linear', cmap='bwr'):
+           fignum=1, subplot=111, figsize=__figsize__, interpolation='nearest', cmap='bwr', scale=1.0):
+    """
+
+    Parameters
+    ----------
+    griddata
+    xmin
+    xmax
+    ymin
+    ymax
+    cbar
+    vmin
+    vmax
+    fignum
+    subplot
+    figsize
+    interpolation: 'none', 'nearest', 'bilinear', 'bicubic', 'spline16', 'spline36',
+                   'hanning', 'hamming', 'hermite', 'kaiser', 'quadric', 'catrom',
+                   'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos'.
+    cmap
+
+    Returns
+    -------
+
+    """
     fig, ax = set_fig(fignum, subplot, figsize=figsize)
     if vmin == vmax == 0:
         cax = ax.imshow(griddata, extent=(xmin, xmax, ymin, ymax),\
@@ -532,7 +557,7 @@ def imshow(griddata, xmin=0, xmax=1, ymin=0, ymax=1, cbar=True, vmin=0, vmax=0, 
         cax = ax.imshow(griddata, extent=(xmin, xmax, ymin, ymax),\
                    interpolation=interpolation, cmap=cmap, vmin=vmin, vmax=vmax)
     if cbar:
-        cc = fig.colorbar(cax)
+        cc = fig.colorbar(cax, scale=1.0)
     return fig, ax, cax, cc
 
 
