@@ -22,8 +22,8 @@ def read_json(datafilepath, verbose=True):
 
 #pickle
 def read_pickle(filename):
-    pickle_in = open(filename, "rb" )
-    obj = pickle.load(pickle_in)
+    with open(filename, "rb" ) as pickle_in:
+        obj = pickle.load(pickle_in)
     return obj
 
 # csv

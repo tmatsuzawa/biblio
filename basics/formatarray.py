@@ -212,6 +212,7 @@ def natural_sort(arr):
 
     return sorted(arr, key=natural_keys)
 
+
 # Application
 def detect_sign_flip(arr, delete_first_index=True):
     """
@@ -579,7 +580,7 @@ def coarse_grain_2darr(arr, nrows_sub, ncolumns_sub):
     arr_coarse: coarse-grained 2d arr
 
     """
-    arr = np.asrray(arr)
+    arr = np.asarray(arr)
     nrows, ncols = arr.shape
 
     # If the 2d array cannot be separated into blocks, then extend/pad the 2d array

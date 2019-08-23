@@ -1060,9 +1060,14 @@ def compute_spatial_autocorr(ui, x, y, roll_axis=1, n_bins=None, x0=None, x1=Non
         rr, corr = rr.flatten(), corr.flatten()
 
         # get a histogram
-        rr_, _, _ = binned_statistic(rr, rr, statistic='mean', bins=n_bins)
+        rr_means, rr_edges, binnumber = binned_statistic(rr, rr, statistic='mean', bins=n_bins)
         corr_, _, _ = binned_statistic(rr, corr, statistic='mean', bins=n_bins)
         corr_err, _, _ = binned_statistic(rr, corr, statistic='std', bins=n_bins)
+
+        # One may use rr_means or the middle point of each bin for plotting
+        # Default is the middle point
+        rr_binwidth = (rr_edges[1] - rr_edges[0])
+        rr_ = rr_edges[1:] - rr_binwidth / 2
 
         # Sort arrays
         rr, corr = sort2arr(rr_, corr_)
@@ -2106,7 +2111,7 @@ def get_characteristic_velocity(udata):
     return u_irms
 
 def klonecker_delta(i, j):
-    """
+    """F
     Klonecker Delta function
     Parameters
     ----------

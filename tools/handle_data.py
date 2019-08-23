@@ -158,16 +158,9 @@ def generate_data_dct_plottable(dataPath, threshold=0.0, separation='\t', varInd
         #     print 'var' + str(x-1) + '-Masked'
         #     print dataMaskedForPlot["var{0}".format(x + 1)].mask
 
-    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-    for x in range(0, len(dataMaskedForPlot)):
-        print dataMaskedForPlot["var{0}".format(x)].mask
-    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+
 #Cropping
-    print len(dataMaskedForPlot)
     dataCroppedForPlot = {}  # initialize a dictionary where numpy masked arrays will be stored
-    print dataMaskedForPlot["var{0}".format(0)].mask  ####
     for x in range(0, len(dataMaskedForPlot)):
         dataCroppedForPlot["var{0}".format(x)] = []  # initialize lists var0, var1,...
         checkerArray = np.zeros((len(dataMaskedForPlot["var{0}".format(x)])), dtype=bool) #Used to identify which lists need to be cropped for plotting

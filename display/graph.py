@@ -19,6 +19,8 @@ from scipy import stats
 import library.basics.formatarray as fa
 import numpy as np
 import glob
+from fractions import Fraction
+from math import modf
 
 
 #Global variables
@@ -183,40 +185,52 @@ def plotfunc(func, x, param, fignum=1, subplot=111, ax = None, label=None, color
         ax.legend()
     return fig, ax
 
-def plot(x, y, fignum=1, figsize=None, label='', color=None, subplot=None, legend=False, **kwargs):
+def plot(x, y, fignum=1, figsize=None, label='', color=None, subplot=None, legend=False, fig=None, ax=None,**kwargs):
     """
     plot a graph using given x,y
     fignum can be specified
     any kwargs from plot can be passed
     """
-    fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    if fig is None and ax is None:
+        fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    elif fig is None:
+        fig = plt.gcf()
+    elif ax is None:
+        ax = plt.gca()
+
+
     if len(x) > len(y):
         print("Warning : x and y data do not have the same length")
         x = x[:len(y)]
     if color is None:
-        plt.plot(x, y, label=label, **kwargs)
+        ax.plot(x, y, label=label, **kwargs)
     else:
-        plt.plot(x, y, color=color, label=label, **kwargs)
+        ax.plot(x, y, color=color, label=label, **kwargs)
     if legend:
-        plt.legend()
+        ax.legend()
     return fig, ax
 
 
-def plot_saddoughi(fignum=1, figsize=None, label='', color=None, subplot=None, legend=False, **kwargs):
+def plot_saddoughi(fignum=1, fig=None, ax=None, figsize=None, label='', color=None, subplot=None, legend=False, **kwargs):
     """
     plot universal 1d energy spectrum (Saddoughi, 1992)
     """
-    fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    if fig is None and ax is None:
+        fig, ax = set_fig(fignum, subplot, figsize=figsize)
+    elif ax is not None and fig is None:
+        fig = plt.gcf()
+    elif fig is not None and ax is None:
+        ax = plt.gca()
 
     x = np.asarray([1.27151, 0.554731, 0.21884, 0.139643, 0.0648844, 0.0198547, 0.00558913, 0.00128828, 0.000676395, 0.000254346])
     y = np.asarray([0.00095661, 0.0581971, 2.84666, 11.283, 59.4552, 381.78, 2695.48, 30341.9, 122983, 728530])
 
     if color is None:
-        plt.plot(x, y, label=label, **kwargs)
+        ax.plot(x, y, label=label, **kwargs)
     else:
-        plt.plot(x, y, color=color, label=label, **kwargs)
+        ax.plot(x, y, color=color, label=label, **kwargs)
     if legend:
-        plt.legend()
+        ax.legend()
     return fig, ax
 
 
@@ -471,8 +485,8 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
 
 ## 2D plotsFor the plot you showed at group meeting of lambda converging with resolution, can you please make a version with two x axes (one at the top, one below) one pixel spacing, other PIV pixel spacing, and add a special tick on each for the highest resolution point.
 # (pcolormesh)
-def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None, vmax=None, log10=False, show=False,
-               cbar=False, cmap='magma', aspect='equal', linewidth=0,  **kwargs):
+def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None, vmax=None, log10=False, label=None, show=False,
+               cbar=True, cmap='magma', aspect='equal', linewidth=0,  option='scientific', **kwargs):
     """  Color plot of 2D array
     Parameters
     ----------
@@ -513,7 +527,7 @@ def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None
         cc = ax.pcolormesh(x, y, z, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
 
     if cbar:
-        plt.colorbar()
+        add_colorbar(cc, ax=ax, label=label, option=option)
 
     if aspect == 'equal':
         ax.set_aspect('equal')
@@ -781,6 +795,7 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
 
     return cb
 
+
 def add_discrete_colorbar(ax, colors, vmin=0, vmax=None, label=None, fontsize=None, option='normal',
                  tight_layout=True, ticklabelsize=None, ticklabel=None,
                  aspect = None, **kwargs):
@@ -829,41 +844,91 @@ def add_discrete_colorbar(ax, colors, vmin=0, vmax=None, label=None, fontsize=No
 
     return cb
 
-def add_colorbar_alone(fig=None, ax=None, ax_loc=[0.05, 0.80, 0.9, 0.15], vmin=0, vmax=1, cmap=cmap, orientation='horizontal',
-                       label=None, fontsize=__fontsize__, *kwargs):
-    """
-    Add a colorbar alone to a canvas.
-    Use a specified figure and axis object if given. Otherwise, create one at location "ax_loc"
-    Parameters
-    ----------
-    fig
-    ax
-    ax_loc
-    vmin
-    vmax
-    cmap
-    orientation
-    label
-
-    Returns
-    -------
-    ax: axis object
-    cb: colorbarbase object
-
-    """
 
 
-    if fig is None:
-        fig = plt.gcf()
-    if ax is None:
-        ax = fig.add_axes(ax_loc)
+def add_colorbar_alone(ax, values, cmap=cmap, label=None, fontsize=None, option='normal',
+                 tight_layout=True, ticklabelsize=None, ticklabel=None,
+                 aspect = None, location='right', **kwargs):
+    fig = ax.get_figure()
+
+    # number of values
+    n = np.asarray(values).size
+    # get min/max values
+    vmin, vmax = np.nanmin(values), np.nanmax(values)
+    # vmin, vmax = 0, len(values)
+
+
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
-    cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap,
-                                    norm=norm,
-                                    orientation=orientation)
-    if label is not None:
-        cb.set_label(label, fontsize=fontsize)
-    return ax, cb
+    sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+    sm.set_array([])  # dummy mappable
+
+    # make an axis instance for a colorbar
+    divider = axes_grid.make_axes_locatable(ax)
+    cax = divider.append_axes(location, size='5%', pad=0.15)
+
+    if option == 'scientific':
+        cb = fig.colorbar(sm, cax=cax, format=sfmt, **kwargs)
+    else:
+        cb = fig.colorbar(sm, cax=cax,  **kwargs)
+
+    if ticklabel is not None:
+        cb.ax.set_yticklabels(ticklabel)
+
+    if not label is None:
+        if fontsize is None:
+            cb.set_label(label)
+        else:
+            cb.set_label(label, fontsize=fontsize)
+    if ticklabelsize is not None:
+        cb.ax.tick_params(labelsize=ticklabelsize)
+
+    # Adding a color bar may distort the aspect ratio. Fix it.
+    if aspect == 'equal':
+        ax.set_aspect('equal')
+
+    # Adding a color bar may disport the overall balance of the figure. Fix it.
+    if tight_layout:
+        fig.tight_layout()
+
+    return cb
+
+# def add_colorbar_alone(fig=None, ax=None, ax_loc=[0.05, 0.80, 0.9, 0.15], vmin=0, vmax=1, cmap=cmap, orientation='horizontal',
+#                        label=None, fontsize=__fontsize__, *kwargs):
+#     """
+#     Add a colorbar alone to a canvas.
+#     Use a specified figure and axis object if given. Otherwise, create one at location "ax_loc"
+#     Parameters
+#     ----------
+#     fig
+#     ax
+#     ax_loc
+#     vmin
+#     vmax
+#     cmap
+#     orientation
+#     label
+#
+#     Returns
+#     -------
+#     ax: axis object
+#     cb: colorbarbase object
+#
+#     """
+#
+#
+#     if fig is None:
+#         fig = plt.gcf()
+#     if ax is None:
+#         ax = fig.add_axes(ax_loc)
+#     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+#     cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap,
+#                                     norm=norm,
+#                                     orientation=orientation)
+#     if label is not None:
+#         cb.set_label(label, fontsize=fontsize)
+#     return ax, cb
+
+
 
 
 
@@ -1130,6 +1195,62 @@ def addtext(ax, text='text goes here', x=0, y=0, color='k',
         ax.text(xcenter, ycenter, text,  color=color, **kwargs)
     return ax
 
+def draw_power_triangle(ax, x, y, exponent, w=None, h=None, facecolor='none', edgecolor='r', alpha=1.0, flip=False,
+                        fontsize=__fontsize__, set_base_label_one=False, beta=20, **kwargs):
+
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    exp_xmax, exp_xmin = np.log10(xmax), np.log10(xmin)
+    exp_ymax, exp_ymin = np.log10(ymax), np.log10(ymin)
+    exp_x, exp_y = np.log10(x), np.log10(y)
+
+    # Default size of the triangle is the fifth of the width of the plot
+    if w is None and h is None:
+        exp_w = (exp_xmax - exp_xmin) * 0.4
+        exp_h = exp_w * exponent
+    elif w is None and h is not None:
+        exp_h = np.log10(h)
+        exp_w = exp_h / exponent
+    elif w is not None and h is None:
+        exp_w = np.log10(w)
+        exp_h = exp_w * exponent
+    else:
+        exp_w = np.log10(w)
+        exp_h = np.log10(h)
+
+    w = 10 ** (exp_x + exp_w) - 10 ** exp_x  # base of the triangle
+    h = 10 ** (exp_y + exp_h) - 10 ** exp_y  # height of the triangle
+    if not flip:
+        path = mpl.path.Path([[x, y], [x + w, y], [x + w, y + h], [x, y]])
+    else:
+        path = mpl.path.Path([[x, y], [x, y + h], [x + w, y + h], [x, y]])
+    patch = mpatches.PathPatch(path, facecolor=facecolor, edgecolor=edgecolor, alpha=alpha, **kwargs)
+    ax.add_patch(patch)
+
+
+    # annotate
+    # beta = 20. # greater beta corresponds to less spacing between the texts and the triangle edges
+    if exponent >= 0 and not flip:
+        x_base, y_base = 10 ** (exp_x + exp_w * 0.4), 10 ** (exp_y - (exp_ymax - exp_ymin) / beta)
+        x_height, y_height = 10 ** (exp_x + (exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.6)
+    elif exponent < 0 and not flip:
+        x_base, y_base = 10 ** (exp_x + exp_w * 0.4), 10 ** (exp_y + (exp_ymax - exp_ymin) / beta)
+        x_height, y_height = 10 ** (exp_x + (exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.6)
+    elif exponent >= 0 and flip:
+        x_base, y_base = 10 ** (exp_x + exp_w * 0.4), 10 ** (exp_y + (exp_ymax - exp_ymin) / beta)
+        x_height, y_height = 10 ** (exp_x - (exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.6)
+    else:
+        x_base, y_base = 10 ** (exp_x + exp_w * 0.4), 10 ** (exp_y + exp_h - (exp_ymax - exp_ymin) / beta)
+        x_height, y_height = 10 ** (exp_x - (exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.6)
+
+    if set_base_label_one:
+        ax.text(x_base, y_base, '1', fontsize=fontsize)
+        ax.text(x_height, y_height, '%.2f' % exponent, fontsize=fontsize)
+    else:
+        # get the numbers to put on the graph to indicate the power
+        exponent_rational = approximate_fraction(exponent, 0.0001)
+        ax.text(x_base, y_base, str(np.abs(exponent_rational.denominator)), fontsize=fontsize)
+        ax.text(x_height, y_height, str(np.abs(exponent_rational.numerator)), fontsize=fontsize)
 
 
 
@@ -1139,6 +1260,12 @@ def clf(fignum=None):
     plt.clf()
 
 ## Color cycle
+def reset_colorcycle(color_cycle=__color_cycle__, last_color='#17becf'):
+    for i in range(100):
+        if next(color_cycle) == last_color:
+            break
+    return color_cycle
+
 def skipcolor(numskip, color_cycle=__color_cycle__):
     """ Skips numskip times in the color_cycle iterator
         Can be used to reset the color_cycle"""
@@ -1151,10 +1278,51 @@ def get_default_color_cycle():
     return __color_cycle__
 
 def get_first_n_colors_from_color_cycle(n):
+    __color_cycle__ = reset_colorcycle()
     color_list = []
     for i in range(n):
         color_list.append(next(__color_cycle__))
     return color_list
+
+
+def create_cmap_using_values(colors=None, color1='greenyellow', color2='darkgreen', n=100):
+    """
+    Create a colormap instance from a list
+    ... same as mpl.colors.LinearSegmentedColormap.from_list()
+    Parameters
+    ----------
+    colors
+    color1
+    color2
+    n
+
+    Returns
+    -------
+
+    """
+    if colors is None:
+        colors = get_color_list_gradient(color1=color1, color2=color2, n=n)
+    cmap_name = 'new_cmap'
+    newcmap = mpl.colors.LinearSegmentedColormap.from_list(cmap_name, colors, N=n)
+
+    return newcmap
+
+def get_colors_and_cmap_using_values(values, cmap=None, color1='greenyellow', color2='darkgreen', vmin=None, vmax=None, n=100):
+    values = np.asarray(values)
+    if vmin is None:
+        vmin = np.nanmin(values)
+    if vmax is None:
+        vmax = np.nanmin(values)
+    if cmap is None:
+        cmap = create_cmap_using_values(color1=color1, color2=color2, n=n)
+    else:
+        cmap = plt.get_cmap(cmap, n)
+        # normalize
+    vmin, vmax = np.nanmin(values), np.nanmax(values)
+    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+    colors = cmap(norm(values))
+    return colors, cmap, norm
+
 
 def get_color_list_gradient(color1='greenyellow', color2='darkgreen', n=10):
     """
@@ -1309,8 +1477,56 @@ def add_subplot_axes(ax, rect, axisbg='w'):
 
 # sketches
 def draw_rectangle(ax, x, y, width, height, angle=0.0, linewidth=1, edgecolor='r', facecolor='none', **kwargs):
+    """
+    Draws a rectangle in a figure (ax)
+    Parameters
+    ----------
+    ax
+    x
+    y
+    width
+    height
+    angle
+    linewidth
+    edgecolor
+    facecolor
+    kwargs
+
+    Returns
+    -------
+
+    """
     rect = mpatches.Rectangle((x, y), width, height, angle=angle, linewidth=linewidth, edgecolor=edgecolor,
                               facecolor=facecolor, **kwargs)
     ax.add_patch(rect)
+    ax.axis('equal') # this ensures to show the rectangle if the rectangle is bigger than the original size
     return rect
 
+## misc.
+def simplest_fraction_in_interval(x, y):
+    """Return the fraction with the lowest denominator in [x,y]."""
+    if x == y:
+        # The algorithm will not terminate if x and y are equal.
+        raise ValueError("Equal arguments.")
+    elif x < 0 and y < 0:
+        # Handle negative arguments by solving positive case and negating.
+        return -simplest_fraction_in_interval(-y, -x)
+    elif x <= 0 or y <= 0:
+        # One argument is 0, or arguments are on opposite sides of 0, so
+        # the simplest fraction in interval is 0 exactly.
+        return Fraction(0)
+    else:
+        # Remainder and Coefficient of continued fractions for x and y.
+        xr, xc = modf(1/x);
+        yr, yc = modf(1/y);
+        if xc < yc:
+            return Fraction(1, int(xc) + 1)
+        elif yc < xc:
+            return Fraction(1, int(yc) + 1)
+        else:
+            return 1 / (int(xc) + simplest_fraction_in_interval(xr, yr))
+
+def approximate_fraction(x, e):
+    """Return the fraction with the lowest denominator that differs
+    from x by no more than e."""
+    return simplest_fraction_in_interval(x - e, x + e)

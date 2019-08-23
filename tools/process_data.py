@@ -8,7 +8,8 @@ import copy
 import numpy.ma as ma
 from scipy import interpolate
 from scipy.stats import binned_statistic
-
+from numpy.fft import fft, ifft, fftfreq
+import copy
 # Data cleaning (Masking / Filtering)
 
 def interpolate_using_mask(arr, mask):
@@ -743,3 +744,15 @@ def compute_velocity_simple(time, pos):
 
     velocity = delta_pos / delta_time
     return time_new, velocity
+
+
+# FFT
+def lowpass_filter(signal, dt, f=10):
+    n = len(signal)
+    freq = fftfreq(n, d=dt)
+    signal_f = fft(signal)
+    signal_f_cut = copy.deepcopy(signal_f)
+    signal_f_cut[np.abs(freq) > f] = 0
+    signal_cut = ifft(signal_f_cut)
+    print np.sum(np.abs(freq) > f), n
+    return signal_cut
