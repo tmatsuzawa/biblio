@@ -66,10 +66,10 @@ def compute_u_matrix(R,Rp,Gamma,d=3):
     
     U = Gamma/(4*np.pi)*np.sum(dl/norm_C**3,axis=0)
     
-    print(T_mat.shape)
+    print((T_mat.shape))
     #print(T_mat[0,...])
     Cnorm = norm(C)
-    print(C.shape)
+    print((C.shape))
     
 #    n = path.shape[0]
 #    m = x.shape[0]
@@ -200,12 +200,12 @@ def tangent_test():
     path = generate_vortex(1,N)
     dV = tangent(path)*N/(2*np.pi)
     
-    print(np.mean(norm(dV)))
-    print(np.std(norm(dV)))
+    print((np.mean(norm(dV))))
+    print((np.std(norm(dV))))
     
     indices = np.arange(0,100,10)
     for i in indices:
-        print(dV[i,:],path[i,:])
+        print((dV[i,:],path[i,:]))
         
 #    graphes.graph(path[:,0],path[:,1],label='r')
     graphes.graph(np.arange(N),path[:,0])
@@ -228,8 +228,8 @@ def example():
     start=time.time()    
     V = velocity_from_line([path],X,Gamma)
     end=time.time()
-    print("Time elapsed : "+str(end-start)+"s")
-    print("Number of computed values :"+str(np.shape(X)[0]))
+    print(("Time elapsed : "+str(end-start)+"s"))
+    print(("Number of computed values :"+str(np.shape(X)[0])))
 
     V_th = B_along_axis(X,R,Gamma)
 
@@ -321,7 +321,7 @@ def vortex_maps(x,y,Z,dx=1,display_map=False):
     b0 = 2.5
     dZ2={}
     for b in blist:
-        print('Compute vorticity with r='+str(b))
+        print(('Compute vorticity with r='+str(b)))
         dZ2[b] = strain_tensor.strain_tensor_C(Z,d=2,b=b)/dx
     
     omega1,enstrophy2 = strain_tensor.vorticity(dZ1,d=2,norm=False)
@@ -391,8 +391,8 @@ def vortex_maps(x,y,Z,dx=1,display_map=False):
         graphes.graph([b],[omega2[i2,j2]],label='k^',fignum=12)
         graphes.legende('Circle radius r (in box unit)','max. vorticity','Influence of contour size')
         
-    print(Xp.shape)
-    print(Xp2.shape)
+    print((Xp.shape))
+    print((Xp2.shape))
     
     #    graphes.color_plot(X,Y,R,fignum=3,vmin=0,vmax=10)
     print(figs)

@@ -66,7 +66,7 @@ def detect_start(X, start, fileCine, epsilon=10, Dt=10):
     # lim=2000
 
 
-    print('Threshold : ' + str(lim))
+    print(('Threshold : ' + str(lim)))
     indices = np.where(X > lim)
     # print(np.shape(indices))
     # np.extract : find the first indices satisfying this condition
@@ -85,7 +85,7 @@ def detect_start(X, start, fileCine, epsilon=10, Dt=10):
     if valid == '':
         print('ok')
     else:
-        valid = input('Confirm ?')
+        valid = eval(input('Confirm ?'))
 
         if not valid == '':
             print('Origin of time arbitrary set to 0')

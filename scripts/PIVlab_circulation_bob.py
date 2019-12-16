@@ -56,7 +56,7 @@ def load_matlab_data(data_loc):
                 uy.append(float(val))
             elif j == 4:
                 omega.append(float(val))
-    x, y, ux, uy, omega = map(lambda z: asarray(z), [x, y, ux, uy, omega])
+    x, y, ux, uy, omega = [asarray(z) for z in [x, y, ux, uy, omega]]
     return x, y, ux, uy, omega
 
 
@@ -169,17 +169,17 @@ if __name__ == '__main__':
         name, ext = os.path.splitext(cine_name)
         cine_dir = os.path.join(date_dir, name)
 
-        print 'Working on Cine file: ', name
+        print('Working on Cine file: ', name)
         if not os.path.exists(cine_dir):
             os.mkdir(cine_dir)
 
         data_dir = os.path.join(cine_dir, 'tif_data', 'PIV_W%s_step%s_data' % (box_size, int(frame_spacing)))
-        print data_dir
+        print(data_dir)
         circulation_dir = os.path.join(OUTDIR, name + '_W' + str(box_size))
         if not os.path.exists(circulation_dir):
             os.mkdir(circulation_dir)
         if not os.path.exists(data_dir):
-            print 'NO DATA DIRECTORY FOUND! EXITING'
+            print('NO DATA DIRECTORY FOUND! EXITING')
             sys.exit()
 
         # INITIALIZE EMTPY LISTS FOR ROBUST GAMMA COMPUTATIONS
@@ -191,19 +191,19 @@ if __name__ == '__main__':
 
         # ITERATE THROUGH FRAMES IN CINE FILE
         if args.stop == 0:
-            frames = range(args.start, 11000, args.skip)
+            frames = list(range(args.start, 11000, args.skip))
         else:
-            frames = range(args.start, args.stop, args.skip)
-        print 'Working on frame range: (%d:%d)' % (frames[0], frames[-1])
+            frames = list(range(args.start, args.stop, args.skip))
+        print('Working on frame range: (%d:%d)' % (frames[0], frames[-1]))
 
 
         for i, f in enumerate(frames):
             if f - ((f/plot_spacing) * plot_spacing) == 0:
-                print 'Processing frame %d' % f
+                print('Processing frame %d' % f)
                 try:
                     i += frames[0] / frame_spacing
                 except TypeError:
-                    print 'NO FRAME SPACING SPECIFIED! EXITING'
+                    print('NO FRAME SPACING SPECIFIED! EXITING')
 
                 if not summarize:
 
@@ -213,13 +213,12 @@ if __name__ == '__main__':
                         x, y, ux, uy, omega = load_matlab_data(os.path.join(data_dir, data_name))
 
                     except IOError:
-                        print 'NO DATA EXISTS FOR FRAME: %d; SKIPPING!' % f
+                        print('NO DATA EXISTS FOR FRAME: %d; SKIPPING!' % f)
                         continue
 
-                    print 'Loaded PIVlab_%d.txt' % (i + 1)
+                    print('Loaded PIVlab_%d.txt' % (i + 1))
                     # COMPUTE INTERPOLATED VELOCITY AND VORTICITY FIELDS
-                    iux, iuy = map(
-                        lambda flow: interp_flow_component(x, y, flow * scale * rate, imsize), [ux, uy])
+                    iux, iuy = [interp_flow_component(x, y, flow * scale * rate, imsize) for flow in [ux, uy]]
                     iomega = interp_flow_component(x, y, omega * rate, imsize)
 
                     # FIND CENTER OF VORTEX FROM WEIGHTED AVERAGE IN A BOX CENTERED ON THE MAXIMUM VALUE OF OMEGA
@@ -228,7 +227,7 @@ if __name__ == '__main__':
                     if not max_x_arr:
                         continue
 
-                    max_x, max_y = map(lambda x: int(x[0]), [max_x_arr, max_y_arr])
+                    max_x, max_y = [int(x[0]) for x in [max_x_arr, max_y_arr]]
                     w_cy, w_cx = ndimage.measurements.center_of_mass(
                         iomega[max_y - rad:max_y + rad, max_x - rad:max_x + rad])
                     cy = w_cy + (max_y - rad)
@@ -236,7 +235,7 @@ if __name__ == '__main__':
 
                     # CONFIRM VORTEX CENTER IS IN FRAME
                     if isnan(cx):
-                        print 'VORTEX NOT IN FRAME, SKIPPING'
+                        print('VORTEX NOT IN FRAME, SKIPPING')
                         continue
 
                     # CONFIRM THAT CIRCULATION CURVES ARE ALL IN THE FRAME
@@ -246,7 +245,7 @@ if __name__ == '__main__':
                     if (path_y_limits <= cutoff).any() or (path_y_limits >= (imsize[0] - cutoff)).any():
                         bad_y_path = True
                     if bad_y_path:
-                        print 'CIRCULATION CURVE NOT IN FRAME, SKIPPING'
+                        print('CIRCULATION CURVE NOT IN FRAME, SKIPPING')
                         continue
 
                     bad_x_path = False
@@ -254,7 +253,7 @@ if __name__ == '__main__':
                     if (path_x_limits <= cutoff).any() or (path_x_limits >= (imsize[1] - cutoff)).any():
                         bad_x_path = True
                     if bad_x_path:
-                        print 'CIRCULATION CURVE NOT IN FRAME, SKIPPING'
+                        print('CIRCULATION CURVE NOT IN FRAME, SKIPPING')
                         continue
 
                     # GENERATE SUBFIGURES OF INTERPOLATED QUANTITIES
@@ -383,7 +382,7 @@ if __name__ == '__main__':
                 try:
                     circulation_data = json.load(open(circulation_data_file))
                 except IOError:
-                    print 'No data found for %s!' % circulation_data_name
+                    print('No data found for %s!' % circulation_data_name)
                     continue
 
                 robust_gammas.append(circulation_data['mean_gamma'][where(
@@ -395,7 +394,7 @@ if __name__ == '__main__':
                 robust_frames.append(f)
 
         # PLOT AGGREGATE DATA COMPRISED OF ALL PROCESSED FRAMES
-        print 'Working on aggregate plot'
+        print('Working on aggregate plot')
         plt.figure(figsize=(8, 8))
         plt.subplot(211)
 

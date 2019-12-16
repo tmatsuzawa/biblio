@@ -6,17 +6,17 @@ from scipy import ndimage
 import time
 import sys, os
 import argparse, cine
-import multipool
-import setupfile
+from . import multipool
+from . import setupfile
 
-from cine import Sparse4D
+from .cine import Sparse4D
 
 def if_int(str):
     if not str: return None
     else: return int(str)
 
 def eval_slice(s, N): 
-    return range(*slice(*[if_int(x) for x in s.split(':')]).indices(N))
+    return list(range(*slice(*[if_int(x) for x in s.split(':')]).indices(N)))
     
 def work_func(args):
     frame_num, dat, setup_list, args = args
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         base, ext = os.path.splitext(fn)
         ofn = base + '-pc.s4d'
         if os.path.exists(ofn) and not args.overwrite:
-            print "%s\n --> %s already exists, ignoring..." % (fn, ofn)
+            print("%s\n --> %s already exists, ignoring..." % (fn, ofn))
             continue
 
         input = cine.Sparse(fn)
@@ -119,13 +119,13 @@ if __name__ == '__main__':
         frames = len(input) // setup['cine_depth']
         #frames = 85521 // setup['cine_depth']
         #frames = 3000 // setup['cine_depth']
-        print frames, len(input)
+        print(frames, len(input))
         
         header = input.header
         header['command'] = ' '.join(sys.argv)
         header['3dsetup'] = setup_list
     
-        print '%s\n --> %s %3d/%3d' % (fn, ofn, 0, frames),
+        print('%s\n --> %s %3d/%3d' % (fn, ofn, 0, frames), end=' ')
         sys.stdout.flush()
 
         #sys.exit()
@@ -155,7 +155,7 @@ if __name__ == '__main__':
             del raw
             del job
         
-            print '\r --> %s %3d/%3d' % (ofn, i+1, frames),
+            print('\r --> %s %3d/%3d' % (ofn, i+1, frames), end=' ')
             sys.stdout.flush()
             #time.sleep(0.01)
         
@@ -163,7 +163,7 @@ if __name__ == '__main__':
             results = pool.return_results()
             pool.close()
 
-        print '\r --> %s  -->  Done in %.1f s.' % (ofn, time.time() - start)
+        print('\r --> %s  -->  Done in %.1f s.' % (ofn, time.time() - start))
 
         results.sort()
 

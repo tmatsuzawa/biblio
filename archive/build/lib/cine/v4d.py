@@ -3,7 +3,7 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 
 try: from OpenGL.GLUT.freeglut import *
-except: print "No freeglut!"
+except: print("No freeglut!")
 
 from OpenGL.GLU import *
 from numpy import *
@@ -11,17 +11,17 @@ import sys, os, shutil
 import time
 #from cine import Cine, Tiff
 #from sparse4d import Sparse4D
-from cine import Sparse4D
+from .cine import Sparse4D
 import argparse
 import Image
 import traceback
-import setupfile
+from . import setupfile
 
 try:
-    import aligned
+    from . import aligned
 except:
     USE_ALIGNED = False
-    print "WARINING: failed to import aligned module, display may be slow!"
+    print("WARINING: failed to import aligned module, display may be slow!")
 else:
     USE_ALIGNED = True
     
@@ -105,12 +105,12 @@ def make_movie(source, sequence, export_dir, s=slice(None), window_kwargs={}):
     
     SEQUENCE = sequence
     
-    print 'Exporting movie to %s' % export_dir
+    print('Exporting movie to %s' % export_dir)
     if not os.path.exists(export_dir):
         os.mkdir(export_dir)
     else:
-        print "Export directory already exists!  Overwrite? [y/N] (All files will be deleted!)"
-        answer = raw_input()
+        print("Export directory already exists!  Overwrite? [y/N] (All files will be deleted!)")
+        answer = input()
         if answer.lower().startswith('y'):
             shutil.rmtree(export_dir)
             os.mkdir(export_dir)
@@ -133,7 +133,7 @@ def make_movie(source, sequence, export_dir, s=slice(None), window_kwargs={}):
 #    if 'perspective' in DATA.header:
 #        TEXTURE_PERSPECTIVE_SCALE = 0
     
-    FRAMES = range(*s.indices(len(DATA)))
+    FRAMES = list(range(*s.indices(len(DATA))))
 
     WINDOW.start()
 
@@ -158,9 +158,9 @@ def show(source, s=slice(None), window_name='4d viewer', mem_buffer=True, window
     #if 'perspective' in DATA.header:
     #    TEXTURE_PERSPECTIVE_SCALE = 0.0
     
-    FRAMES = range(*s.indices(len(DATA)))
+    FRAMES = list(range(*s.indices(len(DATA))))
      
-    print '''----Keys----
+    print('''----Keys----
 wasdqe -> Rotate volume
 zx -> Zoom
 i -> Reset rotation
@@ -190,7 +190,7 @@ QAWSEDRFTGYH -> Adjust display extents
 u -> Reset display extents
 b -> Toggle outline
 n -> Toggle background color
-'''
+''')
 #90 -> Adjust x shear
 #78 -> Adjust perspective correction
 
@@ -268,7 +268,7 @@ def tock(message=''):
         return None
 
     now = time.time()
-    print message + '%.3f' % (now - TICK_TIME)
+    print(message + '%.3f' % (now - TICK_TIME))
     TICK_TIME = now
     
 I3x = lambda x, y, z: x
@@ -377,14 +377,14 @@ class Image4D(object):
                     setup_dirs, filter_vars, default={'x_func':I3x, 'y_func':I3y, 'z_func':I3z})
         
         if self.setup_file:
-            print "Using 3d setup file: %s" % self.setup_file
+            print("Using 3d setup file: %s" % self.setup_file)
             for fn, func in zip(('x_func', 'y_func', 'z_func'), (I3x, I3y, I3z)):
                 if fn not in self.setup:
-                    print "Warning: '%s' not in setup file -- no correction applied on this axis." % fn
+                    print("Warning: '%s' not in setup file -- no correction applied on this axis." % fn)
                     self.setup[fn] = func
         
         else:
-            print "No filter matching setup file found; no perspective correction applied."
+            print("No filter matching setup file found; no perspective correction applied.")
             
             
     def __len__(self):
@@ -565,15 +565,15 @@ class FuncSetter(object):
     def __set__(self, obj, val):
         try:
             if self.glut_func is not None: self.glut_func(val)
-            else: print 'Warning: %s property is ignored.' % self.prop_name
+            else: print('Warning: %s property is ignored.' % self.prop_name)
         except:
-            print "Failed to set callback for %s" % self.prop_name
+            print("Failed to set callback for %s" % self.prop_name)
         
         
 try:
     MWF = glutMouseWheelFunc
 except:
-    print "Warning: mouse scroll wheel disabled."
+    print("Warning: mouse scroll wheel disabled.")
     MWF = None
         
 class GLUTWindow(object):
@@ -787,7 +787,7 @@ def movie_draw_scene():
     
         fn = os.path.join(EXPORT_DIR, '%08d.tga' % FRAME_COUNT)
         WINDOW.screenshot(fn)
-        print fn
+        print(fn)
         FRAME_COUNT += 1
     
     
@@ -924,7 +924,7 @@ def draw_scene():
             R = rot_y(AUTOROTATE_SPEED * elapsed, R)
             #R = dot(rot_y(AUTOROTATE_SPEED * elapsed), R)
 
-        display_settings = (FOV, int(CURRENT_FRAME), EYE_SPLIT, map(tuple, R), DISPLAY_3D,
+        display_settings = (FOV, int(CURRENT_FRAME), EYE_SPLIT, list(map(tuple, R)), DISPLAY_3D,
                             BRIGHTNESS, WINDOW.width, WINDOW.height,
                             MOUSE_CAPTURED, FOV, Z_SHIFT, DRAW_BOX, Z_STEP,
                             #TEXTURE_SHEAR, TEXTURE_PERSPECTIVE_SCALE,
@@ -945,7 +945,7 @@ def draw_scene():
                 FRAME_TIMES.append(time.time() - current_time)
                 
                 if current_time - FRAME_COUNT_START > 1:
-                    print '%5.1f' % (1. / mean(FRAME_TIMES))
+                    print('%5.1f' % (1. / mean(FRAME_TIMES)))
                     FRAME_COUNT_START = current_time
                     FRAME_TIMES = []
 
@@ -957,7 +957,7 @@ def mouse_wheel_func(button, dir, x, y):
     Z_SHIFT *= (1 + Z_RATE * dir)
 
 def find_new_file(name_str, max=10000):
-    for i in xrange(max):
+    for i in range(max):
         if not os.path.exists(name_str % i):
             return name_str % i
     else:
@@ -1014,20 +1014,20 @@ def key_pressed(*args):
         DISPLAY_3D = not DISPLAY_3D
     elif args[0] in ('[', '{'):
         EYE_SPLIT /= 2**(1./8)
-        print "Total eye shear: %.3f" % (EYE_SPLIT*2)
+        print("Total eye shear: %.3f" % (EYE_SPLIT*2))
     elif args[0] in (']', '}'):
         EYE_SPLIT *= 2**(1./8)
-        print "Total eye shear: %.3f" % (EYE_SPLIT*2)
+        print("Total eye shear: %.3f" % (EYE_SPLIT*2))
     elif args[0] in ('\\', '|'):
         EYE_SPLIT *= -1
     elif args[0] == 'g':
         FOV *= sqrt(2.)
         Z_SHIFT /= sqrt(2.)
-        print 'FOV = %.2f' % FOV
+        print('FOV = %.2f' % FOV)
     elif args[0] == 'h':
         FOV /= sqrt(2.)
         Z_SHIFT *= sqrt(2.)
-        print 'FOV = %.2f' % FOV
+        print('FOV = %.2f' % FOV)
     elif args[0] == 'a':
         display_rot(y = -ROTATE_AMOUNT)
     elif args[0] == 'd':
@@ -1056,7 +1056,7 @@ def key_pressed(*args):
     elif args[0] == 'o':
         CURRENT_FRAME = 0.;
     elif args[0] == 'f':
-        print int(CURRENT_FRAME)
+        print(int(CURRENT_FRAME))
     elif args[0] == 'r':
         AUTOROTATE = not AUTOROTATE
     elif args[0] == 't':
@@ -1084,7 +1084,7 @@ def key_pressed(*args):
             
     elif args[0] == '1':
         fn = find_new_file('%s_frame%03d_%%04d.png' % (BASENAME, int(CURRENT_FRAME)))
-        print "Saving screenshot to " + fn
+        print("Saving screenshot to " + fn)
         SCREENSHOT = fn
         #WINDOW.screenshot(fn)
 
@@ -1104,7 +1104,7 @@ def key_pressed(*args):
 
     elif args[0] == '4':
         USE_ALIGNED = not USE_ALIGNED
-        print 'USE_ALIGNED = %s' % repr(USE_ALIGNED)
+        print('USE_ALIGNED = %s' % repr(USE_ALIGNED))
 
     elif args[0] == 'u':
         EDGES = array([[0., 1]]*3)
@@ -1126,7 +1126,7 @@ def key_pressed(*args):
         
         settings = []
         
-        for k, v in movie_settings.iteritems():
+        for k, v in movie_settings.items():
             if getattr(LAST_MOVIE_SETTINGS, k, None) != v:
                 settings.append('    %s: %s' % (k, v))
         
@@ -1134,7 +1134,7 @@ def key_pressed(*args):
        
         if MOVIE_FILE is None:
             MOVIE_FILE = find_new_file('%s_movie_%%04d.txt' % BASENAME)
-            print "Created movie file: %s" % MOVIE_FILE
+            print("Created movie file: %s" % MOVIE_FILE)
             open(MOVIE_FILE, 'w').write('#Autogenerated on: %s\n\nsource: %s\n\nsingle:\n%s\n' % (time.strftime("%Y %b %d %a %H:%M:%S %Z"), DATA.source.fn, '\n'.join(settings)))
             #, format_array(R[:2, :]), int(CURRENT_FRAME), Z_SHIFT, BRIGHTNESS, DISPLAY_3D, DRAW_BOX, Z_STEP, FOV, format_array(EDGES)))
 
@@ -1154,7 +1154,7 @@ def key_pressed(*args):
         
         EDGES[axis, side] += pm * 0.05
         
-        print '(' + ', '.join('%.2f' % n for n in tuple(EDGES.flatten())) + ')'
+        print('(' + ', '.join('%.2f' % n for n in tuple(EDGES.flatten())) + ')')
     
     elif args[0] == 'n':
         if BACKGROUND_COLOR in BACKGROUND_COLORS:

@@ -61,7 +61,7 @@ def make_dict_json_serializable(datadict):
                     except:
                         continue
 
-    print '...Converted contents of a dictionary into lists'
+    print('...Converted contents of a dictionary into lists')
     return datadict
 
 
@@ -115,9 +115,9 @@ def make_default_data_dict(keys_list):
         for i in range(num_keys):
             datadict[keys_list[0]][keys_list[1]][keys_list[2]][keys_list[3]][keys_list[4]] = np.nan
     elif num_keys > 5:
-        print 'Currently, this method can NOT make a datadict with nestedness of more than 5.'
+        print('Currently, this method can NOT make a datadict with nestedness of more than 5.')
     else:
-        print 'Error: Provided key_list is invalid. Returning None...'
+        print('Error: Provided key_list is invalid. Returning None...')
         return None
 
     datadict = dict(datadict)

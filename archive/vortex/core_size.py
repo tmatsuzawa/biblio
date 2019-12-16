@@ -37,20 +37,20 @@ def compute(M, method='vorticity', fignum=1, display=True):
     """
     if method == 'vorticity':
         lc, std_lc = from_vorticity(M, fignum=fignum, display=display)
-        print(fignum / 2 - 1, M.dataDir)
-        print('Core size : ' + str(lc) + ' +/- ' + str(std_lc) + ' mm')
+        print((fignum / 2 - 1, M.dataDir))
+        print(('Core size : ' + str(lc) + ' +/- ' + str(std_lc) + ' mm'))
         return lc, std_lc, None, None
 
     if method == 'circulation':
         lc, std_lc, Gamma, std_Gamma = from_circulation_1(M, fignum=fignum, display=display)
-        print('Core size : ' + str(lc) + ' +/- ' + str(std_lc) + ' mm')
-        print('Circulation : ' + str(Gamma) + ' +/- ' + str(std_Gamma) + ' mm')
+        print(('Core size : ' + str(lc) + ' +/- ' + str(std_lc) + ' mm'))
+        print(('Circulation : ' + str(Gamma) + ' +/- ' + str(std_Gamma) + ' mm'))
         return lc, std_lc, Gamma, std_Gamma
 
     if method == 'circulation_2':
         lc, std_lc, Gamma, std_Gamma = from_circulation_2(M, fignum=fignum, display=display)
-        print('Core size : ' + str(lc) + ' +/- ' + str(std_lc) + ' mm')
-        print('Circulation : ' + str(Gamma) + ' +/- ' + str(std_Gamma) + ' mm')
+        print(('Core size : ' + str(lc) + ' +/- ' + str(std_lc) + ' mm'))
+        print(('Circulation : ' + str(Gamma) + ' +/- ' + str(std_Gamma) + ' mm'))
         return lc, std_lc, Gamma, std_Gamma
 
     if method == 'joseph':
@@ -59,7 +59,7 @@ def compute(M, method='vorticity', fignum=1, display=True):
         except:
             print('Computation falls down, skip')
             lc, std_lc = 1, 1
-        print('Core size : ' + str(lc) + ' +/- ' + str(std_lc) + ' mm')
+        print(('Core size : ' + str(lc) + ' +/- ' + str(std_lc) + ' mm'))
         return lc, std_lc, None, None
 
     return None
@@ -76,7 +76,7 @@ def from_vorticity(M, fignum=1, display=True):
     x, y = space_axis_vorticity(M)
 
     a = []
-    indices = range(0, nt, 1)
+    indices = list(range(0, nt, 1))
     x0 = []
     y0 = []
     index = []
@@ -96,7 +96,7 @@ def from_vorticity(M, fignum=1, display=True):
     error = 0.5
     if len(index) > 0 and std_lc / lc < error:
         i_example = index[len(index) // 2]
-        print('Indice : ' + str(i_example))
+        print(('Indice : ' + str(i_example)))
         if display:
             sigma, center, figs = fit_core_size(x, y, Z[..., i_example], fignum=fignum, display=display)
 
@@ -125,7 +125,7 @@ def from_circulation_1(M, fignum=1, display=True):
 
     a = []
     G0 = []
-    indices = range(0, nt, 1)
+    indices = list(range(0, nt, 1))
     x0 = []
     y0 = []
     index = []
@@ -436,7 +436,7 @@ def from_circulation(M, display=True):
 def compile(Mlist, V=None, method='circulation'):
     symbol = {'50': '^', '125': 'o', '250': 's'}
     color = {'circulation': 'r', 'vorticity': 'b', 'joseph': 'k'}
-    labels = {key: color[method] + symbol[key] for key in symbol.keys()}
+    labels = {key: color[method] + symbol[key] for key in list(symbol.keys())}
     if V == None:
         sub_labels = labels
         piston_v = None
@@ -452,10 +452,10 @@ def compile(Mlist, V=None, method='circulation'):
 
         error = 0.25
         for piston in [piston1, piston2]:
-            if piston in sub_labels.keys():
-                print(M.dataDir)
+            if piston in list(sub_labels.keys()):
+                print((M.dataDir))
                 dx = np.mean(np.diff(M.x[0, :]))
-                print('Spatial scale : ' + str(dx) + ' mm/box')
+                print(('Spatial scale : ' + str(dx) + ' mm/box'))
                 lc, std_lc, Gamma, std_Gamma = compute(M, method=method, display=False, fignum=(i + 1) * 2)
 
                 #                print(piston,dx,lc,std_lc)
@@ -472,7 +472,7 @@ def compile(Mlist, V=None, method='circulation'):
                 # print(piston,dx,lc,std_lc
                 print('')
 
-    print('figure', figs)
+    print(('figure', figs))
     print(figs)
     graphes.save_figs(figs, suffix='Compilation_method_' + method + '_v' + piston_v)
 
@@ -586,7 +586,7 @@ def from_circulation_joseph(M, fignum=1, display=True):
         rad_est.append(sigma)  # just need an estimate
         #      print 'done with estimate %d'%frame_no
     med_rad_est = np.median(rad_est) * ppmm  # estimate for mean radius from the 3 random frames
-    print 'estimated radius: %.2f mm' % (med_rad_est / ppmm)
+    print('estimated radius: %.2f mm' % (med_rad_est / ppmm))
 
     # need to make the thing to convolve
     # making the thing to convolve

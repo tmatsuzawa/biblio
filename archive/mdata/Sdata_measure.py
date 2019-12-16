@@ -37,7 +37,7 @@ def fix_PIV(S):
     Nfalse = sum(sum(sum(np.where(Vtrue, 0, 1))))
     N = Ntrue + Nfalse
 
-    print('Percentage of removed data points : ' + str((Nfalse * 100) / N) + ' %')
+    print(('Percentage of removed data points : ' + str((Nfalse * 100) / N) + ' %'))
 
     return Ux, Uy
 
@@ -138,7 +138,7 @@ def horizontal_profile(S, ylines, Dt, start=0):
         graphes.legende('x (m)', 'V (m/s)', 'Uy')
 
         plt.draw()
-        raw_input()
+        input()
 
 
 def vertical_profile(S, xlines, Dt, start=0):
@@ -164,7 +164,7 @@ def vertical_profile(S, xlines, Dt, start=0):
         graphes.legende('z (m)', 'V (m/s)', 'Uy')
 
         plt.draw()
-        raw_input()
+        input()
 
 
 def compare_profil(S1, S2):
@@ -176,7 +176,7 @@ def compare_profil(S1, S2):
 
     U1, theta1 = Smath.cart2pol(Ux1, Uy1)
     U2, theta2 = Smath.cart2pol(Ux2, Uy2)
-    print(U2.shape)
+    print((U2.shape))
 
     nx, ny, nt = S1.shape()
     indices1, indices2, nt = Sdata.subset_index(S1, S2)
@@ -191,7 +191,7 @@ def compare_profil(S1, S2):
     # a fraction can be selected using the attr im_index of each one (to use the same list of images)
     # random extract
     N = 2000
-    ind = random.sample(xrange(nx * ny * nt), N)
+    ind = random.sample(range(nx * ny * nt), N)
 
     graphes.graph(U1[ind], U2[ind])
     xlabel = 'V (m/s)  at ' + str(S1.timescale * S1.fps) + ' fps'
@@ -202,7 +202,7 @@ def compare_profil(S1, S2):
     bounded_velocity(S1, True, 5, 'v')
     bounded_velocity(S2, True, 5, 'h')
 
-    raw_input()
+    input()
 
 
 def mean_profile(S, i, j, direction='v', label='k^', display=False):
@@ -235,10 +235,10 @@ def mean_profile(S, i, j, direction='v', label='k^', display=False):
         U_moy = [np.mean(np.mean(U[:, i - Dt:i + Dt, k], axis=0), axis=0) for k in range(nt)]
         print('vertical average')
 
-    print(np.shape(U_moy))
+    print((np.shape(U_moy)))
     if display:
         # U_moy=np.mean(V[np.invert(np.isnan(V))],axis=0)
-        print('Number of frames : ' + str(len(S.m.t)))
+        print(('Number of frames : ' + str(len(S.m.t))))
 
         graphes.graph(t, U_moy, label)
         graphes.legende('t (ms)', '<V>_{x,y} (m/s)', '')
@@ -357,13 +357,13 @@ def time_window(S, nframe):
 
         plt.show(block=False)
         time.sleep(10e-3)
-        raw_input()
+        input()
 
 
 def multi_graph(function, Slist):
     for S in Slist:
         function(S)
-        raw_input()
+        input()
 
 
 def make_2dmovie(M, Z, start, stop, Dirname='velocity_module', vmin=-3, vmax=3):
@@ -383,7 +383,7 @@ def make_2dmovie(M, Z, start, stop, Dirname='velocity_module', vmin=-3, vmax=3):
         graphes.legende('x (mm)', 'y (mm)', titre)
 
         if i == start:
-            input()
+            eval(input())
         #       graphes.vfield_plot(S)
 
         Dir = os.path.dirname(M.Sdata.fileCine) + '/' + Dirname + '/'
@@ -406,7 +406,7 @@ def measure_anisotropy(fileDir, t0, fpms):
     t = np.arange(t0, t0 + n * ft, ft)
     graphes.graphloglog(t, U, label)
     graphes.legende('t (ms)', 'I (norm.)', '')
-    print(str(max(t)) + '   ' + str(max(U)))
+    print((str(max(t)) + '   ' + str(max(U))))
     # raw_input()
 
 

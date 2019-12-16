@@ -43,7 +43,7 @@ class Mdata(object):
             self.Sdata = Sdata.Sdata(generate=False)
 
             if kwargs is not None:
-                if 'dataDir' in kwargs.keys():
+                if 'dataDir' in list(kwargs.keys()):
                     self.dataDir = kwargs['dataDir']
 
                     #   self.U_ref={'ux':None,'uy':None,'x':None,'y':None}
@@ -65,7 +65,7 @@ class Mdata(object):
             print('------------------------------------------------------------')
             print('------------------------------------------------------------')
 
-            print(type(self.Sdata))
+            print((type(self.Sdata)))
         else:
             print('------------------------------------------------------------')
             print('Mdata not associated to a cine file !')
@@ -77,7 +77,7 @@ class Mdata(object):
 
         self.Id = Id.Id(self.Sdata, index=self.Sdata.Id.index, mindex=mindex)
 
-        print(self.Id.get_id())
+        print((self.Id.get_id()))
         # Data file
         # Data are not stored by default in Sdata, the data load must be called explicitly
         self.filePIV = ''  # associate the PIV file parameter ?
@@ -90,7 +90,7 @@ class Mdata(object):
 
         # print(self.get_filename())
 
-        print(self.get_filename(frmt='.hdf5'))
+        print((self.get_filename(frmt='.hdf5')))
         if os.path.exists(self.get_filename(frmt='.hdf5')):
             self.load_all(source=self.get_filename(frmt='.hdf5'), mindex=mindex)
         elif os.path.exists(self.get_filename('.txt')):
@@ -134,7 +134,7 @@ class Mdata(object):
 
         f = to_hdf5.open(filename)
 
-        if 'Sdata' in f['Mdata'].keys():
+        if 'Sdata' in list(f['Mdata'].keys()):
             self.load(f['Mdata'])
         else:
             names = ['Sdata', 'param', 'Id']
@@ -147,14 +147,14 @@ class Mdata(object):
         f.close()
 
         # print(self.Id)
-        print(self.Ux.shape)
+        print((self.Ux.shape))
 
     def load_rec(self, f, name, key=''):
         key_fix = 'Mdata'
         #  print(key_fix+key)
         try:
             #   print("toto : " +str(dpath.util.search(dict(f[key_fix+key]),'*mdata.'+name+'*').keys()))
-            keys = dpath.util.search(dict(f[key_fix + key]), '*mdata.' + name + '*').keys()
+            keys = list(dpath.util.search(dict(f[key_fix + key]), '*mdata.' + name + '*').keys())
         except:
             print("Nothing to look for anymore")
             return None
@@ -172,7 +172,7 @@ class Mdata(object):
                 # print("done")
         else:
             #   print("Iterate...")
-            keys = f[key_fix + key].keys()
+            keys = list(f[key_fix + key].keys())
             if not keys == []:
                 for k in keys:
                     self.load_rec(f, name, key=key + '/' + k)
@@ -199,7 +199,7 @@ class Mdata(object):
         """
         fileList, n = browse.get_fileList(self.dataDir + '/', self.frmt, display=display, sort='name')
         if n == 0:
-            print("NO PIV files found locally at : " + self.dataDir)
+            print(("NO PIV files found locally at : " + self.dataDir))
             print("Look for other possible locations")
 
             rootDir = file_architecture.get_dir(self.Id.date)
@@ -210,7 +210,7 @@ class Mdata(object):
             if n == 0:
                 print("No PIV files found globally !")
             else:
-                print("PIV files found at : " + rootDir)
+                print(("PIV files found at : " + rootDir))
 
         # print(n)
         return fileList, n
@@ -226,7 +226,7 @@ class Mdata(object):
 
     def set_dimensions(self):
         fileList, nt = self.get_fileList()
-        print(np.shape(self.U_ref['ux']))
+        print((np.shape(self.U_ref['ux'])))
         nx, ny = np.shape(self.U_ref['ux'])
 
         return nx, ny, nt
@@ -368,7 +368,7 @@ class Mdata(object):
             t1 = time.time()
             self.write_hdf5()
             t2 = time.time()
-            print('Time elapsed : ' + str(round((t2 - t1) * 100) / 100.) + 's')
+            print(('Time elapsed : ' + str(round((t2 - t1) * 100) / 100.) + 's'))
             print("Data written")
 
     def write_hdf5(self):
@@ -405,8 +405,8 @@ class Mdata(object):
         maxy = np.max(y)
 
         print('bounds:')
-        print(labelx + ' in [' + str(minx) + ', ' + str(maxx) + '] mm')
-        print(labely + ' in [' + str(miny) + ', ' + str(maxy) + '] mm')
+        print((labelx + ' in [' + str(minx) + ', ' + str(maxx) + '] mm'))
+        print((labely + ' in [' + str(miny) + ', ' + str(maxy) + '] mm'))
 
         boolList = [x0 >= minx, x0 <= maxx, y0 >= minx, y0 <= maxx]
         if all(boolList):
@@ -457,7 +457,7 @@ class Mdata(object):
 
     def measure(self, name, function, force=False, *args, **kwargs):
         if (not hasattr(self, name)) or force:
-            print("Compute " + name)
+            print(("Compute " + name))
             val = function(self, *args, **kwargs)
             setattr(self, name, val)
         else:

@@ -36,7 +36,7 @@ def convert(obj,L=[],t=0):
             L.append(name)            
             D = copy.deepcopy(getattr(obj,'__dict__'))
     
-            for key in D.keys():
+            for key in list(D.keys()):
              #   print(key)
                 if t<10:
                     attr = copy.deepcopy(getattr(obj,key))
@@ -55,14 +55,14 @@ def load(obj,data):
     Load a h5py group into the attributes of obj. If the h5py group contains subgroup, recursively saved them
     """
     if isinstance(data,h5py._hl.group.Group):        
-        for key,item in data.attrs.items():
+        for key,item in list(data.attrs.items()):
          #   print(obj)
             if type(obj)==dict:
                 obj[key]=item
             else:
                 setattr(obj,key,item)
                 
-        for key,item in data.items():
+        for key,item in list(data.items()):
             if type(item) is h5py._hl.dataset.Dataset:
               #  print(key)
              #   print(obj)
@@ -94,7 +94,7 @@ def create(filename):
         f = h5py.File(filename,'w')
         return f,True
     else:
-        print("File "+filename+" already exists, skip ")
+        print(("File "+filename+" already exists, skip "))
         return None,False
   
 def write(obj,erase=False,filename=None,key=''):
@@ -140,7 +140,7 @@ def write_rec(f,Dict,key='',group=None,t=0,tmax=50):
         
         if group not in f:
             f.create_group(group)
-        for key in Dict.keys():
+        for key in list(Dict.keys()):
             write_rec(f,Dict[key],key=key,group=group)
 
     if type(Dict) in [list]:
@@ -159,7 +159,7 @@ def write_rec(f,Dict,key='',group=None,t=0,tmax=50):
         done=True
         f[group].attrs[key] = Dict
     if not done:
-        print("Unrecognized : "+str(key) +' of type '+str(type(Dict))) 
+        print(("Unrecognized : "+str(key) +' of type '+str(type(Dict)))) 
         
 def write_rec_terminal(f,Dict,L=[],key='',group=None,t=0):
     """
@@ -182,7 +182,7 @@ def write_rec_terminal(f,Dict,L=[],key='',group=None,t=0):
             if group not in f:
                # print(group)
                 f.create_group(group)
-            for key in Dict.keys():
+            for key in list(Dict.keys()):
                 write_rec_terminal(f,Dict[key],L=L,key=key,group=group,t=t+1)
 
     if type(Dict) in [list]:
@@ -202,7 +202,7 @@ def write_rec_terminal(f,Dict,L=[],key='',group=None,t=0):
        # print(key)
         f[group].attrs[key] = Dict
     if not done:
-        print("Unrecognized : "+str(key) +' of type '+str(type(Dict))) 
+        print(("Unrecognized : "+str(key) +' of type '+str(type(Dict)))) 
         
      
 ############### Open and load ###########
@@ -216,7 +216,7 @@ def open(filename,typ='r'):
     if os.path.exists(filename):
         f = h5py.File(filename,typ)
     else:
-        print("File "+filename+" does not exist")
+        print(("File "+filename+" does not exist"))
         f = h5py.File(filename,'w')
     return f
    # print('done')
@@ -229,10 +229,10 @@ def load_dict(data):
 
 def load_rec(data):
     ans = {}
-    for key,item in data.attrs.items():
+    for key,item in list(data.attrs.items()):
         ans[key] = item         
         
-    for key,item in data.items():
+    for key,item in list(data.items()):
         if type(item) is h5py._hl.dataset.Dataset:
             ans[key] = item.value
         elif type(item) is h5py._hl.group.Group:
@@ -243,10 +243,10 @@ def load_rec(data):
 def display(Dict,key=None):
     #recursive display of a dictionnary
     if type(Dict)==dict:
-        for key in Dict.keys():
+        for key in list(Dict.keys()):
             display(Dict[key],key=key)
     else:
-        print('     '+key+'  , ' + str(type(Dict)))
+        print(('     '+key+'  , ' + str(type(Dict))))
 
 
 #################### How to use it ! #####################

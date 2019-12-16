@@ -31,7 +31,7 @@ for input in sys.argv[1:]:
     if not os.path.exists(tmp_dir):
         os.mkdir(tmp_dir)
     
-    for name, R in views.iteritems():
+    for name, R in views.items():
         mname = os.path.join(tmp_dir, name)
         f = open(mname + '.txt', 'w')
         f.write(movie_file % (input, R, steps, steps))

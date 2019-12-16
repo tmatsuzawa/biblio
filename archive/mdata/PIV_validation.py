@@ -54,8 +54,8 @@ def compare_measure(M1, M2):
         Uy1 = M1.Ux[tup1[0], tup1[1], indices1_t]
 
         tup2 = indices2_xy[indices1_xy.index(tup1)]
-        print(tup2[0])
-        print(tup2[1])
+        print((tup2[0]))
+        print((tup2[1]))
         Ux2 = M2.Ux[tup2[0], tup2[1], indices2_t]
         Uy2 = M2.Uy[tup2[0], tup2[1], indices2_t]
 

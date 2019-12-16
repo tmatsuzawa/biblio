@@ -2,19 +2,19 @@
 #from pylab import *
 
 from numpy import *
-from sparse4d import Sparse4D, make_block
+from .sparse4d import Sparse4D, make_block
 from scipy import ndimage
 import time
 import sys, os
 import argparse, cine
-import multipool
+from . import multipool
 
 def if_int(str):
     if not str: return None
     else: return int(str)
 
 def eval_slice(s, N): 
-    return range(*slice(*[if_int(x) for x in s.split(':')]).indices(N))
+    return list(range(*slice(*[if_int(x) for x in s.split(':')]).indices(N)))
     
 def work_func(args):
     frame_num, dat, args = args
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         header['perspective'] = args.perspective
         header['gamma'] = args.gamma
     
-        print '%s -> %s (%d frames)' % (fn, ofn, len(frames))
+        print('%s -> %s (%d frames)' % (fn, ofn, len(frames)))
         #print input.header
         #print output.header
 
@@ -77,7 +77,7 @@ if __name__ == '__main__':
         for i in frames:
             if args.threads == 1:
                 results.append(work_func((i, input[i], args)))
-                print '%4d' % i,
+                print('%4d' % i, end=' ')
                 sys.stdout.flush()
             else:
                 pool.send_job((i, input[i], args))
@@ -86,7 +86,7 @@ if __name__ == '__main__':
             results = pool.return_results()
             pool.close()
         else:
-            print '-> Done in %.1f s.' % (time.time() - start)
+            print('-> Done in %.1f s.' % (time.time() - start))
 
 
         results.sort()

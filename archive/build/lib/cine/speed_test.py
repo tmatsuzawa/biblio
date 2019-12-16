@@ -1,6 +1,6 @@
 from numpy import *
 import time
-from cine import Tiff, Cine
+from .cine import Tiff, Cine
 import sys
 
 sys.setrecursionlimit(10**5)
@@ -14,12 +14,12 @@ def tick():
 def tock(message=''):
     global TICK_TIME
     now = time.time()
-    print message + '%.3f' % (now - TICK_TIME)
+    print(message + '%.3f' % (now - TICK_TIME))
     TICK_TIME = now
     
 test = source[0]
-print test.shape
-print test.dtype
+print(test.shape)
+print(test.dtype)
 a = zeros((256,) + test.shape, dtype=test.dtype)
 
 tick()

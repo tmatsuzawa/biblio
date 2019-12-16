@@ -24,7 +24,7 @@ import sys
 import datetime
 
 if sys.version_info[0] == 2:
-    import urllib
+    import urllib.request, urllib.parse, urllib.error
 elif sys.version_info[0] == 3:
     import urllib.request, urllib.parse, urllib.error
 
@@ -73,14 +73,14 @@ def get_cutout(
         os.remove(filename + '.h5')
 
     if sys.version_info[0] == 2:
-        urllib.urlretrieve(url, filename + '.hdf5')
+        urllib.request.urlretrieve(url, filename + '.hdf5')
     elif sys.version_info[0] == 3:
         urllib.request.urlretrieve(url, filename + '.hdf5')
     # check if file downloaded ok
     print(filename)
     data = h5py.File(filename + '.hdf5', mode='r')
     data.close()
-    print('Data downloaded and ' + filename + '.h5 written successfuly.')
+    print(('Data downloaded and ' + filename + '.h5 written successfuly.'))
     return None
 
 
@@ -129,7 +129,7 @@ def get_big_cutout(filename='tst',
 
                         try:
                             count += 1
-                            print(str(count * 100 / N) + ' %')
+                            print((str(count * 100 / N) + ' %'))
                             if not os.path.exists(tmp_filename + '.h5'):
                                 get_cutout(
                                     tmp_filename,
@@ -190,7 +190,7 @@ def get_big_cutout(filename='tst',
 def convert_dict(dset, delimiter='_'):
     # convert a dictionnary to a string format, using
     s = ''
-    for key in dset.keys():
+    for key in list(dset.keys()):
         s += key + delimiter + str(dset[key]) + delimiter
 
     return s[:-1]
@@ -204,10 +204,10 @@ def load_spatial_samples():
     c0 = 50
     step = 100
 
-    tstep = range(c0, 1024, step)
-    xstep = range(c0, 1024, step)
-    ystep = range(c0, 1024, step)
-    zstep = range(c0, 1024, step)
+    tstep = list(range(c0, 1024, step))
+    xstep = list(range(c0, 1024, step))
+    ystep = list(range(c0, 1024, step))
+    zstep = list(range(c0, 1024, step))
 
     indices = [(t, i, j, k) for t in tstep for i in xstep for j in ystep for k in zstep]
 
@@ -219,7 +219,7 @@ def load_spatial_samples():
     ny = 10
     nz = 10
 
-    print("Number of files to load : " + str(N))
+    print(("Number of files to load : " + str(N)))
     count = 0
     for i in range(N):
         print(i)
@@ -241,7 +241,7 @@ def load_spatial_samples():
             count += 1
             pass
 
-    print("Percentage of data lost : " + str(count * 100 // N) + ' %')
+    print(("Percentage of data lost : " + str(count * 100 // N) + ' %'))
 
     #  f0 = h5py.File(name+'.h5', mode='r')
     #  print((data_type, f0['_contents'][:]))
@@ -270,7 +270,7 @@ def date():
 
 def main():
     dirbase = '/Users/stephane/Documents/JHT_Database/Data/Spatial_measurement_2d/' + date() + '/'  # '#_2016_04_11/'
-    print(date())
+    print((date()))
     #    input()
 
     directory = dirbase + 'Data/'
@@ -283,7 +283,7 @@ def main():
     N = 256
     Nt = 1024
     N0 = 0
-    t = range(Nt)  # ,2**4)#[256]#range(N/2**6)
+    t = list(range(Nt))  # ,2**4)#[256]#range(N/2**6)
 
     log_file = dirbase + 'log.txt';
     f_log = open(log_file, 'w')
@@ -336,10 +336,10 @@ def recover(log_file):
 
     Header, dset_list = rw_data.read_dataFile(log_file, Hdelimiter='\t', Ddelimiter='\t', Oneline=False)
 
-    n = len(dset_list[dset_list.keys()[0]])
+    n = len(dset_list[list(dset_list.keys())[0]])
 
     for i in range(n):
-        dset = {key: int(dset_list[key][i]) for key in dset_list.keys()}
+        dset = {key: int(dset_list[key][i]) for key in list(dset_list.keys())}
         print(dset)
 
         dir_current = directory + convert_dict(dset) + '/'

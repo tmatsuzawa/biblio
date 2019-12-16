@@ -190,7 +190,7 @@ class ViewAlignedBox(object):
                 for i in range(1, len(c) - 1):
                     C.append([c[0], c[i], c[i + 1]])
 
-            V, T, C = map(asarray, (V, T, C))
+            V, T, C = list(map(asarray, (V, T, C)))
 
         return V, T, C
 

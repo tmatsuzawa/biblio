@@ -12,9 +12,9 @@ class JHTDdata:
     def __init__(self, data, param, N=None):
         ''''''
         if N is None:
-            N = len(data.keys())
+            N = len(list(data.keys()))
 
-        dim = data[data.keys()[0]].shape
+        dim = data[list(data.keys())[0]].shape
         tup = tuple(dim[:-2]) + (N,)
 
         #   print(tup)
@@ -39,7 +39,7 @@ class JHTDdata:
 
     def load_data(self, data, param, N=None):
         """Load the data for the dataset chunk"""
-        keys = np.sort(data.keys())
+        keys = np.sort(list(data.keys()))
         for i, key in enumerate(keys[:N]):
             self.t[i] = param[key]['t0']
             self.x0[i] = param[key]['x0']
@@ -64,7 +64,7 @@ class JHTDdata:
         self.Uz = self.Uz[..., indices]
 
     def def_axis(self, data, param, dim, d=2):
-        key = data.keys()[0]
+        key = list(data.keys())[0]
         # first dimension is x instead of z
         self.x = np.asarray([[[k for i in np.arange(param[key]['xl'])] for j in range(param[key]['yl'])] for k in
                              range(param[key]['zl'])])[..., 0]
@@ -116,7 +116,7 @@ class JHTDdata:
 
     def measure(self, name, function, force=False, *args, **kwargs):
         if (not hasattr(self, name)) or force:
-            print("Compute " + name)
+            print(("Compute " + name))
             val = function(self, *args, **kwargs)
             setattr(self, name, val)
         else:

@@ -57,7 +57,7 @@ def cine2tiff(file,mode,step,start=0,stop=0,ctime=1,folder='/Tiff_folder',post='
         return None
         
     print('cine open')
-    print('Length : '+str(len(c)))
+    print(('Length : '+str(len(c))))
     
     # get maximum value according to bit depth
  #   bitmax = float(2**c.real_bpp)
@@ -89,7 +89,7 @@ def cine2tiff(file,mode,step,start=0,stop=0,ctime=1,folder='/Tiff_folder',post='
         filename=Dir+root+browse.digit_to_s(index,ndigit)+'.tiff'
         #save only if the image does not already exist !
         if not os.path.exists(filename):
-            print(filename,index)
+            print((filename,index))
             
             if index<len(c):
                 data = c.get_frame(index)            
@@ -167,7 +167,7 @@ def manual_sampling(start,end,Dt=[1],step=1):
         indexList=indexList+indexA+indexB
     
     indexList.sort()
-    print('number of images to save : '+str(len(indexList)))
+    print(('number of images to save : '+str(len(indexList))))
     
     return indexList,ndigit
 #def sampleCine_fromRef(c,)
@@ -193,7 +193,7 @@ def sampleCine(c,mode,step,start=0,stop=0,ctime=1):
     #Mode : pair, single, series
     #for series, step become a List (!) of step
     if mode=='single':
-        indexList=range(start,stop,step)
+        indexList=list(range(start,stop,step))
     if mode=='pair':
         indexL1=[i for i in range(start,stop-ctime,step)]
         indexL2=[i for i in range(start+ctime,stop,step)]
@@ -202,7 +202,7 @@ def sampleCine(c,mode,step,start=0,stop=0,ctime=1):
     if mode=='series':
         indexList=[]
         for dt in step:
-            index=range(start,stop,dt)
+            index=list(range(start,stop,dt))
             indexList=indexList+index
         indexList.sort()
         

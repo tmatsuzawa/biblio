@@ -19,7 +19,7 @@ def save(filename,Dict):
     if b:
         write_rec(f,Dict,key='U')
     else:
-        print(filename+' cannot be saved')  
+        print((filename+' cannot be saved'))  
             
 def create(filename):
 #    filename = file_architecture.os_i(filename)            
@@ -28,7 +28,7 @@ def create(filename):
         f = h5py.File(filename,'w')
         return f,True
     else:
-        print("File "+filename+" already exists, skip ")
+        print(("File "+filename+" already exists, skip "))
         return None,False
   
 def write(obj,erase=False,filename=None,key=''):
@@ -81,7 +81,7 @@ def write_rec(f,Dict,key='',grp=None,group=None,t=0,tmax=3):
         else:
             grp = f[group]
 #        print(Dict.keys())            
-        for key in Dict.keys():
+        for key in list(Dict.keys()):
             if t<tmax:#limit the number of recursion to 2 : protection against overflow
                 write_rec(f,Dict[key],key=key,group=group,grp=grp,t=t+1)
 
@@ -102,7 +102,7 @@ def write_rec(f,Dict,key='',grp=None,group=None,t=0,tmax=3):
        # print(key)
         grp.attrs[key] = Dict
     if not done:
-        print("Unrecognized : "+str(key) +' of type '+str(type(Dict))) 
+        print(("Unrecognized : "+str(key) +' of type '+str(type(Dict)))) 
         
      
 ############### Open and load ###########
@@ -118,7 +118,7 @@ def open(filename,typ='r'):
     if os.path.exists(filename):
         f = h5py.File(filename,typ)
     else:
-        print("File "+filename+" does not exist")
+        print(("File "+filename+" does not exist"))
         f = h5py.File(filename,'w')
     return f
    # print('done')
@@ -127,9 +127,9 @@ def load_dict(data,ans={}):
     """
     Transform a h5py group into a dictionnary. Recursive function
     """
-    for key,item in data.attrs.items():
+    for key,item in list(data.attrs.items()):
         ans[key] = item         
-    for key,item in data.items():
+    for key,item in list(data.items()):
         if type(item) is h5py._hl.dataset.Dataset:
          #   print(item)
             ans[key] = item.value
@@ -146,10 +146,10 @@ def load_dict(data,ans={}):
 def display(Dict,key=None):
     #recursive display of a dictionnary
     if type(Dict)==dict:
-        for key in Dict.keys():
+        for key in list(Dict.keys()):
             display(Dict[key],key=key)
     else:
-        print('     '+key+'  , ' + str(type(Dict)))
+        print(('     '+key+'  , ' + str(type(Dict))))
 
 
 #################### How to use it ! #####################

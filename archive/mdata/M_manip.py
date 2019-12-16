@@ -56,7 +56,7 @@ def Measure_gen_serie(S):
         for name in dataDirList:
             # browse.get_string()
             if True:  # '/PIV_W32_data/' in name: ### to generate only a subset of the Mdata (in particular in case of processing in progress)
-                print(name, dataDirList.index(name))
+                print((name, dataDirList.index(name)))
 
                 # How to find with which software the data have been analysed ?
                 # M_gen(S,name,dataDirList.index(name),'pyPIV')
@@ -64,7 +64,7 @@ def Measure_gen_serie(S):
 
                 print('')
                 print('generate Mdata')
-                print(dataDirList.index(name))
+                print((dataDirList.index(name)))
                 print(name)
                 print('')
                 M_gen(S, name, dataDirList.index(name), 'PIVlab')
@@ -132,7 +132,7 @@ def load_Mdata_file(filename, data=True):
 
         return M
     else:
-        print('No data found for ' + S.filename)
+        print(('No data found for ' + S.filename))
         return None
 
 
@@ -174,7 +174,7 @@ def load_Mdata_serie(date, index=[], mindex=[], data=True):
             Mlist.append(M)
         else:
             print("")
-            print("unable to read Sdata for " + date)
+            print(("unable to read Sdata for " + date))
             print("")
 
     return Mlist
@@ -208,7 +208,7 @@ def getloc(date, index, mindex):
         print(fileList)
     else:
         if mindex == []:
-            print('load every Mdata associated to ' + date + '_' + str(index))
+            print(('load every Mdata associated to ' + date + '_' + str(index)))
             fileList, n = browse.get_fileList(Dir, 'txt', root='M_' + date + str(index))
         else:
             filename = Dir + "M_" + date + "_" + str(index) + "_" + str(mindex) + ".txt"

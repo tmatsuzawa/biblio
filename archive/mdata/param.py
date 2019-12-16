@@ -100,7 +100,7 @@ class param:
             Header, Data = rw_data.read_dataFile(fileParam, Hdelimiter='\t', Ddelimiter='\t')
             print(Data)
 
-            for i in Data.keys():
+            for i in list(Data.keys()):
                 setattr(self, i, Data[i][0])
         else:
             if os.path.isfile(self.fileParam):
@@ -125,13 +125,13 @@ class param:
 
     def manual_input(self):
         # load the first image and save it in a reference file
-        print(
-        "Manual loading of experimental parameters for " + self.Sdata.fileCine)  # self.date + " ," + str(self.fps) +" fps")
-        self.fx = float(input("fx = "))
-        self.im0 = float(input("im(t=0) = "))
-        self.x0 = float(input("x0 = "))
-        self.y0 = float(input("y0 = "))
-        self.angle = float(input("angle = "))
+        print((
+        "Manual loading of experimental parameters for " + self.Sdata.fileCine))  # self.date + " ," + str(self.fps) +" fps")
+        self.fx = float(eval(input("fx = ")))
+        self.im0 = float(eval(input("im(t=0) = ")))
+        self.x0 = float(eval(input("x0 = ")))
+        self.y0 = float(eval(input("y0 = ")))
+        self.angle = float(eval(input("angle = ")))
         # generate a param file (in case of the data have to be reloaded)
         # name of the file :
         # Rotating angle
@@ -140,10 +140,10 @@ class param:
         self.im0 = initial_time.get_im0(self, int(self.im0))
 
     def comments(self):
-        self.description = input("")
+        self.description = eval(input(""))
 
     def read_reference(self, ref=0):
-        print(self.Sdata.fileCine)
+        print((self.Sdata.fileCine))
         try:
             c = cine.Cine(self.Sdata.fileCine)
         except:
@@ -158,7 +158,7 @@ class param:
 
         im_ref = np.float64(a)
 
-        print(np.shape(im_ref))
+        print((np.shape(im_ref)))
 
         plt.figure(1)
         plt.imshow(im_ref)

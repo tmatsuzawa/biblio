@@ -145,12 +145,12 @@ def generate_data_dct_plottable(dataPath, threshold=0.0, separation='\t', varInd
 
         dataMaskedForPlot["var{0}".format(x)],dataMaskedForPlot["var{0}".format(x+1)]=generate_plottable_arrays(dataMasked["var{0}".format(varIndexForX)], dataMasked["var{0}".format(x/2)])
 
-        print 'var' + str(x) + '-Masked'
+        print('var' + str(x) + '-Masked')
         #print dataMaskedForPlot["var{0}".format(x)]
-        print dataMaskedForPlot["var{0}".format(x)].mask
-        print 'var' + str(x+1) + '-Masked'
+        print(dataMaskedForPlot["var{0}".format(x)].mask)
+        print('var' + str(x+1) + '-Masked')
         #print dataMaskedForPlot["var{0}".format(x+1)]
-        print dataMaskedForPlot["var{0}".format(x+1)].mask
+        print(dataMaskedForPlot["var{0}".format(x+1)].mask)
 
         # if not x==0:
         #     print 'var' + str(x-2) + '-Masked'
@@ -164,19 +164,19 @@ def generate_data_dct_plottable(dataPath, threshold=0.0, separation='\t', varInd
     for x in range(0, len(dataMaskedForPlot)):
         dataCroppedForPlot["var{0}".format(x)] = []  # initialize lists var0, var1,...
         checkerArray = np.zeros((len(dataMaskedForPlot["var{0}".format(x)])), dtype=bool) #Used to identify which lists need to be cropped for plotting
-        print dataMaskedForPlot["var{0}".format(x)].mask
-        print 'var' + str(x)
-        print dataMaskedForPlot["var{0}".format(x)].mask
+        print(dataMaskedForPlot["var{0}".format(x)].mask)
+        print('var' + str(x))
+        print(dataMaskedForPlot["var{0}".format(x)].mask)
         if np.array_equal(dataMaskedForPlot["var{0}".format(x)].mask, checkerArray):
                 dataCroppedForPlot["var{0}".format(x)] = dataMaskedForPlot["var{0}".format(x)]  # If var# does not have a mask, no need to crop the data!
-                print 'var' + str(x) + ' will NOT be cropped! (no mask)'
+                print('var' + str(x) + ' will NOT be cropped! (no mask)')
         if not np.array_equal(dataMaskedForPlot["var{0}".format(x)].mask, checkerArray):
-            print 'var' + str(x) + ' will be  cropped!'
+            print('var' + str(x) + ' will be  cropped!')
             for y in range(0, len(dataMaskedForPlot["var{0}".format(x)])):
                 if dataMaskedForPlot["var{0}".format(x)].mask[y] == False:  # Crop data so that it contains only values and no masks
                     dataCroppedForPlot["var{0}".format(x)].append(dataMaskedForPlot["var{0}".format(x)][y])
                     #print 'var' + str(x) + '[' + str(y) +'] was appended to ' +  'var' + str(x)
-        print dataCroppedForPlot["var{0}".format(x)]
+        print(dataCroppedForPlot["var{0}".format(x)])
 
     return key, dataCroppedForPlot
 
@@ -193,17 +193,17 @@ def generate_plottable_arrays(maskedArray1, maskedArray2):
             try:
                 if mask2==False:
                     mask3=False
-                    print '1'
+                    print('1')
             except ValueError:
                 mask3=mask2
-                print '2'
+                print('2')
     except ValueError:
             try:
                 if mask2==False:
                     mask3=mask1
-                    print '3'
+                    print('3')
             except ValueError:
-                print '4'
+                print('4')
                 for x in range(0, len(maskedArray1)):
                     notMask1.append(not mask1[x])
                     notMask2.append(not mask2[x])

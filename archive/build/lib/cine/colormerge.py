@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from numpy import *
-from sparse4d import Sparse4D
+from .sparse4d import Sparse4D
 from scipy import ndimage
 import argparse
 import os, sys
@@ -16,7 +16,7 @@ def if_int(str):
 def eval_slice(s, N):
     if s and ':' not in s:
         return (int(s),)
-    return range(*slice(*[if_int(x) for x in s.split(':')]).indices(N))
+    return list(range(*slice(*[if_int(x) for x in s.split(':')]).indices(N)))
 
 
 parser = argparse.ArgumentParser(description='Convert a 4D image to S4D')
@@ -60,6 +60,6 @@ for i in eval_slice(args.range, len(input1)):
     frame[..., 3] = f1
 
     output.append_array(frame)
-    print i
+    print(i)
 
 output.close()

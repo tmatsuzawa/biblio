@@ -132,7 +132,7 @@ def draw_grid(ax,x0,y0,M=50,D=10,N=5,facecolor='y',edgecolor='k',linewidth=1):
     
 def draw(S,fignum,ax,color='r'):
     graphes.set_fig(fignum)
-    print(S.fileCine)
+    print((S.fileCine))
     if hasattr(S.param,'im_ref'):
         angle = S.param.angle*pi/180
         fx = S.param.fx

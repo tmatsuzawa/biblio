@@ -45,7 +45,7 @@ def make_movie(cinefile,nimage,start=0,stop=1,step=1,folder='',framerate=30,qual
         folder = os.path.dirname(cinefile)
 
     folder = '/References'
-    print(folder+base)
+    print((folder+base))
 
     cine2pic.cine2tiff(cinefile,mode='Sample',step=step,ctime=2,start=start,stop=nimage*step+start,folder=folder,post=base)
     

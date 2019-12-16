@@ -12,13 +12,13 @@ import sys
 import os
 import time
 import struct
-import sparse
+from . import sparse
 #import numpy as N
 from numpy import array, frombuffer
 #import Image
 from threading import Lock
 #import multiprocessing as M
-import packed
+from . import packed
 
 import datetime
 import hashlib
@@ -375,7 +375,7 @@ class Cine(object):
 
     def __getitem__(self, key):
         if type(key) == slice:
-            return map(self.get_frame, range(self.image_count)[key])
+            return list(map(self.get_frame, list(range(self.image_count))[key]))
 
         return self.get_frame(key)
 
@@ -399,7 +399,7 @@ class Cine(object):
         self._iter_current_frame = -1
         return self
 
-    def next(self):
+    def __next__(self):
         self._iter_current_frame += 1
         if self._iter_current_frame >= self.image_count:
             raise StopIteration
@@ -413,7 +413,7 @@ class Cine(object):
         return self.fn
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return str(self).encode('utf-8')
 
     __repr__ = __unicode__
 

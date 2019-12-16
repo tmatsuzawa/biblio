@@ -44,8 +44,8 @@ def fft2d(aa, x0=0, x1=None, y0=0, y1=None,
     1/n_samples * sum of f(k)^2 over k = sum of f(x)^2 over x
     """
     if dx is None or dy is None:
-        print 'ERROR: dx or dy is not provided! dx is grid spacing in real space.'
-        print '... k grid will be computed based on this spacing! Please provide.'
+        print('ERROR: dx or dy is not provided! dx is grid spacing in real space.')
+        print('... k grid will be computed based on this spacing! Please provide.')
         raise ValueError
     if x1 is None:
         x1 = aa.shape[1]

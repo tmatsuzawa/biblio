@@ -8,7 +8,7 @@ import glob
 try:
     import dolfin as dolf
 except:
-    print '\n\nWARNING: Could not import dolfin\n (Limits usage of module phasefield_elasticity).'
+    print('\n\nWARNING: Could not import dolfin\n (Limits usage of module phasefield_elasticity).')
 from matplotlib import cm
 
 hostname = socket.gethostname()
@@ -19,7 +19,7 @@ if hostname[0:6] != 'midway':
     try:
         import sympy as sp
     except:
-        print 'WARNING: Could not import sympy!\n (Should not matter though).'
+        print('WARNING: Could not import sympy!\n (Should not matter though).')
     from scipy.spatial import Delaunay
 
 '''Module for handling fenics data.
@@ -135,15 +135,15 @@ def genmesh(shape, meshtype, N, xi, theta, R, eta, fenicsdir='../'):
         nx = int(np.sqrt(N))
         meshd = nx / (2 * R) * float(xi)
         if meshtype == 'UnitSquare':
-            print 'Creating unit square mesh of ', meshtype, ' lattice topology...'
+            print('Creating unit square mesh of ', meshtype, ' lattice topology...')
             mesh = dolf.UnitSquareMesh(nx, nx)
         else:
-            print 'Creating square-shaped mesh of ', meshtype, ' lattice topology...'
+            print('Creating square-shaped mesh of ', meshtype, ' lattice topology...')
             meshfile = fenicsdir + 'meshes/' + shape + 'Mesh_' + meshtype + '_eta' + etastr + '_R' + Rstr + '_N' + \
                        str(int(N)) + '.xml'
             mesh = dolf.Mesh(meshfile)
     elif shape == 'circle':
-        print 'Creating circle-shaped mesh of ', meshtype, ' lattice topology...'
+        print('Creating circle-shaped mesh of ', meshtype, ' lattice topology...')
         meshd = 2 * np.sqrt(N / np.pi) * float(xi) / (2 * R)
         if meshtype == 'Trisel':
             add_exten = '_Nsp' + str(Nsp) + '_H' + '{0:.2f}'.format(H / R).replace('.', 'p') + \
@@ -157,16 +157,16 @@ def genmesh(shape, meshtype, N, xi, theta, R, eta, fenicsdir='../'):
             int(N)) + '.xml'
         mesh = dolf.Mesh(meshfile)
     elif shape == 'rectangle2x1' or shape == 'rectangle1x2':
-        print 'Creating circle-shaped mesh of ', meshtype, ' lattice topology...'
+        print('Creating circle-shaped mesh of ', meshtype, ' lattice topology...')
         meshd = np.sqrt(N * 0.5) * float(xi) / (2 * R)
         add_exten = ''
 
         meshfile = fenicsdir + 'meshes/' + shape + 'Mesh_' + meshtype + add_exten + '_eta' + etastr + '_R' + Rstr + '_N' + str(
             int(N)) + '.xml'
-        print 'loading meshfile = ', meshfile
+        print('loading meshfile = ', meshfile)
         mesh = dolf.Mesh(meshfile)
 
-    print 'found meshfile = ', meshfile
+    print('found meshfile = ', meshfile)
     return mesh, meshd, meshfile
 
 
@@ -905,7 +905,7 @@ def nearest_gL_fit(lookupdir, beta, rho, fit_mean):
     """Lookup Griffith length for given rho value in table, could be table based on a quadratic fit or of the mean gLs for a given rho.
     Note that for fit_mean==fit, rho = r/R, wherease for fit_mean==mean, rho = r/x0."""
     print('looking for file:')
-    print(lookupdir + fit_mean + '_rho_gLmeters_beta' + '{0:.2f}'.format(beta / np.pi).replace('.', 'p') + '*.txt')
+    print((lookupdir + fit_mean + '_rho_gLmeters_beta' + '{0:.2f}'.format(beta / np.pi).replace('.', 'p') + '*.txt'))
     gLfile = \
         glob.glob(
             lookupdir + fit_mean + '_rho_gLmeters_beta' + '{0:.2f}'.format(beta / np.pi).replace('.', 'p') + '*.txt')[
@@ -919,7 +919,7 @@ def nearest_gL_fit(lookupdir, beta, rho, fit_mean):
 def constP_gL_fit(lookupdir, alph):
     """Lookup Griffith length for given aspect ratio in table of the mean gLs vs aspect ratio, returned in meters"""
     print('looking for file:')
-    print(lookupdir + 'constP_means_alph_gLinches.txt')
+    print((lookupdir + 'constP_means_alph_gLinches.txt'))
     gLfile = glob.glob(lookupdir + 'constP_means_alph_gLinches.txt')[0]
     alphV, gLV = np.loadtxt(gLfile, delimiter=',', skiprows=1, usecols=(0, 1), unpack=True)
     diff = abs(alphV - alph)
@@ -1013,7 +1013,7 @@ def find_subdirs(string, maindir):
     is_subdir = [os.path.isdir(ii) for ii in contents]
 
     if len(is_subdir) == 0:
-        print 'WARNING! Found no matching subdirectory: returning empty list'
+        print('WARNING! Found no matching subdirectory: returning empty list')
         return is_subdir
     else:
         subdirs = [prepdir(contents[ii]) for ii in np.where(is_subdir)[0].tolist()]
@@ -1032,7 +1032,7 @@ def find_subsubdirectory(string, maindir):
     is_subdir = [os.path.isdir(ii) for ii in contents]
 
     if len(is_subdir) == 0:
-        print 'WARNING! Found no matching subdirectory: returning empty list'
+        print('WARNING! Found no matching subdirectory: returning empty list')
         return is_subdir, is_subdir
     else:
         # print 'contents = ', contents
@@ -1043,7 +1043,7 @@ def find_subsubdirectory(string, maindir):
     subsubdir = []
     for ii in subdirs:
         # print 'ii =', ii
-        print 'prepdir(ii)+string = ', prepdir(ii) + string
+        print('prepdir(ii)+string = ', prepdir(ii) + string)
         subcontents = glob.glob(prepdir(ii) + string)
         # print 'glob.glob(',prepdir(ii),string,') = ',subcontents
         is_subsubdir = [os.path.isdir(jj) for jj in subcontents]
@@ -1071,25 +1071,25 @@ def find_subsubdirectory(string, maindir):
                 # Add subdir to list
                 if isinstance(subdir, str):
                     subdir = [subdir, prepdir(ii)]
-                    print 'adding second to subdir = ', subdir
+                    print('adding second to subdir = ', subdir)
                     if len(subsubdirs) > 1:
                         for kk in range(1, len(subsubdirs)):
                             subdir.append(prepdir(ii))
-                        print 'adding second (multiple) to subdir = ', subdir
+                        print('adding second (multiple) to subdir = ', subdir)
                 else:
-                    print 'subsubdirs'
+                    print('subsubdirs')
                     for kk in range(1, len(subsubdirs)):
                         subdir.append(prepdir(ii))
                         # print 'subsubdirs = ', subsubdirs
-                        print 'adding more to subdir = ', subdir
+                        print('adding more to subdir = ', subdir)
                 # Add subsubdir to list
                 for jj in subsubdirs:
                     if isinstance(subsubdir, str):
                         subsubdir = [subsubdir, prepdir(jj)]
-                        print 'adding second to subsubdirs = ', subsubdir
+                        print('adding second to subsubdirs = ', subsubdir)
                     else:
                         subsubdir.append(prepdir(jj))
-                        print 'adding more to subsubdirs = ', subsubdir
+                        print('adding more to subsubdirs = ', subsubdir)
 
     if found:
         return subdir, subsubdir
@@ -1323,7 +1323,7 @@ if __name__ == "__main__":
     from mpl_toolkits.mplot3d import Axes3D
 
     if demo_arrow_mesh:
-        print 'Demonstrating arrow_mesh function: makes custom arrows in 3D'
+        print('Demonstrating arrow_mesh function: makes custom arrows in 3D')
         fig = plt.figure()  # figsize=plt.figaspect(1.0))
         ax = fig.gca(projection='3d')
         x = .5;
@@ -1349,8 +1349,8 @@ if __name__ == "__main__":
 
     if demo_tensor:
         # Show gaussian bump stress
-        print('Demonstrating calculation and easy display of Stress field for Gaussian Bump and ' +
-              'conversion to Cartesian coords')
+        print(('Demonstrating calculation and easy display of Stress field for Gaussian Bump and ' +
+              'conversion to Cartesian coords'))
         x = np.linspace(-5, 5)
         y = np.linspace(-5, 5)
         xv, yv = np.meshgrid(x, y)
@@ -1411,8 +1411,8 @@ if __name__ == "__main__":
                           title2=r'Sine field $u_x$', title3=r'Sine field $u_y$', ptsz=20, axis_on=0)
 
     if demo_linept:
-        print 'Demo: Define value based on distance from a line segment (used for creating initial state of phase for a crack).'
-        print 'This demo focuses on a function that does this for one point at a time (inefficient in numpy but useful in some contexts in FEniCS).'
+        print('Demo: Define value based on distance from a line segment (used for creating initial state of phase for a crack).')
+        print('This demo focuses on a function that does this for one point at a time (inefficient in numpy but useful in some contexts in FEniCS).')
         pts = np.random.random((4000, 2))
         W = .3
         endpt1 = [W, W]
@@ -1421,9 +1421,9 @@ if __name__ == "__main__":
         value = np.zeros_like(pts[:, 0])
         ind = 0
         for pt in pts:
-            print 'pt=', pt
+            print('pt=', pt)
             x = [pt[0], pt[1]]
-            print 'x=', x
+            print('x=', x)
             # p, d = closest_pt_on_lineseg(x,endpt1, endpt2)
             value[ind] = initphase_linear_slit(x, endpt1, endpt2, W, contour='linear')
             ind += 1
@@ -1431,7 +1431,7 @@ if __name__ == "__main__":
         plt.show()
 
     if demo_gaussiancurvature:
-        print 'Demo: Demonstrating gaussian_curvature_unstructured: measuring the Gaussian curvature of a surface defined by a collection of points'
+        print('Demo: Demonstrating gaussian_curvature_unstructured: measuring the Gaussian curvature of a surface defined by a collection of points')
         X = np.arange(-5, 5, 0.2)
         Y = np.arange(-5, 5, 0.2)
         X, Y = np.meshgrid(X, Y)
@@ -1447,8 +1447,8 @@ if __name__ == "__main__":
         ax[1].set_title('Curvature --evenly spaced array pts')
         plt.colorbar(color)
         plt.show()
-        print np.shape(xgrid), np.shape(ygrid), np.shape(Kgrid)
-        print np.shape(X), np.shape(Y), np.shape(K)
+        print(np.shape(xgrid), np.shape(ygrid), np.shape(Kgrid))
+        print(np.shape(X), np.shape(Y), np.shape(K))
 
         ## Load x,y,z from text file and compute curvature
         # fname = '/Users/npmitchell/Desktop/data_local/20151022/20151022-1120_QGP_fixbotY_Tri_N10000_dt0p000_HoR0p080_beta0p50/height.txt'
@@ -1463,7 +1463,7 @@ if __name__ == "__main__":
         # print np.shape(X), np.shape(Y), np.shape(K)
 
     if demo_gaussiancurvature2:
-        print 'Demo: Demonstrating gaussian_curvature_unstructured2: measuring the Gaussian curvature of a surface defined by a collection of points in another way.'
+        print('Demo: Demonstrating gaussian_curvature_unstructured2: measuring the Gaussian curvature of a surface defined by a collection of points in another way.')
         x = np.random.random((5000,)).ravel() - 0.5
         y = np.random.random((5000,)).ravel() - 0.5
         sigma = 0.8
@@ -1471,19 +1471,19 @@ if __name__ == "__main__":
 
         xy = np.dstack((x, y))[0]
         xyz = np.dstack((x, y, z))[0]
-        print 'Triangulating...'
+        print('Triangulating...')
         Triang = Delaunay(xy)
         temp = Triang.vertices
-        print 'Flipping orientations...'
+        print('Flipping orientations...')
         Tri = flip_orientations_tris(temp, xyz)
         # proxy for avg distance between points
         dist = np.mean(np.sqrt((x[Tri[:, 0]] - x[Tri[:, 1]]) ** 2 + (y[Tri[:, 0]] - y[Tri[:, 1]]) ** 2))
         dx = dist * 0.5
-        print 'x=', x
-        print 'y=', y
+        print('x=', x)
+        print('y=', y)
 
         K, xgrid, ygrid, Kgrid = gaussian_curvature_unstructured(x, y, z, dx, N=3)
-        print 'shape(K)=', np.shape(K)
+        print('shape(K)=', np.shape(K))
         fig, ax = plt.subplots(1, 2)
         color = ax[0].scatter(x, y, c=K, edgecolor='')
         ax[1].scatter(xgrid.ravel(), ygrid.ravel(), c=Kgrid.ravel(), edgecolor='')
@@ -1492,7 +1492,7 @@ if __name__ == "__main__":
         plt.show()
 
     if demo_Ztube:
-        print 'Demonstrating Z_Ttube_approx: the projection of xy points to a tube with a piecewise defined shape: flat, polynomial, exponential'
+        print('Demonstrating Z_Ttube_approx: the projection of xy points to a tube with a piecewise defined shape: flat, polynomial, exponential')
         Y = np.arange(-1, 1, 0.005)
         X = np.arange(-1, 1, 0.005)  # np.zeros_like(Y)
         X, Y = np.meshgrid(X, Y)
@@ -1567,16 +1567,16 @@ if __name__ == "__main__":
 
         U = -0.01
         P0 = GB_P_uDirichlet(alph, x0, R, U, nu)
-        print 'U =', U, ' P0 = ', P0
+        print('U =', U, ' P0 = ', P0)
         U = 0.0
         P0 = GB_P_uDirichlet(alph, x0, R, U, nu)
-        print 'U =', U, ' P0 = ', P0
+        print('U =', U, ' P0 = ', P0)
         U = 0.012
         P0 = GB_P_uDirichlet(alph, x0, R, U, nu)
-        print 'U =', U, ' P0 = ', P0
+        print('U =', U, ' P0 = ', P0)
         U = 0.03
         P0 = GB_P_uDirichlet(alph, x0, R, U, nu)
-        print 'U =', U, ' P0 = ', P0
+        print('U =', U, ' P0 = ', P0)
 
         alph = 0.706446
         P = 0.0679
@@ -1584,21 +1584,21 @@ if __name__ == "__main__":
         R = 0.06
         nu = 0.45
         U0 = GB_U_from_P(alph, x0, R, P, nu)
-        print 'U0 = ', U0
-        print 'GB_U_from_P(alph,x0,R,P,nu) =>>  U =  0.0153414532992', '\n'
+        print('U0 = ', U0)
+        print('GB_U_from_P(alph,x0,R,P,nu) =>>  U =  0.0153414532992', '\n')
 
         U0 = GB_U_from_P(alph, x0, R, 0.01, nu)
-        print 'P=0.01, U0 = ', U0
+        print('P=0.01, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.02, nu)
-        print 'P=0.02, U0 = ', U0
+        print('P=0.02, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.03, nu)
-        print 'P=0.03, U0 = ', U0
+        print('P=0.03, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.04, nu)
-        print 'P=0.04, U0 = ', U0
+        print('P=0.04, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.05, nu)
-        print 'P=0.05, U0 = ', U0
+        print('P=0.05, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.06, nu)
-        print 'P=0.06, U0 = ', U0, '\n'
+        print('P=0.06, U0 = ', U0, '\n')
 
         alph = 0.706446
         P = 0.0679
@@ -1606,28 +1606,28 @@ if __name__ == "__main__":
         R = 0.12
         nu = 0.45
         U0 = GB_U_from_P(alph, x0, R, P, nu)
-        print 'U0 = ', U0
-        print 'GB_U_from_P(alph,x0,R,P,nu) =>>  U =  0.0153414532992', '\n'
+        print('U0 = ', U0)
+        print('GB_U_from_P(alph,x0,R,P,nu) =>>  U =  0.0153414532992', '\n')
 
         U0 = GB_U_from_P(alph, x0, R, 0.01, nu)
-        print 'P=0.01, U0 = ', U0
+        print('P=0.01, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.02, nu)
-        print 'P=0.02, U0 = ', U0
+        print('P=0.02, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.03, nu)
-        print 'P=0.03, U0 = ', U0
+        print('P=0.03, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.04, nu)
-        print 'P=0.04, U0 = ', U0
+        print('P=0.04, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.05, nu)
-        print 'P=0.05, U0 = ', U0
+        print('P=0.05, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.06, nu)
-        print 'P=0.06, U0 = ', U0, '\n'
+        print('P=0.06, U0 = ', U0, '\n')
 
         alph = 0.4242640687119285
         U0 = GB_U_from_P(alph, 0.02553, 0.06, P0, nu)
-        print 'U0 = ', U0
+        print('U0 = ', U0)
 
         alph = 0.2121320343559643
         U0 = GB_U_from_P(alph, 1., 2.35, P0, 0.5)
-        print 'U0 = ', U0
+        print('U0 = ', U0)
         U0 = GB_U_from_P(0.000, 1., 2.35, P0, 0.5)
-        print 'U0 = ', U0
+        print('U0 = ', U0)

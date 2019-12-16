@@ -36,9 +36,9 @@ def get_rate_of_strain_tensor(udata):
         try:
             nrows, ncols, nstacks = ux.shape
         except:
-            print 'ux.shape:'
-            print ux.shape
-            print 'Space for which velocity is given must have a dimension at least (2,2,2) to take a gradient!!!'
+            print('ux.shape:')
+            print(ux.shape)
+            print('Space for which velocity is given must have a dimension at least (2,2,2) to take a gradient!!!')
             sys.exit(1)
         duxdx = np.gradient(ux, axis=1)
         duxdy = np.gradient(ux, axis=0)
@@ -61,7 +61,7 @@ def get_rate_of_strain_tensor(udata):
         sij[..., 2, 1] = duzdy
         sij[..., 2, 2] = duzdz
     elif shape[0] > 3:
-        print 'Not implemented yet.'
+        print('Not implemented yet.')
         return None
     return sij
 
@@ -118,7 +118,7 @@ def curl(udata):
         omega1, omega2, omega3 = 2.* gij[..., 1, 2], 2.* gij[..., 2, 0], 2.* gij[..., 0, 1]
         omega = np.stack((omega1, omega2, omega3))
     else:
-        print 'Not implemented yet!'
+        print('Not implemented yet!')
         return None
     return omega
 

@@ -1,4 +1,4 @@
-import cine
+from . import cine
 from pylab import *
 from numpy import *
 from scipy import *

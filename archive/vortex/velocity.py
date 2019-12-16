@@ -33,7 +33,7 @@ def example_vortex():
 
 def tangle_vs_t(fileList):
     #    fileList = glob.glob(Directory+'*.tangle')
-    print('Number of fileList : ' + str(len(fileList)))
+    print(('Number of fileList : ' + str(len(fileList))))
 
     indice = np.arange(0, 700, 1)
     for i, file in enumerate(fileList):
@@ -85,8 +85,8 @@ def example_tangle(T, n=10, d=3):
 
     L = T.total_length()
     epsilon = np.mean(eigen['epsilon'])
-    print('L = ' + str(L))
-    print('Epsilon : ' + str(epsilon))
+    print(('L = ' + str(L)))
+    print(('Epsilon : ' + str(epsilon)))
 
     return L, epsilon
 
@@ -103,9 +103,9 @@ def stretching_along(T, a=1, d=3):
         path = p.path
 
         ds = np.mean(biot.norm(np.diff(path, axis=0)))
-        print('ds = ' + str(ds))
+        print(('ds = ' + str(ds)))
         s = np.cumsum(biot.norm(np.diff(path, axis=0)))
-        print(np.shape(s))
+        print((np.shape(s)))
 
         x = np.arange(-3 * ds, 3 * ds + ds, ds)
         # matrix = np.meshgrid(x,x,x)

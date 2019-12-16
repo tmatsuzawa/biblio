@@ -5,7 +5,7 @@ import copy
 def convert(obj,L=[],t=0):
     types = ['stephane','instance']
     
-    print(type(obj))
+    print((type(obj)))
     if type(obj)==dict:
         return obj
     elif True in [a in str(type(obj)) for a in types]:
@@ -14,7 +14,7 @@ def convert(obj,L=[],t=0):
             L.append(name)            
             D = copy.deepcopy(getattr(obj,'__dict__'))
     
-            for key in D.keys():
+            for key in list(D.keys()):
              #   print(key)
                 if t<10:
                     attr = copy.deepcopy(getattr(obj,key))

@@ -43,17 +43,17 @@ class Clicker:
         """ Extracts locations from the user"""
         if event.key == 'shift':
             # Shift + click to remove all selections
-            print 'cleared click events'
+            print('cleared click events')
             self.clear()
             return
         if event.xdata is None or event.ydata is None:
             return
         if event.button == 1:
-            print 'click event: xdata = %f, ydata= %f' % (event.xdata, event.ydata)
+            print('click event: xdata = %f, ydata= %f' % (event.xdata, event.ydata))
             self.pt_lst.append((event.xdata, event.ydata))
         elif event.button == 3:
             # Right click to remove selected pt
-            print 'removed click event near: data = %f, ydata = %f' % (event.xdata, event.ydata)
+            print('removed click event near: data = %f, ydata = %f' % (event.xdata, event.ydata))
             self.remove_pt((event.xdata, event.ydata))
 
         self.redraw()
@@ -61,7 +61,7 @@ class Clicker:
     def remove_pt(self, loc):
         """ Removes point from pt_lst that is nearest to loc"""
         if len(self.pt_lst) > 0:
-            self.pt_lst.pop(argmin(map(lambda x: sqrt((x[0] - loc[0]) ** 2 + (x[1] - loc[1]) ** 2), self.pt_lst)))
+            self.pt_lst.pop(argmin([sqrt((x[0] - loc[0]) ** 2 + (x[1] - loc[1]) ** 2) for x in self.pt_lst]))
 
     def redraw(self):
         """ Scatter points from pt_lst onto the figure"""

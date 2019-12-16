@@ -15,7 +15,7 @@ def worker_func(conn, func):
         else:
             try:
                 result = func(input)
-            except Exception, e:
+            except Exception as e:
                 result = e
             
             conn.send(result)
@@ -71,13 +71,13 @@ class WorkerPool(object):
                 self.results.append(conn.recv())
                 if isinstance(self.results[-1], Exception):
                     self.force_close()
-                    print "Error in worker %d" % i
+                    print("Error in worker %d" % i)
                     raise self.results[-1]
                 
                 self.ready.append(i)
                 
                 if self.print_result_number:
-                    print '%3d' % len(self.results),
+                    print('%3d' % len(self.results), end=' ')
                     sys.stdout.flush()
     
     def send_job(self, args):
@@ -89,7 +89,7 @@ class WorkerPool(object):
                 time.sleep(self.cycle_time)
                 self.get_results()
             except KeyboardInterrupt:
-                print "\n!!! KEYBOARD INTERRUPT !!!\nForcing workers closed!"
+                print("\n!!! KEYBOARD INTERRUPT !!!\nForcing workers closed!")
                 self.force_close()
                 sys.exit()
             
@@ -104,9 +104,9 @@ class WorkerPool(object):
             
         if self.print_result_number:
             if '%' in self.done_mesg:
-                print self.done_mesg % (time.time() - self.start)
+                print(self.done_mesg % (time.time() - self.start))
             else:
-                print self.done_mesg
+                print(self.done_mesg)
             sys.stdout.flush()
                
         results = self.results     
@@ -142,5 +142,5 @@ if __name__ == '__main__':
     results.sort()
     pool.close()
     
-    for i, results in results: print i, results
+    for i, results in results: print(i, results)
     

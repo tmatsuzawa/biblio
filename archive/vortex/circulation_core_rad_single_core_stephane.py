@@ -17,7 +17,7 @@ import os
 from matplotlib.colors import Normalize
 from scipy import ndimage, interpolate, signal
 from scipy import optimize as opt
-import cPickle
+import pickle
 import random
 import scipy.io as sio
 
@@ -59,8 +59,8 @@ def rm_big(u, v, b=2):
     mag = np.sqrt(u ** 2 + v ** 2)  # going to look at them in terms of magnitude & phaze
     phaze = np.arctan2(v, u)
     ny, nx = u.shape
-    for i in xrange(b, ny - b):
-        for j in xrange(b, nx - b):
+    for i in range(b, ny - b):
+        for j in range(b, nx - b):
             mag_nbrs = mag[i - b:i + b + 1, j - b:j + b + 1]
             mag_med = np.median(mag_nbrs)
             x_phaze_nbrs = phaze[i, j - b:j + b + 1]
@@ -154,23 +154,23 @@ def partial_deriv(plane, direction, dx):
     """
     result = np.zeros(plane.shape)
     if direction == 'y':
-        for i in xrange(plane.shape[1]):  # do each column
+        for i in range(plane.shape[1]):  # do each column
             result[0, i] = (plane[0, i] - plane[1, i]) / dx  # top edge case. Note indexing is 'upside-down'
-            for j in xrange(1, plane.shape[0] - 1):  # middle cases
+            for j in range(1, plane.shape[0] - 1):  # middle cases
                 result[j, i] = (plane[j - 1, i] - plane[j + 1, i]) / (2 * dx)
             result[plane.shape[0] - 1, i] = (plane[plane.shape[0] - 2, i] - plane[
                 plane.shape[0] - 1, i]) / dx  # bottom edge case
         return -1 * result
     elif direction == 'x':
-        for i in xrange(plane.shape[0]):  # do each row
+        for i in range(plane.shape[0]):  # do each row
             result[i, 0] = (plane[i, 0] - plane[i, 1]) / dx  # left edge case
-            for j in xrange(1, plane.shape[1] - 1):  # middle cases
+            for j in range(1, plane.shape[1] - 1):  # middle cases
                 result[i, j] = (plane[i, j - 1] - plane[i, j + 1]) / (2 * dx)
             result[i, plane.shape[1] - 1] = (plane[i, plane.shape[1] - 2] - plane[
                 i, plane.shape[1] - 1]) / dx  # right edge case
         return -1 * result  # -1 because I messed up...
     else:
-        print 'Direction not specified or was invalid! please try again using x or y'
+        print('Direction not specified or was invalid! please try again using x or y')
 
 
 def interp_flow_component(x, y, u, piv_roi):
@@ -197,7 +197,7 @@ def interp_flow_component(x, y, u, piv_roi):
     ------
     Returns the grid of data points, meaning a numpy array of shape (y.len,x.len)
     """
-    uindicies = zip(y, x)
+    uindicies = list(zip(y, x))
     grid_ind_y, grid_ind_x = np.mgrid[piv_roi[2]:piv_roi[3], piv_roi[0]:piv_roi[
         1]]  # gives a grid between specified points (of spacing 1 instead of PIV boxes)
     return interpolate.griddata(uindicies, u, (grid_ind_y, grid_ind_x), method='linear',
@@ -242,8 +242,9 @@ def ellip_gauss_func(x, y, cx, cy, sx=1., sy=1.):
     return np.exp(-z)
 
 
-def gauss_func_cfit((x, y), cx, cy, sx=1., sy=1., a=1.):
+def gauss_func_cfit(xxx_todo_changeme, cx, cy, sx=1., sy=1., a=1.):
     """ read somewhere that suggested that we need the first thing as a tuple for curve fit """
+    (x, y) = xxx_todo_changeme
     z = (x - cx) ** 2 / sx ** 2 + (y - cy) ** 2 / sy ** 2
     return np.exp(-z)
 
@@ -346,9 +347,9 @@ def main():
         real_gammas.max(), 4.))  # fitting to the correct distribution, give rough first est of core size of 4 mm
         sigma = np.abs(popt[1])  # should be core size in mm
         rad_est.append(sigma)  # just need an estimate
-        print 'done with estimate %d' % frame_no
+        print('done with estimate %d' % frame_no)
     med_rad_est = np.median(rad_est) * ppmm  # estimate for mean radius from the 3 random frames
-    print 'estimated radius: %.2f mm' % (med_rad_est / ppmm)
+    print('estimated radius: %.2f mm' % (med_rad_est / ppmm))
 
     # need to make the thing to convolve
     # making the thing to convolve
@@ -431,7 +432,7 @@ def main():
                                      piv_roi)  # returning a grid interpolated to every 1 (real) pixel instead of every ?? which is what we get from PIV
         i_uy = interp_flow_component(x_array, y_array, best_uy_array, piv_roi)
         phis = np.arange(0, 2 * np.pi, 2 * np.pi / float(num_pts))  # for circles
-        print 'frame %d' % frame
+        print('frame %d' % frame)
 
         pos_dir = '%s_figs/' % position
         gammas = []
@@ -485,7 +486,7 @@ def main():
         plt.savefig(os.path.join(result_dir, pos_dir, 'circulation_v_rad_frame_%d.png' % frame))
         plt.close()
         sigma = np.abs(popt[1])  # should be core size in mm
-        print 'measured core radius (%s): %.2f' % (position, sigma)
+        print('measured core radius (%s): %.2f' % (position, sigma))
 
         # plotting vorticity with an overlay of the core
         norm = MidpointNormalize(midpoint=0)  # for making sure white is really 0 in the color map
@@ -519,7 +520,7 @@ def main():
 
     # saving the info we collected
     core_rad_file = open(os.path.join(result_dir, 'core_radii.p'), 'wb')
-    cPickle.dump(core_radii, core_rad_file)
+    pickle.dump(core_radii, core_rad_file)
     core_rad_file.close()
 
 

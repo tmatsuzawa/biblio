@@ -18,7 +18,7 @@ try:
     # import seaborn.apionly as sns
     import seaborn as sns
 except:
-    print 'WARNING: Could not import seaborn. Functionality is limited.'
+    print('WARNING: Could not import seaborn. Functionality is limited.')
 from matplotlib.colors import LinearSegmentedColormap
 from scipy import interpolate
 import numpy as np
@@ -1378,7 +1378,7 @@ def register_colormaps(cmaps=cmaps):
     for cmap_name in cmaps:
         if cmap_name not in plt.colormaps():
             if cmap_name == 'isolum_rainbow':
-                print 'registering isolum_rainbow...'
+                print('registering isolum_rainbow...')
                 plt.register_cmap(cmap=isolum_rainbow)
             else:
                 plt.register_cmap(name=cmap_name, cmap=cmaps[cmap_name])

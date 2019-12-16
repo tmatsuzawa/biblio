@@ -55,7 +55,7 @@ def make_2dmovie(M, name, Range=None, fignum=1, local=True, log=False, vmin=0, v
     fig = graphes.set_fig(fignum)
     graphes.set_fig(0)  # clear current figure
 
-    print('Compute ' + name)
+    print(('Compute ' + name))
     M, field = vgradient.compute(M, name, filter=filt)
 
     for i in range(start, stop, step):

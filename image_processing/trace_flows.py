@@ -45,7 +45,7 @@ todo = np.arange(0, len(tiffs)-args.ftm, step)
 
 # Get a median intensity
 if args.subtract_median:
-    print 'Computing a median image'
+    print('Computing a median image')
     tiffs_considered = tiffs[todo]
     imsum_for_med = []
     for tiff in tiffs_considered:
@@ -55,14 +55,14 @@ if args.subtract_median:
     im_med[im_med > 255] = 255
     result = Image.fromarray(im_med)
     result.save(outdir + 'trace_flows_im_med' + '.png')
-    print '... Done'
+    print('... Done')
 
 
 
 # If the frames are not already saved, or if we are to overwrite, go through and sum adjacent frames
 if len(glob.glob(outdir + 'trace_flows*.png')) < len(todo) or args.overwrite:
     for (start, kk) in zip(todo, np.arange(len(todo))):
-        print 'start=' + str(start) + ', index = ' + str(kk) + '/' + str(len(todo))
+        print('start=' + str(start) + ', index = ' + str(kk) + '/' + str(len(todo)))
         end = start + args.ftm
         # initialize
         imsum = 0

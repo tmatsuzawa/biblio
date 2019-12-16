@@ -77,7 +77,7 @@ if load:
     dataPath = dataDir + dataFile
     key, data8mmEight, counter8mmEight = dhandle.generate_data_dct(dataPath, separation='\t')
     # print counter5mmEight
-    print key
+    print(key)
 
     veff8_tr_eight = data8mmEight["var6"]
     veff8_tl_eight = data8mmEight["var6"]

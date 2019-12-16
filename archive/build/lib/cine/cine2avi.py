@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import cine
+from . import cine
 from numpy import *
 import os, sys
 import argparse
@@ -27,18 +27,18 @@ for i, fn in enumerate(args.cines):
         if fn[-1] == ']':
             fn, s = fn.split('[')
             try:
-                frame_slice = slice(*map(noneint, s[:-1].split(':')))
+                frame_slice = slice(*list(map(noneint, s[:-1].split(':'))))
             except:
                 raise ValueError("Couldn't convert '[%s' to slice notation" % s)
 
         else:
-            print "Warning, found '[' in input, but it didn't end with ']', so I'll assume you didn't mean to give a frame range."
+            print("Warning, found '[' in input, but it didn't end with ']', so I'll assume you didn't mean to give a frame range.")
     
     base, ext = os.path.splitext(fn)
     ext = ext.lower()
     
     if not os.path.exists(fn):
-        print "File %s not found, ignoring." % fn
+        print("File %s not found, ignoring." % fn)
         continue
     
     output = args.output
@@ -58,7 +58,7 @@ for i, fn in enumerate(args.cines):
     bpps = input[0].dtype.itemsize * 8
     if bpp is None: bpp = bpps
     
-    frames = range(*frame_slice.indices(len(input)))
+    frames = list(range(*frame_slice.indices(len(input))))
     
     if args.clip == 0:
         map = linspace(0., 2.**(bpps - bpp), 2**bpps)
@@ -94,7 +94,7 @@ for i, fn in enumerate(args.cines):
     
     map = clip(map * 255, 0, 255).astype('u1')
 
-    print '%s -> %s' % (fn, output)
+    print('%s -> %s' % (fn, output))
     
     output = cine.Avi(output, framerate=args.framerate, quality=args.quality)
     

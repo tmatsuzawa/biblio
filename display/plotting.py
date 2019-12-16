@@ -71,7 +71,7 @@ def plot_pcolormesh_scalar(x, y, C, outpath, title, xlabel=None, ylabel=None, ti
     fig.text(0.5, 0.98, title2, horizontalalignment='center', verticalalignment='top')
 
     if outpath is not None and outpath != 'none':
-        print 'outputting matrix image to ', outpath
+        print('outputting matrix image to ', outpath)
         plt.savefig(outpath + '.png')
     if show:
         plt.show()
@@ -116,7 +116,7 @@ def plot_real_matrix(M, name='', outpath=None, fig='auto', climv=None, cmap="coo
     cbar.set_clim(climvs)
 
     if outpath is not None and outpath != 'none':
-        print 'outputting matrix image to ', outpath
+        print('outputting matrix image to ', outpath)
         plt.savefig(outpath + '.png')
     if show:
         plt.show()
@@ -179,7 +179,7 @@ def plot_complex_matrix(M, name='', outpath=None, fig='auto', climvs=[], show=Fa
     cbar.set_clim(climv_real_lower, climv_real_upper)
 
     if outpath is not None and outpath != 'none':
-        print 'outputting complex matrix image to ', outpath
+        print('outputting complex matrix image to ', outpath)
         plt.savefig(outpath + '.png')
     if show:
         plt.show()
@@ -359,7 +359,7 @@ def plot_pcolormesh(x, y, z, n, ax=None, cax=None, method='nearest', make_cbar=T
     pcm = ax.pcolormesh(X, Y, Z, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha)
 
     if make_cbar:
-        print 'making colorbar in plot_pcolormesh()...'
+        print('making colorbar in plot_pcolormesh()...')
         cbar = plt.colorbar(pcm, cax=cax, orientation=cbar_orientation)
         if ticks is not None:
             cbar.set_ticks(ticks)
@@ -372,23 +372,23 @@ def plot_pcolormesh(x, y, z, n, ax=None, cax=None, method='nearest', make_cbar=T
                 cbar.set_label(cax_label, labelpad=cbar_labelpad, rotation=0, fontsize=fontsize)
 
     if title is not None:
-        print '\n\n\nplotting.plotting: Making title\n\n\n'
+        print('\n\n\nplotting.plotting: Making title\n\n\n')
         if title_axX is None and title_axY is None:
             ax.set_title(title, fontsize=fontsize)
         elif title_axX is None:
-            print 'placing title at custom Y position...'
+            print('placing title at custom Y position...')
             ax.text(0.5, title_axY, title,
                     horizontalalignment='center',
                     verticalalignment='center',
                     transform=ax.transAxes)
         elif title_axY is None:
-            print 'placing title at custom X position...'
+            print('placing title at custom X position...')
             ax.text(title_axX, 1.0, title,
                     horizontalalignment='center',
                     verticalalignment='bottom',
                     transform=ax.transAxes)
         else:
-            print 'plotting.plotting: placing title at custom XY position...'
+            print('plotting.plotting: placing title at custom XY position...')
             ax.text(title_axX, title_axY, title,
                     horizontalalignment='center',
                     verticalalignment='center',
@@ -411,7 +411,7 @@ def change_axes_geometry_stack(fig, ax, naxes):
             ax[ii].change_geometry(*geometry)
 
     for ii in np.arange(len(ax),naxes):
-        print 'adding axis ', ii
+        print('adding axis ', ii)
         fig.add_subplot(naxes, 1, ii+1)
 
     ax = fig.axes
@@ -1065,7 +1065,7 @@ def colored_DOS_plot(eigval, DOS_ax, sim_type, alpha=1.0, colorV=None, colormap=
     if colormap not in plt.colormaps():
         lecmaps.register_colormaps()
 
-    print '\nCOLORMAP = ', colormap
+    print('\nCOLORMAP = ', colormap)
 
     plt.sca(DOS_ax)
     # num_eigvals = len(eigval)
@@ -1084,7 +1084,7 @@ def colored_DOS_plot(eigval, DOS_ax, sim_type, alpha=1.0, colorV=None, colormap=
                                        range=histrange)
 
     if colorV is not None:
-        print 'plotting.plotting: np.shape(colorV) = ', np.shape(colorV)
+        print('plotting.plotting: np.shape(colorV) = ', np.shape(colorV))
         if len(colorV) == nbins:
             colors = colorV
         elif len(colorV) == len(eigval):
@@ -1118,10 +1118,10 @@ def colored_DOS_plot(eigval, DOS_ax, sim_type, alpha=1.0, colorV=None, colormap=
             if vmax is None:
                 if climbars:
                     vmax = np.max(colors)
-                    print 'vmax --> climbars:', vmax
+                    print('vmax --> climbars:', vmax)
                 else:
                     vmax = np.max(colorV)
-                    print 'vmax --> climbars:', vmin
+                    print('vmax --> climbars:', vmin)
             norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax)
             sm = matplotlib.cm.ScalarMappable(cmap=colormap, norm=norm)
         # else:
@@ -1136,7 +1136,7 @@ def colored_DOS_plot(eigval, DOS_ax, sim_type, alpha=1.0, colorV=None, colormap=
 
         sm._A = []
         if make_cbar:
-            print 'making cbar...'
+            print('making cbar...')
             cbar = plt.colorbar(sm, cax=cbar_ax, orientation=cbar_orientation, format=cbar_tickfmt)
             cbar.set_label(cax_label, labelpad=cbar_labelpad, rotation=0, fontsize=fontsize, va='center')
             if ticks is not None:
@@ -1201,7 +1201,7 @@ def colored_DOS_plot(eigval, DOS_ax, sim_type, alpha=1.0, colorV=None, colormap=
         DOS_ax.set_yticks(yaxis_ticks)
 
     if ylabel_right:
-        print '\n\n\n\nplotting.plotting: setting ylabel position to be right\n\n\n\n'
+        print('\n\n\n\nplotting.plotting: setting ylabel position to be right\n\n\n\n')
         DOS_ax.yaxis.set_label_position("right")
 
     # plt.yticks([0,20, 40, 60])
@@ -1350,7 +1350,7 @@ def shaded_DOS_plot(eigval, DOS_ax, sim_type, alpha=None, facecolor='#80D080', n
 
         sm._A = []
         if make_cbar:
-            print 'making cbar...'
+            print('making cbar...')
             cbar = plt.colorbar(sm, cax=cbar_ax)
             cbar.set_label(cax_label, labelpad=10, rotation=0, fontsize=fontsize)
         else:
@@ -1571,10 +1571,10 @@ def construct_eigvect_DOS_plot(xy, fig, DOS_ax, eig_ax, eigval, eigvect, en, sim
                         inc += 1
 
             # lines connect sites (bonds), while lines_12 draw the black lines from the pinning to location sites
-            lines = [zip(x, y) for x, y in test]
+            lines = [list(zip(x, y)) for x, y in test]
 
     # lines_12 draw the black lines from the pinning to location sites
-    lines_12 = [zip(x, y) for x, y in lines_1]
+    lines_12 = [list(zip(x, y)) for x, y in lines_1]
 
     # Check that we have all the cmaps
     if cmap_lines not in plt.colormaps() or cmap_patches not in plt.colormaps():
@@ -1771,7 +1771,7 @@ def plot_eigvect_excitation(xy, fig, dos_ax, eig_ax, eigval, eigvect, en, marker
     eig_ax.add_collection(pp)
 
     if black_t0lines:
-        lines_12 = [zip(x, y) for x, y in lines_1]
+        lines_12 = [list(zip(x, y)) for x, y in lines_1]
         lines_12_st = LineCollection(lines_12, linewidth=0.8)
         lines_12_st.set_color('k')
         eig_ax.add_collection(lines_12_st)
@@ -1989,7 +1989,7 @@ def timestep_plot(current_pos, xy, Ni, Nk, BM, ax=None, factor=1, amp=1, title='
                 inc += 1
 
     if show_bonds:
-        lines = [zip(x, y) for x, y in test]
+        lines = [list(zip(x, y)) for x, y in test]
         stretch = np.array(stretches[0:inc])
         # print 'stretch = ', stretch
 
@@ -2225,7 +2225,7 @@ def timestep_plot_original(current_pos, R, Ni, Nk, ax, factor=1, amp=1, dist=0):
                 test[inc] = [R[(i, j), 0], R[(i, j), 1]]
                 inc += 1
 
-    lines = [zip(x, y) for x, y in test]
+    lines = [list(zip(x, y)) for x, y in test]
     stretch = np.array(stretches[0:inc])
 
     lines_st = LineCollection(lines, array=stretch, cmap='seismic', linewidth=4)
@@ -2538,12 +2538,12 @@ def initialize_nxmpanel_cbar_fig(nn, mm, Wfig=90, Hfig=None, x0frac=0.15, y0frac
             if cbar_placement in ['above_center']:
                 x0cbar = (Wfig - wcbar) * 0.5
             elif cbar_placement in ['above_right', 'default']:
-                print 'mm = ', mm
+                print('mm = ', mm)
                 x0cbar = x0 + (mm - 0.5) * ws - wcbar * 0.5 + (mm - 1) * hspace
     else:
         x0cbar = x0cbarfrac * Wfig
 
-    print 'leplt.nxm: orientation = ', orientation, '\ncbar_placement= ', cbar_placement
+    print('leplt.nxm: orientation = ', orientation, '\ncbar_placement= ', cbar_placement)
     if y0cbarfrac is None:
         if orientation == 'vertical':
             if cbar_placement in ['right_right', 'default']:
@@ -2552,10 +2552,10 @@ def initialize_nxmpanel_cbar_fig(nn, mm, Wfig=90, Hfig=None, x0frac=0.15, y0frac
                 y0cbar = y0 + (1. - hcbarfrac) * hs * 0.5
         elif orientation == 'horizontal':
             if cbar_placement in ['above_right', 'default']:
-                print 'nn = ', nn
+                print('nn = ', nn)
                 y0cbar = y0 + (nn - 1.) * vspace + (nn + 0.1) * hs
             elif cbar_placement in ['above_center']:
-                print 'leplt: placing cbar in center above subplots...'
+                print('leplt: placing cbar in center above subplots...')
                 y0cbar = y0 + (nn - 1.) * vspace + (nn + 0.1) * hs
             else:
                 y0cbar = y0 + (nn - 1.) * vspace + (nn + 0.1) * hs
@@ -2791,7 +2791,7 @@ def initialize_axis_stack(n_ax, make_cbar=False, Wfig=90, Hfig=90, hfrac=None, w
         if make_cbar and cbar_orientation == 'horizontal':
             # colorbar is going on top, with space cbarspace
             hfrac -= float(cbarspace) / (float(Hfig) * float(n_ax))
-        print 'hfrac = ', hfrac
+        print('hfrac = ', hfrac)
     if x0frac is None:
         x0 = (1. - wfrac)*0.5 * Wfig
     else:
@@ -2799,10 +2799,10 @@ def initialize_axis_stack(n_ax, make_cbar=False, Wfig=90, Hfig=90, hfrac=None, w
     y0 = y0frac * Hfig
     ws = wfrac * Wfig
     hs = hfrac * Hfig
-    print 'hs = ', hs
+    print('hs = ', hs)
     xywh_list = [[x0, y0 + (n_ax - 1 - ii) * (hs + vspace), ws, hs, ''] for ii in range(n_ax)]
 
-    print 'xywh_list = ', xywh_list
+    print('xywh_list = ', xywh_list)
     ax = [sps.axes_in_mm(x0, y0, width, height, label=part, label_params=label_params)
           for x0, y0, width, height, part in xywh_list]
 
@@ -2874,19 +2874,19 @@ def initialize_axis_doublestack(n_ax, make_cbar=False, Wfig=90, Hfig=90, hfrac=N
         if make_cbar:
             # colorbar is going on top, with space cbarspace
             hfrac -= float(cbarspace) / (float(Hfig) * float(n_ax))
-        print 'hfrac = ', hfrac
+        print('hfrac = ', hfrac)
     if x0frac is None:
         x0 = (1. - 2.*wfrac - float(hspace)/float(Wfig))*0.5 * Wfig
     else:
         x0 = x0frac * Wfig
-    print 'x0 = ', x0
+    print('x0 = ', x0)
     y0 = y0frac * Hfig
     ws = wfrac * Wfig
     hs = hfrac * Hfig
     xywh_list = [[x0, y0 + (n_ax - 1 - ii) * (hs + vspace), ws, hs, ''] for ii in range(n_ax)]
     xywh2_list = [[x0 + ws + hspace, y0 + (n_ax - 1 - ii) * (hs + vspace), ws, hs, ''] for ii in range(n_ax)]
 
-    print 'xywh_list = ', xywh_list
+    print('xywh_list = ', xywh_list)
     ax = [sps.axes_in_mm(x, y, width, height, label=part, label_params=label_params)
           for x, y, width, height, part in xywh_list]
     ax += [sps.axes_in_mm(x, y, width, height, label=part, label_params=label_params)
@@ -2894,9 +2894,9 @@ def initialize_axis_doublestack(n_ax, make_cbar=False, Wfig=90, Hfig=90, hfrac=N
     if make_cbar:
         wcbar = Wfig * wcbar_frac
         hcbar = cbar_aratio * wcbar
-        print 'wcbar = ', wcbar
-        print 'x0 = ', x0
-        print 'ws = ', ws
+        print('wcbar = ', wcbar)
+        print('x0 = ', x0)
+        print('ws = ', ws)
         cbar_ax = [sps.axes_in_mm(x0 + (ws - wcbar) * 0.5, y0 + n_ax * (hs + vspace) + cbarspace, wcbar,
                                   hcbar, label='', label_params=label_params),
                    sps.axes_in_mm(x0 + (3.*ws - wcbar) * 0.5 + hspace, y0 + n_ax * (hs + vspace) + cbarspace, wcbar,
@@ -2960,19 +2960,19 @@ def initialize_insetaxis_doublestack(n_ax, make_cbar=False, Wfig=90, Hfig=90, hf
         if make_cbar:
             # colorbar is going on top, with space cbarspace
             hfrac -= float(cbarspace) / (float(Hfig) * float(n_ax))
-        print 'hfrac = ', hfrac
+        print('hfrac = ', hfrac)
     if x0frac is None:
         x0 = (1. - 2.*wfrac - float(hspace)/float(Wfig))*0.5 * Wfig
     else:
         x0 = x0frac * Wfig
-    print 'x0 = ', x0
+    print('x0 = ', x0)
     y0 = y0frac * Hfig
     ws = wfrac * Wfig
     hs = hfrac * Hfig
     xywh_list = [[x0, y0 + (n_ax - 1 - ii) * (hs + vspace), ws, hs, ''] for ii in range(n_ax)]
     xywh2_list = [[x0 + ws + hspace, y0 + (n_ax - 1 - ii) * (hs + vspace), ws, hs, ''] for ii in range(n_ax)]
 
-    print 'xywh_list = ', xywh_list
+    print('xywh_list = ', xywh_list)
     ax = [sps.axes_in_mm(x, y, width, height, label=part, label_params=label_params)
           for x, y, width, height, part in xywh_list]
     ax += [sps.axes_in_mm(x, y, width, height, label=part, label_params=label_params)
@@ -2980,9 +2980,9 @@ def initialize_insetaxis_doublestack(n_ax, make_cbar=False, Wfig=90, Hfig=90, hf
     if make_cbar:
         wcbar = Wfig * wcbar_frac
         hcbar = cbar_aratio * wcbar
-        print 'wcbar = ', wcbar
-        print 'x0 = ', x0
-        print 'ws = ', ws
+        print('wcbar = ', wcbar)
+        print('x0 = ', x0)
+        print('ws = ', ws)
         cbar_ax = [sps.axes_in_mm(x0 + (ws - wcbar) * 0.5, y0 + n_ax * (hs + vspace) + cbarspace, wcbar,
                                   hcbar, label='', label_params=label_params),
                    sps.axes_in_mm(x0 + (3.*ws - wcbar) * 0.5 + hspace, y0 + n_ax * (hs + vspace) + cbarspace, wcbar,

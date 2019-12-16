@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from numpy import *
-import v4d_shader as v4d
+from . import v4d_shader as v4d
 from scipy.interpolate import interp1d
 import sys, os
 
@@ -64,7 +64,7 @@ def interp_basis(b1, b2, sub_divides=4, zero_tol=0.01):
                 
         B = B2
         
-    B = map(normalize_basis, B)
+    B = list(map(normalize_basis, B))
     
     d = [0]
     
@@ -82,19 +82,19 @@ def strip_comments(s):
     
 def unpack_commands(s):
     s = s.replace('\t', ' '*8)
-    lines = filter(str.strip, map(strip_comments, s.splitlines()))
+    lines = list(filter(str.strip, list(map(strip_comments, s.splitlines()))))
     
     commands = []
     while lines:
         line = lines.pop(0).strip()
         if ':' in line:
-            cmd, arg = map(str.strip, line.split(':', 1))
+            cmd, arg = list(map(str.strip, line.split(':', 1)))
         else: cmd, arg = line, ''
     
         kwargs = {}    
         while lines and lines[0].startswith(' '):
             line = lines.pop(0).strip()
-            if ':' in line: key, val = map(str.strip, line.split(':', 1))
+            if ':' in line: key, val = list(map(str.strip, line.split(':', 1)))
             else: key, val = line, ''
             kwargs[key.lower()] = val
         
@@ -109,7 +109,7 @@ def unpack_commands(s):
 #            raise ValueError('invalid movie frame keyword "%s"' % k)
         
 def eval_kwargs(d):
-    for k, v in d.iteritems():
+    for k, v in d.items():
         if k in v4d.valid_movie_options:
             d[k] = v4d.valid_movie_options[k](eval(v))
         else:
@@ -146,7 +146,7 @@ if __name__ == '__main__':
             source = arg
     
         if cmd == 'size':
-            w, h = map(int, arg.split(','))
+            w, h = list(map(int, arg.split(',')))
             window_kwargs['width'] = w
             window_kwargs['height'] = h
     
@@ -176,7 +176,7 @@ if __name__ == '__main__':
             N = int(eval(arg))
             steps = [{} for n in range(N)]
             
-            for k, v in kwargs.iteritems():
+            for k, v in kwargs.items():
                 #print k, type(v)
                 if type(v) in (list, tuple): v = array(v)
                 

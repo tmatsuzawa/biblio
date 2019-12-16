@@ -111,15 +111,15 @@ def count_occurrences(arr, display=True):
 
     """
     unique, counts = np.unique(arr, return_counts=True)
-    occur_dict = dict(zip(unique, counts))
+    occur_dict = dict(list(zip(unique, counts)))
     if display:
-        print occur_dict
+        print(occur_dict)
     return occur_dict
 
 def count_nans(arr, verbose=True):
     nnans = np.count_nonzero(np.isnan(arr))
     if verbose:
-        print 'no. of nans: %d / %d' % (nnans, np.asarray(arr).size)
+        print('no. of nans: %d / %d' % (nnans, np.asarray(arr).size))
     return nnans
 
 
@@ -139,7 +139,7 @@ def get_n_largest_values(arr, n=1):
     arr = np.array(arr)
     arr1 = arr.flatten()
     if n > len(arr1):
-        print 'n is greater than the array length! Returning an entire array (sorted)...'
+        print('n is greater than the array length! Returning an entire array (sorted)...')
     return arr1[np.argsort(arr1)[-n:]]
 
 def get_n_smallest_values(arr, n=1):
@@ -156,7 +156,7 @@ def get_n_smallest_values(arr, n=1):
     """
     arr1 = arr.flatten()
     if n > len(arr1):
-        print 'n is greater than the array length! Returning an entire array (sorted)...'
+        print('n is greater than the array length! Returning an entire array (sorted)...')
     return arr1[np.argsort(arr1)[:n]]
 
 # Array sorting
@@ -173,7 +173,7 @@ def sort_two_arrays_using_order_of_first_array(arr1, arr2):
     -------
 
     """
-    arr1, arr2 = zip(*sorted(zip(arr1, arr2)))
+    arr1, arr2 = list(zip(*sorted(zip(arr1, arr2))))
     return arr1, arr2
 
 def sort2arr(arr2, arr1):
@@ -190,9 +190,9 @@ def sort2arr(arr2, arr1):
     arr2_sorted, arr1_sorted
 
     """
-    zipped = zip(arr2, arr1)
+    zipped = list(zip(arr2, arr1))
     zipped_sorted = sorted(zipped, key=lambda x: x[1])
-    arr2_sorted, arr1_sorted = zip(*zipped_sorted)
+    arr2_sorted, arr1_sorted = list(zip(*zipped_sorted))
     return arr2_sorted, arr1_sorted
 
 
@@ -234,7 +234,7 @@ def detect_sign_flip(arr, delete_first_index=True):
     indices = np.array(np.where(signchange == 1))
     # Print indices, indices.shape
     if indices.shape==(1, 0):
-        print 'No sign flip in the array! Returning [0]...'
+        print('No sign flip in the array! Returning [0]...')
         return np.array([0])
 
     if indices[0][0] == 0:
@@ -321,11 +321,11 @@ def get_average_data_from_periodic_data(time, periodic_data, freq=1., interpolat
 
 
 # Interpolation / map_coordinates etc.
-def get_values_from_multidim_array_at_coord(data_arr, x, y, order=3):
+def get_values_from_ndarray_at_coord(data_arr, x, y, order=3):
     """
     Returns values at specific coordinates (indices) even if the coordinates are expressed as decimal numbers
-    e.g.- a is a 2d array, and you would like to get a value at (x1, y1) = (1.2, 6.5).
-          This method returns an interpolated value.
+    e.g.- Let a be a 2d array, and you would like to get a value at (x1, y1) = (1.2, 6.5).
+          This method returns the interpolated value.
     Give coordinates (x1,y1), (x2, y2),... like [x1, x2, ...], [y1, y2, ...]
     Parameters
     ----------
@@ -351,6 +351,27 @@ def get_values_from_multidim_array_at_coord(data_arr, x, y, order=3):
 
     return values
 
+
+def get_values_from_multidim_array_at_coord(data_arr, x, y, order=3):
+    """
+    Returns values at specific coordinates (indices) even if the coordinates are expressed as decimal numbers
+    e.g.- Let a be a 2d array, and you would like to get a value at (x1, y1) = (1.2, 6.5).
+          This method returns the interpolated value.
+    Give coordinates (x1,y1), (x2, y2),... like [x1, x2, ...], [y1, y2, ...]
+    Parameters
+    ----------
+    data_arr multi-dim array
+    x
+    y
+
+    Returns
+    -------
+    value
+
+    """
+
+    return get_values_from_ndarray_at_coord(data_arr, x, y, order=order)
+
 def extend_1darray_fill(arr, newarrsize, fill_value=np.nan):
     """
     Make a longer 1d array by filling somethings on the right
@@ -371,7 +392,7 @@ def extend_1darray_fill(arr, newarrsize, fill_value=np.nan):
     if len(arr) < newarrsize:
         return np.pad(arr, (0, newarrsize - len(arr)), 'constant', constant_values=(np.nan, np.nan))
     else:
-        print 'Original array is bigger than new array. Returning the original array...'
+        print('Original array is bigger than new array. Returning the original array...')
         return arr
 
 def extend_2darray_fill(arr, newarrshape, fill_value=np.nan):
@@ -430,13 +451,13 @@ def array2chunks(l, chunksize):
     Yield successive n-sized chunks from l.
     ... 'yield' returns generators
     """
-    for i in xrange(0, len(l), chunksize):
+    for i in range(0, len(l), chunksize):
         yield l[i:i + chunksize]
 
 def array2nchunks(l, n):
     """Yield n successive chunks from l."""
     chunksize = int(round(len(l) / n))
-    for i in xrange(0, len(l), chunksize):
+    for i in range(0, len(l), chunksize):
         yield l[i:i + chunksize]
 
 ##2D
@@ -587,8 +608,8 @@ def coarse_grain_2darr(arr, nrows_sub, ncolumns_sub):
     remainder_row = nrows % nrows_sub
     remainder_column = ncols % ncolumns_sub
     if not remainder_row == 0 or not remainder_column == 0:
-        print 'Shape is not an integer multiple of (nrows_sub, ncolumns_sub)!'
-        print 'Will extend the array with np.nan, and average...'
+        print('Shape is not an integer multiple of (nrows_sub, ncolumns_sub)!')
+        print('Will extend the array with np.nan, and average...')
         nrows = int(np.ceil(arr.shape[0]/float(nrows_sub))*nrows_sub)
         ncols = int(np.ceil(arr.shape[1] / float(ncolumns_sub)) * ncolumns_sub)
         arr = extend_2darray_fill(arr, (nrows, ncols), fill_value='np.nan')

@@ -142,7 +142,7 @@ def serie(Gamma,epsilon,d0=1):
     
     
     R = np.asarray([p['r'] for p in plist])
-    print(R.shape)
+    print((R.shape))
     graphes.graphloglog(t,np.std(R,axis=0)[...,1,0]**2/(epsilon**2*p['dt']),fignum=2)
     
     #graphes.graphloglog(range(N),np.std(R,axis=0)[...,1,1]/epsilon,fignum=2)

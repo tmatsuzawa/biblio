@@ -12,7 +12,7 @@ except:
     pass  # import simple_cl #Allows it to be run from package dir.
 import re
 import os
-from StringIO import StringIO
+from io import StringIO
 import warnings
 
 '''In order to use this code with FEniCS, references to pyopencl have been removed -- I have left a few, but they will not work.
@@ -34,7 +34,7 @@ class ToDoError(Exception):
 
 
 def shape_str(shape):
-    return '(' + ', '.join(map(lambda d: '-any-' if d < 0 else str(d), shape)) + ')'
+    return '(' + ', '.join(['-any-' if d < 0 else str(d) for d in shape]) + ')'
 
 
 def enforce_shape(arr, shape):
@@ -142,7 +142,7 @@ class Mesh(object):
             self.colors = enforce_shape(colors, (len(self.points), -1))
 
         self.attached = {}
-        for k, v in attached.iteritems():
+        for k, v in attached.items():
             self.attached[k] = enforce_shape(v, (len(self.points),))
 
     def attach(self, key, val):
@@ -338,7 +338,7 @@ class Mesh(object):
             The color limits.  If None, the max/min of c are used.
         """
 
-        if isinstance(c, basestring):
+        if isinstance(c, str):
             import matplotlib.colors
             self.colors = np.tile(matplotlib.colors.colorConverter.to_rgb(c), (len(self.points), 1))
         else:
@@ -447,7 +447,7 @@ class Mesh(object):
                 self.colors[:mc.shape[0], :mc.shape[1]] = mc
                 self.colors[mc.shape[0]:, :oc.shape[1]] = oc
 
-            for prop in set(['normals'] + self.attached.keys() + other.attached.keys()):
+            for prop in set(['normals'] + list(self.attached.keys()) + list(other.attached.keys())):
                 p1 = getattr(self, prop, None)
                 p2 = getattr(other, prop, None)
 
@@ -724,7 +724,7 @@ class Mesh(object):
                 else:
                     break  # No parts separated
 
-            parts = bulk + map(lambda x: x[0], edge)
+            parts = bulk + [x[0] for x in edge]
 
         return parts
 
@@ -776,7 +776,7 @@ class Mesh(object):
 
         clipped_edges = {}
 
-        ak = filter(lambda k: hasattr(self, k), ['points', 'normals', 'colors']) + self.attached.keys()
+        ak = [k for k in ['points', 'normals', 'colors'] if hasattr(self, k)] + list(self.attached.keys())
         new_points = {}
         for k in ak: new_points[k] = []
 
@@ -994,10 +994,10 @@ class Mesh(object):
 
         if hasattr(self, 'normals'):
             for t in self.triangles:
-                output.write('    smooth_triangle {%s}\n' % ','.join(map(lambda x: self._pov_point(x, precision), t)))
+                output.write('    smooth_triangle {%s}\n' % ','.join([self._pov_point(x, precision) for x in t]))
         else:
             for t in self.triangles:
-                output.write('    triangle {%s}\n' % ','.join(map(lambda x: self._pov_point(x, precision), t)))
+                output.write('    triangle {%s}\n' % ','.join([self._pov_point(x, precision) for x in t]))
 
         output.write('}\n')
         output.close()
@@ -1053,7 +1053,7 @@ plane {
             output = open(script_file, 'wt')
             output.write('#!/bin/bash\npovray  +I%s +O%s.png +A0.3 +W1024 +H768\n' % (scene_name, fnb))
             output.close()
-            os.chmod(script_file, 0777)
+            os.chmod(script_file, 0o777)
 
     def remove_degenerate_triangles(self):
         """Remove triangles with repeated edges."""
@@ -1361,7 +1361,7 @@ def _attempt_merge(m1, m2, mask1=None, mask2=None, r_min=0.0):
     extras = {'attached': {}}
 
     baseprop = ['normals', 'colors']
-    for prop in baseprop + m1.attached.keys():
+    for prop in baseprop + list(m1.attached.keys()):
         p1 = getattr(m1, prop, None)
         p2 = getattr(m2, prop, None)
         if p1 is not None and p2 is not None:
@@ -1427,7 +1427,7 @@ def load_mesh(fn, file_type=None):
             normals = None
 
         extras = {}
-        for k, v in data['vertex'].iteritems():
+        for k, v in data['vertex'].items():
             if k not in ('x', 'y', 'z', 'nx', 'ny', 'nz', 'red', 'green', 'blue', 'alpha'):
                 extras[k] = v
 
@@ -1482,7 +1482,7 @@ PLY_PROPERTY_TYPES = {
 PY_TYPE = lambda x: float if x in ('f', 'd') else int
 
 NP_PLY = {}
-for k, v in PLY_PROPERTY_TYPES.iteritems(): NP_PLY[np.dtype(v)] = k
+for k, v in PLY_PROPERTY_TYPES.items(): NP_PLY[np.dtype(v)] = k
 
 
 def decode_ply(f, require_triangles=True):
@@ -1630,7 +1630,7 @@ def decode_ply(f, require_triangles=True):
                 if type(t) is tuple:  # This element is a list.
                     fast_decode = False
                     dtype_list.append((name, 'O'))
-                    py_types.append((name, map(PY_TYPE, t)))
+                    py_types.append((name, list(map(PY_TYPE, t))))
                 else:
                     dtype_list.append((name, t))
                     py_types.append((name, PY_TYPE(t)))
@@ -1673,7 +1673,7 @@ def decode_ply(f, require_triangles=True):
                         if type(t) in (list, tuple):
                             nl = conv(t[0], parts.pop(0))
                             if len(parts) >= nl:
-                                dat[name][i] = map(lambda x: conv(t[1], x), parts[:nl])
+                                dat[name][i] = [conv(t[1], x) for x in parts[:nl]]
                                 parts = parts[nl:]
                             else:
                                 raise PLYError(
@@ -1700,7 +1700,7 @@ def decode_ply(f, require_triangles=True):
         if not fast_triangles:
             v = list(element_data["face"]["vertex_indices"])
 
-            if not (np.array(map(len, v)) == 3).all():
+            if not (np.array(list(map(len, v))) == 3).all():
                 raise PLYError("require_triangles=True, but file contains non-triangular faces")
 
             element_data["face"]["vertex_indices"] = np.array(v)
@@ -1803,7 +1803,7 @@ def encode_ply(points, tris, normals=None, colors=None, enforce_types=True, extr
         p_dt += [('red', c_dt), ('green', c_dt), ('blue', c_dt), ('alpha', c_dt)][:colors.shape[1]]
 
     eva = {}
-    for k, v in extra_vertex_attributes.iteritems():
+    for k, v in extra_vertex_attributes.items():
         v = np.asarray(v)
         eva[k] = v
         if v.shape != (N,):
@@ -1840,7 +1840,7 @@ def encode_ply(points, tris, normals=None, colors=None, enforce_types=True, extr
         if colors.shape[1] == 4:
             point_data['alpha'] = colors[:, 3]
 
-    for k, v in eva.iteritems():
+    for k, v in eva.items():
         point_data[k] = v
 
     t_dt = tris.dtype

@@ -116,14 +116,14 @@ class Sdata(object):
             if filename is None:
                 print("No hdf5 file found")
 
-        print 'Sdata.load_all(): Attempting to load from hdf5...'
+        print('Sdata.load_all(): Attempting to load from hdf5...')
         fi = to_hdf5.open(filename)
-        if 'Id' in fi['Sdata'].keys():
-            print "Sdata.load_all(): loading with self.load(fi['Sdata']) since key 'Id' is in hdf5['Sdata']..."
+        if 'Id' in list(fi['Sdata'].keys()):
+            print("Sdata.load_all(): loading with self.load(fi['Sdata']) since key 'Id' is in hdf5['Sdata']...")
             self.load(fi['Sdata'])
-            print("Sdata.load_all(): self.fileCine = " + self.fileCine)
+            print(("Sdata.load_all(): self.fileCine = " + self.fileCine))
         else:
-            print "Sdata.load_all(): loading with self.load_rec() using a list [Sdata, param, Id]..."
+            print("Sdata.load_all(): loading with self.load_rec() using a list [Sdata, param, Id]...")
             names = ['Sdata', 'param', 'Id']
             for name in names:
                 self.load_rec(fi, name)
@@ -139,18 +139,18 @@ class Sdata(object):
         import turbulence.mdata.M_manip as M_manip
         searchstr = file_architecture.os_c(self.dirCine) + 'M_' + self.Id.date + '/M_' + self.Id.date + '_' +\
                     str(self.Id.index) + '_*' + frmt
-        print('Sdata.Sdata.load_measures(): Looking for ' + searchstr + '...')
+        print(('Sdata.Sdata.load_measures(): Looking for ' + searchstr + '...'))
         filelist_m = glob.glob(searchstr)
         if not filelist_m:
-            print 'filelist_m is empty'
+            print('filelist_m is empty')
             sys.exit()
 
         mlist = []
         # print("Data processed found at : "+str(fileList_M))
         for filename in filelist_m:
-            print('Sdata.Sdata.load_measures(): filename = ' + filename)
+            print(('Sdata.Sdata.load_measures(): filename = ' + filename))
             mlist.append(M_manip.load_Mdata_file(filename, data=True))
-            print 'Sdata.Sdata.load_measures(): mlist = ', mlist
+            print('Sdata.Sdata.load_measures(): mlist = ', mlist)
         return mlist
 
     def load_measure(self, indice=0, frmt='.hdf5'):
@@ -170,7 +170,7 @@ class Sdata(object):
         # print(key_fix+key)
         # try:
         #    print("toto : " +str(dpath.util.search(dict(f[key_fix+key]),'*mdata.'+name+'*').keys()))
-        keys = dpath.util.search(dict(f[key_fix + key]), '*mdata.' + name + '*').keys()
+        keys = list(dpath.util.search(dict(f[key_fix + key]), '*mdata.' + name + '*').keys())
         # except:
         #    print("Nothing to look for anymore")
         #    return None
@@ -184,7 +184,7 @@ class Sdata(object):
                 #   print("done")
         else:
             #  print("Iterate...")
-            keys = f[key_fix + key].keys()
+            keys = list(f[key_fix + key].keys())
             if not keys == []:
                 for k in keys:
                     self.load_rec(f, name, key=key + '/' + k)
@@ -198,9 +198,9 @@ class Sdata(object):
         return self.fileCine[:str.rfind(self.fileCine, "/") + 1]
 
     def save_param(self):
-        print(self.param.fileParam)
+        print((self.param.fileParam))
         # look for the param file
-        print(self.param.Sdata.fileCine)
+        print((self.param.Sdata.fileCine))
 
         # save the experimental parameters in a Ref file (smart !)
         # thwen the param file in pickle format will become obsolete
@@ -227,7 +227,7 @@ class Sdata(object):
         except:
             S = None
             print("Pickle file cannot be loaded anymore. Skip")
-        print(self.param)
+        print((self.param))
         # load an old version of the parameters : must test the type !
         if hasattr(S, 'param'):
             self.param = S.param
@@ -249,7 +249,7 @@ class Sdata(object):
                 self.param.angle = 90
         self.param.Sdata = self
         self.param.fileParam = fileParam
-        print(self.param.fileParam)
+        print((self.param.fileParam))
 
     def write(self):
         """Write the Sdata in the indicated filename -- depricated!

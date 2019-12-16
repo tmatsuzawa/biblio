@@ -43,7 +43,7 @@ def folder(dirname):
     None
     """
     fileList = glob.glob(dirname+'/*.avi')
-    print('Avi files found : '+str(fileList))
+    print(('Avi files found : '+str(fileList)))
     for filename in fileList:
         compress_movie(filename)
 

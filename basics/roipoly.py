@@ -142,7 +142,7 @@ if __name__ == '__main__':
     import pylab as pl
 
     # create image
-    img = pl.ones((100, 100)) * range(0, 100)
+    img = pl.ones((100, 100)) * list(range(0, 100))
 
     # show the image
     pl.imshow(img, interpolation='nearest', cmap="Greys")

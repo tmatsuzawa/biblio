@@ -10,7 +10,7 @@ import datetime
 '''
 
 
-def read(file, key_type=u'u'):
+def read(file, key_type='u'):
     """
     Read a JHDT file (h5py format) 
         read a h5py file
@@ -27,7 +27,7 @@ def read(file, key_type=u'u'):
     """
     f = h5py.File(file, 'r')
     # print(f.keys())
-    data_keys = [key for key in f.keys() if key.find(key_type) >= 0]
+    data_keys = [key for key in list(f.keys()) if key.find(key_type) >= 0]
     data = {}
     for key in data_keys:
         data[key] = f[key]
@@ -50,15 +50,15 @@ def read_chunk(folder, date):
         for file in files:
             try:
                 data_part = read(file)
-                param[data_part.keys()[0]] = get_parameters(file)
+                param[list(data_part.keys())[0]] = get_parameters(file)
                 data.update(data_part)
 
             except:
-                print(str(i) + ', skipped')
+                print((str(i) + ', skipped'))
                 #   print(file)
                 files_fail.append(file)
 
-    print('Number of failed loading : ' + str(len(files_fail)))
+    print(('Number of failed loading : ' + str(len(files_fail))))
     # print(files_fail)
     # log_file = generate_log(files_fail,date)
     # print(log_file)
@@ -96,7 +96,7 @@ def generate_log(files_fail, date=None, rootdir='/Users/npmitchell/Dropbox/Soft_
         param = get_parameters(file)
         rw_data.write_line(f_log, param)
     f_log.close()
-    print(log_file + ' generated')
+    print((log_file + ' generated'))
 
     return log_file
 
@@ -138,7 +138,7 @@ def vlist(data, rm_nan=True):
         each element corresponds to one point 3C of velocity
     """
     U = []
-    for key in data.keys():
+    for key in list(data.keys()):
         # wrap the three components in one 3d matrix (by arbitrary multiplying the first dimension by 3 : spatial
         # information is lost)
         dim = data[key].shape

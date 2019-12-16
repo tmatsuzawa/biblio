@@ -223,7 +223,7 @@ def figure_label(x_legend, y_legend, title, display=True, cplot=False, include_t
         fig[current.number]['fignum'] = y_legend + '_vs_' + x_legend + '_' + title
 
     if display:
-        print(current.number, fig[current.number])
+        print((current.number, fig[current.number]))
     return fig
 
 
@@ -268,7 +268,7 @@ def title(M):
     tdict['fx'] = M.param.fx
 
     title = M.Id.get_id() + ','
-    for key in tdict.keys():
+    for key in list(tdict.keys()):
         title += key + '=' + str(tdict[key]) + ','
 
     return title
@@ -353,11 +353,11 @@ def save_figs(figs, savedir='./', suffix='', prefix='', frmt='pdf', dpi=300, dis
     """
     c = 0
     filename = ''
-    for key in figs.keys():
+    for key in list(figs.keys()):
         fig = figs[key]
         # save the figure
         filename = savedir + prefix + fig['fignum'] + suffix + '_ag'
-        print 'graphes.save_figs(): filename = ', filename
+        print('graphes.save_figs(): filename = ', filename)
         save_fig(key, filename, frmt=frmt, dpi=dpi)
         c += 1
 
@@ -366,7 +366,7 @@ def save_figs(figs, savedir='./', suffix='', prefix='', frmt='pdf', dpi=300, dis
             h5py_s.save(filename, fig['data'])
 
     if display:
-        print('Number of auto-saved graphs : ' + str(c))
+        print(('Number of auto-saved graphs : ' + str(c)))
         print(filename)
 
 
@@ -395,7 +395,7 @@ def save_fig(fignum, filename, frmt='pdf', dpi=300, overwrite=False):
     # If the path in filename is supplied as a relative path, make it an absolute path
     if os.path.dirname(filename)[0] == '.':
         savedir = os.path.dirname(filename)
-        print 'graphes.save_fig(): savedir = ', savedir
+        print('graphes.save_fig(): savedir = ', savedir)
         # Stephane remade the filename from itself here for some reason. This causes problems if we remove relative
         # specifier ('.') from filename.
         # filename = savedir + '/' + os.path.basename(filename)
@@ -627,7 +627,7 @@ def movie(M, field, indices=None, compute=False, label='', Dirname='./', trackin
     figs = {}
     if indices == None:
         nx, ny, nt = M.shape()
-        indices = range(1, nt - 1)
+        indices = list(range(1, nt - 1))
     if tracking:
         import turbulence.vortex.track as track
 
@@ -898,7 +898,7 @@ def distribution(Y, normfactor=1, a=10., label='k', fignum=1, norm=True):
     moy = np.sum(n * xbin) / np.sum(n)
     std = np.sum(n * (xbin - moy) ** 2) / np.sum(n)
 
-    print("Distribution : " + str(moy) + ' +/- ' + str(std))
+    print(("Distribution : " + str(moy) + ' +/- ' + str(std)))
     #    a = fitting.fit(fitting.parabola,x_center,n_center)
     #    n_th = fitting.parabola(xbin,a)
     #    graph(xbin,n_th,label='r-',fignum=fignum)

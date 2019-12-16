@@ -10,7 +10,7 @@ import fenics_handling as pfh
 import matplotlib.pyplot as plt
 import lepm.data_handling as dh
 import lepm.stringformat as sf
-import cPickle as pkl
+import pickle as pkl
 import glob
 import lepm.dataio as dio
 from matplotlib.ticker import FormatStrFormatter
@@ -69,7 +69,7 @@ specstr = 'square_vNbcs_vinfty' + vstr + '_Nmesh' + str(Nmesh)
 meshspec = '_dshell' + sf.float2pstr(args.dshell) + '_thetahole' + sf.float2pstr(thole) + \
            '_phihole' + sf.float2pstr(args.phi) + '_thick' + sf.float2pstr(args.thickness)
 meshfile = './meshes/shell_N' + str(Nmesh) + '_n*_R1p000' + meshspec + '.xml'
-print 'searching for ', meshfile
+print('searching for ', meshfile)
 meshfile = glob.glob(meshfile)[0]
 # Load the information about the linesegments that defined the boundary, rmv_lsegs
 meshparamfn = meshfile[0:-3] + 'pkl'
@@ -189,7 +189,7 @@ c0 = Function(Rf)
 ck0 = Constant(1.0)
 c_k = interpolate(ck0, Rf)
 assigner_R.assign(c_k, cc)
-print 'c_k = ', c_k.vector().array()
+print('c_k = ', c_k.vector().array())
 
 # Hold plot
 plot(mesh)
@@ -224,12 +224,12 @@ interactive()
 n = FacetNormal(mesh)
 m1 = dot(grad(phi_k), n)*ds(2)
 v1 = assemble(m1)
-print("\int grad(u) * n ds(2) = ", v1)
+print(("\int grad(u) * n ds(2) = ", v1))
 
 # Evaluate integral of u over the obstacle
 m2 = phi_k * dx(1)
 v2 = assemble(m2)
-print("\int u dx(1) = ", v2)
+print(("\int u dx(1) = ", v2))
 
 outdir = './results/' + 'potential_flow_shell_' + specstr + '/'
 dio.ensure_dir(outdir)

@@ -9,11 +9,11 @@
 
 ################################################################################
 
-from cine import *
-from tiff import *
+from .cine import *
+from .tiff import *
 #from mjpeg import *
-from sparse import *
-from plot_to_image import *
+from .sparse import *
+from .plot_to_image import *
 import os.path
 
 def open(fn):

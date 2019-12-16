@@ -65,7 +65,7 @@ class Mdata_PIVlab(Mdata, object):
         return super(Mdata_PIVlab, self).read_ref(Ref)
 
     def switch_keys(self, data, display=False):
-        keys = data.keys()
+        keys = list(data.keys())
         new_data = {}
         for k in keys:
             if not 'vorticity' in k:
@@ -96,12 +96,12 @@ class Mdata_PIVlab(Mdata, object):
 
     def set_scales(self):
         # ft is in ms, time elapsed between two consecutive images
-        print(self.ref_indexB)
-        print(self.ref_indexA)
+        print((self.ref_indexB))
+        print((self.ref_indexA))
         Dt = self.ref_indexB - self.ref_indexA
 
         if hasattr(self.param, 'fps'):
-            print('Parameter fps :' + str(self.param.fps))
+            print(('Parameter fps :' + str(self.param.fps)))
             ft = Dt * 1000. / self.param.fps  # -> no global time axis : better to define it image per image
             # this function is thus depreciated : however, ft and timescale can be defined from the first couple of images
             timescale = ft / 1000
@@ -138,7 +138,7 @@ class Mdata_PIVlab(Mdata, object):
 
             if Header == []:
                 c += 1
-                print("Header missing for : " + filename + ". delete file")
+                print(("Header missing for : " + filename + ". delete file"))
                 print(Header)
                 os.remove(filename)
             else:
@@ -238,7 +238,7 @@ class Mdata_PIVlab(Mdata, object):
                     self.Ux[:, :, i] = Data2D['u']
                     self.Uy[:, :, i] = Data2D['v']
             else:
-                print('Frame ' + str(i) + 'cannot be read')
+                print(('Frame ' + str(i) + 'cannot be read'))
             if nt > 100:
                 if i % (nt // 100) == 0:
                     pass
@@ -277,7 +277,7 @@ class Mdata_PIVlab(Mdata, object):
 ######################### Plots ############################
 
 def switch_keys(data, display=False):
-    keys = data.keys()
+    keys = list(data.keys())
     new_data = {}
     for k in keys:
         if not 'vorticity' in k:

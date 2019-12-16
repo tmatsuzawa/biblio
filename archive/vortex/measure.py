@@ -13,7 +13,7 @@ From a set of measurement (?), compute the following quantities :
 """
 
 date = '2016_11_12'
-indices = range(60)
+indices = list(range(60))
 savedir = './Vortex_Turbulence/Vortex_propagation/' + date + '/'
 
 

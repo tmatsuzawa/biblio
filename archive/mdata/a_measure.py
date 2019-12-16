@@ -19,7 +19,7 @@ def map_t0(M, display=False):
     Vmax = np.zeros((ny, nx))
 
     for j in range(nx):
-        print(j / nx * 100)
+        print((j / nx * 100))
         for i in range(ny):
             if display:
                 plt.clf()

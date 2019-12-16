@@ -62,7 +62,7 @@ def read_time_step(file):
 
     t0 = t_s[0]
     t_s = (t_s - t0) / 1000  # t in s
-    print('t0 = ' + str(t0))
+    print(('t0 = ' + str(t0)))
 
     return t_s, Dt
 
@@ -88,7 +88,7 @@ def get_cine_time(file, display=False):
     c = cine.Cine(file)
     # something gets wrong with the computation of the cine length
     n = c.len()
-    print('Number of images : ' + str(n))
+    print(('Number of images : ' + str(n)))
     times = np.asarray([c.get_time(i) for i in range(n)])
 
     if display:

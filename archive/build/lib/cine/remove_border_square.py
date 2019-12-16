@@ -10,11 +10,11 @@ for img in sys.argv[1:]:
     base, ext = os.path.splitext(img)
     if base.endswith(ending): continue
     
-    print img
+    print(img)
 
     img = array(Image.open(img))
     if img.shape[2] == 4:
-        print '  (has alpha channel, which will be ignored)'
+        print('  (has alpha channel, which will be ignored)')
         img = img[..., :3]
     
     border_color = img[0, 0]
@@ -40,7 +40,7 @@ for img in sys.argv[1:]:
     mx += offset // 2
     Mx = mx + h
     
-    print '  Cropped to (%d, %d), (%d, %d)' % (mx, Mx, my, My)
+    print('  Cropped to (%d, %d), (%d, %d)' % (mx, Mx, my, My))
     
     alpha = 255 - 255 * border.astype('u1')
     #border[min(by):max(by)+1, min(bx):max(bx)+1] -= 0.5
@@ -55,6 +55,6 @@ for img in sys.argv[1:]:
     #show()
     ofn = base + ending + ext
     Image.fromarray(new_img).save(ofn)
-    print '  -> %s' % ofn
+    print('  -> %s' % ofn)
     
     #sys.exit()

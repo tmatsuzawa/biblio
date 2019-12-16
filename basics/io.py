@@ -18,7 +18,7 @@ def rename_files_in_dir(dir, target, new_str, ext=''):
     -------
 
     """
-    print 'Working directory: %s' % dir
+    print('Working directory: %s' % dir)
     if ext == '':
         # List directories and files in dir
         files = os.listdir(dir)
@@ -30,4 +30,4 @@ def rename_files_in_dir(dir, target, new_str, ext=''):
             new_file = file.replace(target, new_str)
             new_filepath = os.path.join(dir, new_file)
             os.rename(olf_filepath, new_filepath)
-    print '... Replaced %s with %s' % (target, new_str)
+    print('... Replaced %s with %s' % (target, new_str))

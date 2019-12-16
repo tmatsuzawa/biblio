@@ -79,13 +79,13 @@ def get_float_from_str(str, start, end):
 
     """
     if str.find(start) < 0 and start != '':
-        print 'ERROR: ' + start + ' is not in ' + str
+        print('ERROR: ' + start + ' is not in ' + str)
         return None
         # raise NameError('issues with ' + start)
         #sys.exit(1)
 
     if str.find(end) < 0 and end != '':
-        print 'ERROR: ' + end + ' is not in ' + str
+        print('ERROR: ' + end + ' is not in ' + str)
         return None
         # raise NameError('issues with ' + end)
         #sys.exit(1)
@@ -109,7 +109,7 @@ def get_float_from_str(str, start, end):
             number = convert_decimalstr_to_float(str_extracted)
             return number
         except ValueError:
-            print 'ERROR: ' + str_extracted + ' cannot be converted into float'
+            print('ERROR: ' + str_extracted + ' cannot be converted into float')
             raise RuntimeError
 
 def get_str_from_str(str, start, end):
@@ -127,11 +127,11 @@ def get_str_from_str(str, start, end):
 
     """
     if str.find(start) < 0:
-        print 'ERROR: ' + start + ' is not in ' + str
+        print('ERROR: ' + start + ' is not in ' + str)
         raise NameError('issues with ' + start)
         #sys.exit(1)
     if str.find(end) < 0:
-        print 'ERROR: ' + end + ' is not in ' + str
+        print('ERROR: ' + end + ' is not in ' + str)
         raise NameError('issues with ' + end)
         #sys.exit(1)
     start_ind, end_ind = str.find(start), str.find(end)

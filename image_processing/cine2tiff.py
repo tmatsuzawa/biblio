@@ -45,7 +45,7 @@ def cine2tiff(cinefile, step, start=0, end=None, ctime=1, folder='/Tiff_folder',
         print('Cine file temporary unavailable')
         return None
 
-    print('Length : ' + str(len(c)))
+    print(('Length : ' + str(len(c))))
     cinefile_short = get_filename_wo_ext(cinefile)
     savedir = os.path.dirname(cinefile) + folder + '/' + cinefile_short + '/'
     if not os.path.exists(savedir):
@@ -63,7 +63,7 @@ def cine2tiff(cinefile, step, start=0, end=None, ctime=1, folder='/Tiff_folder',
         if not os.path.exists(filename):
             imarr = c.get_frame(frame)  # 2d array at each frame
             misc.imsave(filename, imarr, 'tiff')
-    print '... Done'
+    print('... Done')
 
 def get_filename_wo_ext(filename):
     """

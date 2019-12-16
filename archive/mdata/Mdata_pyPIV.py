@@ -31,7 +31,7 @@ class Mdata_pyPIV(Mdata):
     def get_fileList(self, display=False):
         fileList, n = browse.get_fileList(self.dataDir + '/', self.frmt, display)
         if n == 0:
-            print("No PIV files found ! at " + self.dataDir)
+            print(("No PIV files found ! at " + self.dataDir))
         return fileList, n
 
     def load_ref(self):
@@ -247,8 +247,8 @@ class Mdata_pyPIV(Mdata):
         maxy = np.max(y)
 
         print('bounds:')
-        print(labelx + ' in [' + str(minx) + ', ' + str(maxx) + '] mm')
-        print(labely + ' in [' + str(miny) + ', ' + str(maxy) + '] mm')
+        print((labelx + ' in [' + str(minx) + ', ' + str(maxx) + '] mm'))
+        print((labely + ' in [' + str(miny) + ', ' + str(maxy) + '] mm'))
 
         boolList = [x0 >= minx, x0 <= maxx, y0 >= minx, y0 <= maxx]
         if all(boolList):

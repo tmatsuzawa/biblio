@@ -1,5 +1,5 @@
 import os
-from flowtrace import flowtrace
+from .flowtrace import flowtrace
 
 # Frames to merge
 framestomerge = 100

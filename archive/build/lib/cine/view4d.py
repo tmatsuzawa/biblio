@@ -5,7 +5,7 @@ from OpenGL.GLU import *
 from numpy import *
 import sys, os
 import time
-from cine import Cine, Tiff
+from .cine import Cine, Tiff
 import argparse
 import Image
 
@@ -83,7 +83,7 @@ def main():
     DATA = Image4D(args.input, args.depth, brighten=args.brightness, clip=args.clip, series=args.series, offset=args.offset, display_range=display_range)
     BASENAME = os.path.splitext(args.input)[0]
     
-    FRAMES = range(*slice(*[if_int(x) for x in args.range.split(':')]).indices(len(DATA)))
+    FRAMES = list(range(*slice(*[if_int(x) for x in args.range.split(':')]).indices(len(DATA))))
     UNLOADED_FRAMES = FRAMES[::-1]
     
     WINDOW = GLUTWindow('4D viewer')
@@ -95,7 +95,7 @@ def main():
     WINDOW.motion_func = motion_func
     WINDOW.mouse_wheel_func = mouse_wheel_func
      
-    print '''----Keys----
+    print('''----Keys----
 wasdqe -> Rotate volume
 zx -> Zoom
 i -> Rest rotation
@@ -113,9 +113,9 @@ r -> Autorotate
 ty -> Adjust autorotate speed
 jkl -> Coarsen / reset / make finer the z stack (default is "correct").
 1 -> Take screenshot
-'''
+''')
 
-    print "Loading %d frames..." % (len(FRAMES)),
+    print("Loading %d frames..." % (len(FRAMES)), end=' ')
     sys.stdout.flush()
     LOAD_START = time.time()
     
@@ -159,7 +159,7 @@ def tick():
 def tock(message=''):
     global TICK_TIME
     now = time.time()
-    print message + '%.3f' % (now - TICK_TIME)
+    print(message + '%.3f' % (now - TICK_TIME))
     TICK_TIME = now
 
 class Image4D(object):
@@ -336,15 +336,15 @@ class FuncSetter(object):
     def __set__(self, obj, val):
         try:
             if self.glut_func is not None: self.glut_func(val)
-            else: print 'Warning: %s property is ignored.' % self.prop_name
+            else: print('Warning: %s property is ignored.' % self.prop_name)
         except:
-            print "Failed to set callback for %s" % self.prop_name
+            print("Failed to set callback for %s" % self.prop_name)
         
         
 try:
     MWF = glutMouseWheelFunc
 except:
-    print "Warning: mouse scroll wheel disabled."
+    print("Warning: mouse scroll wheel disabled.")
     MWF = None
         
 class GLUTWindow(object):
@@ -463,7 +463,7 @@ def draw_scene():
 
         cf = int(CURRENT_FRAME)
 
-        display_settings = (cf, EYE_SPLIT, map(tuple, R), DISPLAY_3D, BRIGHTNESS, WINDOW.width, WINDOW.height, MOUSE_CAPTURED, FOV, Z_SHIFT, DRAW_BOX, Z_STEP)
+        display_settings = (cf, EYE_SPLIT, list(map(tuple, R)), DISPLAY_3D, BRIGHTNESS, WINDOW.width, WINDOW.height, MOUSE_CAPTURED, FOV, Z_SHIFT, DRAW_BOX, Z_STEP)
 
         if display_settings != LAST_DRAW or SCREENSHOT:
 
@@ -522,10 +522,10 @@ def draw_scene():
             if UNLOADED_FRAMES:
                 f = UNLOADED_FRAMES.pop()
                 DATA.gl_load_texture(f)
-                print '%d' % f,
+                print('%d' % f, end=' ')
                 sys.stdout.flush()
                 
-                if not UNLOADED_FRAMES: print "Done in %.1fs." % (time.time() - LOAD_START)
+                if not UNLOADED_FRAMES: print("Done in %.1fs." % (time.time() - LOAD_START))
             else:   
                 time.sleep(1E-2)
             
@@ -534,7 +534,7 @@ def mouse_wheel_func(button, dir, x, y):
     Z_SHIFT *= (1 + Z_RATE * dir)
 
 def find_new_file(name_str, max=10000):
-    for i in xrange(max):
+    for i in range(max):
         if not os.path.exists(name_str % i):
             return name_str % i
     else:
@@ -596,7 +596,7 @@ def key_pressed(*args):
     elif args[0] == 'i':
         R = eye(3)
     elif args[0] == 'f':
-        print CURRENT_FRAME
+        print(CURRENT_FRAME)
     elif args[0] == 'r':
         AUTOROTATE = not AUTOROTATE
     elif args[0] == 't':
@@ -611,7 +611,7 @@ def key_pressed(*args):
         Z_STEP /= 2**.5
     elif args[0] == '1':
         fn = find_new_file(time.strftime('%Y_%m_%d') + '_screenshot_%%04d_%s.png' % BASENAME)
-        print "Saving screenshot to " + fn
+        print("Saving screenshot to " + fn)
         SCREENSHOT = fn
         
         #WINDOW.screenshot(fn)

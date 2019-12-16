@@ -3,7 +3,7 @@ import numpy as np
 import lepm.plotting.colormaps as lecmaps
 import fenics_handling as pfh
 import lepm.stringformat as sf
-import cPickle as pkl
+import pickle as pkl
 import glob
 import lepm.dataio as dio
 import argparse
@@ -70,7 +70,7 @@ else:
     meshspec = 'dshell' + sf.float2pstr(args.dshell) + '_thetahole' + sf.float2pstr(thole) + \
                '_phihole' + sf.float2pstr(args.phi) + '_thick' + sf.float2pstr(args.thickness)
     meshfile = './meshes/shell_N' + str(Nmesh) + '_n*_R1p000_' + meshspec + '.xml'
-    print 'searching for ', meshfile
+    print('searching for ', meshfile)
     meshfile = glob.glob(meshfile)[0]
     mesh = Mesh(meshfile)
 
@@ -215,13 +215,13 @@ assigner_p.assign(ppk, pp)
 n = FacetNormal(mesh)
 m1 = dot(uuk, n) * ds(1)
 v1 = assemble(m1)
-print("\int u.n ds(1) = ", v1)
+print(("\int u.n ds(1) = ", v1))
 
 # Evaluate integral of normal gradient over right boundary
 n = FacetNormal(mesh)
 m1 = dot(uuk, n) * ds(2)
 v1 = assemble(m1)
-print("\int u.n ds(2) = ", v1)
+print(("\int u.n ds(2) = ", v1))
 
 if args.lrbcs:
     if args.tbbcs:
@@ -240,8 +240,8 @@ dio.ensure_dir(outdir)
 xy = pfh.xy_from_function_space(None, None, mesh)
 uuv = uuk.vector().array().reshape(np.shape(xy))
 ppv = ppk.vector().array()
-print 'np.shape(uuv) = ', np.shape(uuv)
-print 'np.shape(uuv) = ', np.shape(ppv)
+print('np.shape(uuv) = ', np.shape(uuv))
+print('np.shape(uuv) = ', np.shape(ppv))
 
 # Get boundary points
 bmesh = BoundaryMesh(mesh, "exterior", True)
@@ -266,7 +266,7 @@ bi_xy = boundary[b_inner]
 # Save data
 #############################################
 outfn = outdir + 'data.pkl'
-print 'outputting to fn:' + outfn
+print('outputting to fn:' + outfn)
 with open(outfn, "wb") as fn:
     res = {'xy': xy, 'uu': uuv, 'pp': ppv, 'boundaries': boundary, 'b_inner': bi_xy, 'b_outer': bo_xy}
     pkl.dump(res, fn)

@@ -34,7 +34,7 @@ def strain_distribution(data, jhtd=True):
     eigen_t = {}
     cosine_t = {}
 
-    for key in data.keys():
+    for key in list(data.keys()):
         eigen, omega, cosine = geom(data[key], jhtd=jhtd)
 
         omega_t += [omega]  # add_list_to_dict(omega_t,omega)
@@ -268,8 +268,8 @@ def strain_tensor_C(U, d=2, b=1.5, step=None):
     dU = np.zeros(dimensions)
 
     nx, ny, nd = np.shape(U)
-    x = range(0, nx)
-    y = range(0, ny)
+    x = list(range(0, nx))
+    y = list(range(0, ny))
     # print(U.shape)
     dU = derivative_C_mat(x, y, U, d=d, b=b)
 
@@ -303,8 +303,8 @@ def strain_tensor_loc(U, i, j, d=2, b=1.):
     dU :
     """
     nx, ny, nd = np.shape(U)
-    x = range(0, nx)
-    y = range(0, ny)
+    x = list(range(0, nx))
+    y = list(range(0, ny))
 
     fx = interpolate.RectBivariateSpline(x, y, U[..., 0], kx=3, ky=3)
     fy = interpolate.RectBivariateSpline(x, y, U[..., 1], kx=3, ky=3)
@@ -543,7 +543,7 @@ def normalize(U, d=3, p=2):
     d = len(dimensions) - 1
 
     module = np.power(np.sum(np.power(U, p), axis=d), 1. / p)
-    U = U / np.transpose(np.asarray([module for k in range(d)]), tuple(range(1, d + 1) + [0]))
+    U = U / np.transpose(np.asarray([module for k in range(d)]), tuple(list(range(1, d + 1)) + [0]))
 
     return U
 
@@ -569,7 +569,7 @@ def Lambda(a, d=3):
         epsilon
     """
     # compute the eigenvalues from the strain tensor for any point in dU2
-    tup = tuple(range(d) + [d + 1, d])
+    tup = tuple(list(range(d)) + [d + 1, d])
     s_sym = (a + np.transpose(a, tup)) / 2
 
     T = np.matrix.trace(s_sym, axis1=d, axis2=d + 1)
@@ -602,7 +602,7 @@ def Lambda(a, d=3):
             eigen['Lambda_' + str(k)].append(vals[k])
             eigen['lambda_' + str(k)].append(vectors[:, k])
 
-    for key in eigen.keys():
+    for key in list(eigen.keys()):
         if key[0:6] == 'Lambda':
             eigen[key] = np.reshape(np.asarray(eigen[key]), s_sym.shape[0:d])
         if key[0:6] == 'lambda':
@@ -634,7 +634,7 @@ def project(U, eigen, d=3):
         s[:, i] = eigen['Lambda_' + str(i)] * np.abs(dotp)  # normalization factor is needed
 
         mean = np.mean(s[:, i])
-        print('lambda_' + str(i) + ' : ' + str(mean))
+        print(('lambda_' + str(i) + ' : ' + str(mean)))
 
     return np.sum(s, axis=1)
 
@@ -658,12 +658,12 @@ def vorticity(tau, d=3, norm=False):
         squared modulus of the vorticity
     """
     # compute the vorticity from the strain tensor for any point in dU2
-    tup = tuple(range(d) + [d + 1, d])
+    tup = tuple(list(range(d)) + [d + 1, d])
     s_asym = tau - np.transpose(tau, tup)
 
     if d == 3:
         vorticity = -np.asarray([s_asym[..., 1, 2], s_asym[..., 2, 0], s_asym[..., 0, 1]])
-        shift = tuple(range(1, d + 1) + [0])
+        shift = tuple(list(range(1, d + 1)) + [0])
         vorticity = np.transpose(vorticity, shift)
     if d == 2:
         vorticity = s_asym[..., 1, 0]

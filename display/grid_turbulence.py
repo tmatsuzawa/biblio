@@ -263,7 +263,7 @@ def make_movie(M, Range=None, field=['E', 'vorticity'], Dirbase=None, Dt=1):
         start, stop, step = tuple(Range)
     else:
         start, stop, step = tuple([0, nt, 1])
-    frames = range(start, stop, step)
+    frames = list(range(start, stop, step))
 
     #    field = ['Ux','Uy']
     #  field = ['E','vorticity']
@@ -314,7 +314,7 @@ def select_range(M, Range):
         start, stop, step = tuple(Range)
     else:
         start, stop, step = tuple([0, nt, 1])
-    frames = range(start, stop, step)
+    frames = list(range(start, stop, step))
 
     return frames
 
@@ -403,7 +403,7 @@ def make_plot(M, Range=None, color='k', field=['E', 'vorticity'], Dirbase=None, 
         frames_disp = [1200]
     else:
         step = frames[1] - frames[0]
-        frames_disp = range(frames[0] + step * 10, frames[-1], step * 10)
+        frames_disp = list(range(frames[0] + step * 10, frames[-1], step * 10))
 
     if individual:
         for frame in frames_disp:
@@ -583,7 +583,7 @@ def scale_select(M, selection, Range=None, Dt=1):
 
     tup = scales(M, Range=Range, Dt=Dt)
 
-    if selection in table.keys():
+    if selection in list(table.keys()):
         return tup[0], tup[table[selection]]
     else:
         print("Scale not found")
@@ -598,7 +598,7 @@ def example(M, Range=None, field=['E', 'vorticity']):
         start, stop, step = tuple(Range)
     else:
         start, stop, step = tuple([0, nt, 1])
-    frames = range(start, stop, step)
+    frames = list(range(start, stop, step))
 
     #    field = ['Ux','Uy']
     #  field = ['E','vorticity']

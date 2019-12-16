@@ -46,7 +46,7 @@ def set_scale_factor(x):
     SCALE_FACTOR = x
 
     p = {}
-    for k, v in params.iteritems():
+    for k, v in params.items():
         if type(v) in (int, float):
             v = v * SCALE_FACTOR
         p[k] = v
@@ -103,7 +103,7 @@ def axes_in_mm(x0, y0, w, h, fig=None, label=None, label_xoff=1.5, label_yoff=1.
 
 
 def joint_image_crop(*imgs):
-    imgs = map(pylab.asarray, imgs)
+    imgs = list(map(pylab.asarray, imgs))
 
     for img in imgs:
         if img.shape != imgs[0].shape:

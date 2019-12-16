@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import curve_fit
-import library.basics.std_func as std_func
+# import library.basics.std_func as std_func
 
 '''
 Module for plotting and saving figures
@@ -16,12 +16,11 @@ import matplotlib.ticker as ticker
 import mpl_toolkits.axes_grid as axes_grid
 import itertools
 from scipy import stats
-import library.basics.formatarray as fa
 import numpy as np
 import glob
 from fractions import Fraction
 from math import modf
-
+import pickle
 
 #Global variables
 #Default color cycle: iterator which gets repeated if all elements were exhausted
@@ -40,11 +39,13 @@ params = {'figure.figsize': __figsize__,
          'axes.labelsize': __fontsize__, # axes
          'axes.titlesize': __fontsize__,
          'xtick.labelsize': __fontsize__, # tick
-         'ytick.labelsize': __fontsize__}
+         'ytick.labelsize': __fontsize__,
+          'lines.linewidth': 5}
 
 
 ## Save a figure
-def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, overwrite=True, tight_layout=False, **kwargs):
+def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, overwrite=True, tight_layout=False,
+         savedata=True, transparent=True, **kwargs):
     """Save a figure from pyplot
     Parameters
     ----------
@@ -89,15 +90,23 @@ def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, over
     ver_no = 0
     while os.path.exists(savepath) and not overwrite:
         # this needs to be fixed. right now, it keeps saving to _000.png
-        savepath = directory + os.path.split(path)[1] + '_%03d' % ver_no + ext
+        savepath = directory + '/' + os.path.split(path)[1][:-len(ext)] + '_%03d.' % ver_no + ext
         ver_no += 1
 
 
     if verbose:
-        print("Saving figure to '%s'..." % savepath),
+        print(("Saving figure to '%s'..." % savepath))
 
     # Save the figure
-    plt.savefig(savepath, dpi=dpi, **kwargs)
+    plt.savefig(savepath, dpi=dpi, transparent=transparent, **kwargs)
+
+    # Save fig instance... This may fail for python2
+    if savedata:
+        try:
+            pickle.dump(fig, open(savepath + '_fig.pkl', 'wb'))
+        except:
+            print('... Could not save a fig instance')
+
 
     # Close it
     if close:
@@ -392,7 +401,7 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
 ## Plot a fit curve
 def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None, linestyle='--',
                    xmin=None, xmax=None, add_equation=True, eq_loc='bl', color=None, label='fit',
-                   show_r2=False, **kwargs):
+                   show_r2=False, return_r2=False, **kwargs):
     """
     Plots a fit curve given xdata and ydata
     Parameters
@@ -413,12 +422,12 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
     ydata = np.array(ydata)
 
     if any(np.isnan(ydata)) or any(np.isnan(xdata)):
-        print 'Original data contains np.nans! Delete them for curve fitting'
+        print('Original data contains np.nans! Delete them for curve fitting')
         condx, condy = np.isnan(xdata), np.isnan(ydata)
         cond = (~condx * ~condy)
-        print 'No of deleted data points %d / %d' % (np.sum(~cond), len(xdata))
+        print('No of deleted data points %d / %d' % (np.sum(~cond), len(xdata)))
         if np.sum(~cond) == len(xdata):
-            print 'No data points for fitting!'
+            print('No data points for fitting!')
             raise RuntimeError
         xdata, ydata = xdata[cond], ydata[cond]
 
@@ -429,7 +438,7 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
 
     x_for_plot = np.linspace(xmin, xmax, 1000)
     if func is None or func=='linear':
-        print 'Fitting to a linear function...'
+        print('Fitting to a linear function...')
         popt, pcov = curve_fit(std_func.linear_func, xdata, ydata)
         if color is None:
             fig, ax = plot(x_for_plot, std_func.linear_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
@@ -443,7 +452,7 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
             addtext(ax, text, option=eq_loc)
         y_fit = std_func.linear_func(xdata, *popt)
     elif func=='power':
-        print 'Fitting to a power law...'
+        print('Fitting to a power law...')
 
         popt, pcov = curve_fit(std_func.power_func, xdata, ydata)
         if color is None:
@@ -468,7 +477,7 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
         y_fit = func(xdata, *popt)
     #plot(x_for_plot, std_func.power_func(x_for_plot, *popt))
 
-    if show_r2:
+    if show_r2 or return_r2:
         # compute R^2
         # residual sum of squares
         ss_res = np.sum((ydata - y_fit) ** 2)
@@ -476,7 +485,10 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
         ss_tot = np.sum((ydata - np.mean(ydata)) ** 2)
         # r-squared
         r2 = 1 - (ss_res / ss_tot)
-        addtext(ax, '$R^2: %.2f$' % r2, option='bl3')
+        if show_r2:
+            addtext(ax, '$R^2: %.2f$' % r2, option='bl3')
+        if return_r2:
+            return fig, ax, popt, pcov, r2
 
 
 
@@ -527,8 +539,14 @@ def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None
         cc = ax.pcolormesh(x, y, z, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
 
     if cbar:
-        add_colorbar(cc, ax=ax, label=label, option=option)
-
+        if vmin is None and vmax is None:
+            add_colorbar(cc, ax=ax, label=label, option=option)
+        elif vmin is not None and vmax is None:
+            add_colorbar(cc, ax=ax, label=label, option=option, vmin=vmin)
+        elif vmin is None and vmax is not None:
+            add_colorbar(cc, ax=ax, label=label, option=option, vmax=vmax)
+        else:
+            add_colorbar(cc, ax=ax, label=label, option=option, vmin=vmin, vmax=vmax)
     if aspect == 'equal':
         ax.set_aspect('equal')
     # set edge color to face color
@@ -694,7 +712,9 @@ def legend(ax, remove=False, **kwargs):
 # Colorbar
 # Scientific format for Color bar- set format=sfmt to activate it
 sfmt=mpl.ticker.ScalarFormatter(useMathText=True)
-sfmt.set_powerlimits((0, 0))
+# Scientific notation is used for data < 10^-n or data >= 10^m, where n and m are the power limits set using set_powerlimits((n,m))
+sfmt.set_scientific(True)
+sfmt.set_powerlimits((0, 0)) # (n,m): 10^m <= data < 10 ^ -n
 
 def add_colorbar_old(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=__fontsize__,
                  vmin=None, vmax=None, cmap='jet', option='normal', **kwargs):
@@ -739,7 +759,7 @@ def add_colorbar_old(mappable, fig=None, ax=None, fignum=None, label=None, fonts
 
 
 def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', label=None, fontsize=None, option='normal',
-                 tight_layout=True, ticklabelsize=None, aspect='equal', **kwargs):
+                 tight_layout=True, ticklabelsize=None, aspect='equal', ntick=10, tickinc=None, **kwargs):
     """
     Adds a color bar
 
@@ -757,6 +777,52 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
     -------
 
     """
+    def get_ticks_for_sfmt(mappable, n=10, inc=0.5, **kwargs):
+        """
+        Returns ticks for scientific notation
+        ... setting format=smft sometimes fails to use scientific notation for colorbar.
+        ... This function should ensure the colorbar object to have appropriate ticks
+         to display numbers in scientific fmt once the generated ticks are passed to fig.colorbar().
+        Parameters
+        ----------
+        mappable
+        n: int, (ROUGHLY) the number of ticks
+        inc: float (0, 0.5]
+        ... 0.5 or 0.25 is recommended
+        Returns
+        -------
+        ticks, list, ticks for scientific format
+        """
+        # ticks for scientific notation
+        zmin, zmax = np.nanmin(mappable.get_array()), np.nanmax(mappable.get_array())
+        if 'vmin' in kwargs.keys():
+            zmin = kwargs['vmin']
+        if 'vmax' in kwargs.keys():
+            zmax = kwargs['vmax']
+
+        # ticks = np.linspace(zmin, zmax, 2*n)
+        exponent = int(np.floor(np.log10(np.abs(zmax))))
+        # ticks = np.around(ticks[1::2], decimals=-exponent + 1)
+
+        if tickinc is not None:
+            # Specify the increment of ticks!
+            dz = inc * 10 ** exponent
+            ticks = [i * dz for i in range(int(zmin / dz), int(zmax / dz)+1)]
+        else:
+            # Specify the number of ticks!
+            exp = int(np.floor(np.log10((zmax - zmin) / n)))
+            dz =  np.round((zmax - zmin) / n, -exp)
+            ticks = [i * dz for i in range(int(zmin / dz), int(zmax / dz) + 1)]
+
+        return ticks
+
+    def remove_vmin_vmax_from_kwargs(**kwargs):
+        if 'vmin' in kwargs.keys():
+            del kwargs['vmin']
+        if 'vmax' in kwargs.keys():
+            del kwargs['vmax']
+        return kwargs
+
     # ax = mappable.axes
     # fig = ax.figure
     # Get a Figure instance
@@ -772,9 +838,16 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
 
     divider = axes_grid.make_axes_locatable(ax)
     cax = divider.append_axes(location, size='5%', pad=0.15)
-    if option == 'scientific':
+    if option == 'scientific_custom':
+        ticks = get_ticks_for_sfmt(mappable, n=ntick, inc=tickinc, **kwargs)
+        kwargs = remove_vmin_vmax_from_kwargs(**kwargs)
+        cb = fig.colorbar(mappable, cax=cax, format=sfmt, ticks=ticks, **kwargs)
+    elif option == 'scientific':
+        # old but more robust
+        kwargs = remove_vmin_vmax_from_kwargs(**kwargs)
         cb = fig.colorbar(mappable, cax=cax, format=sfmt, **kwargs)
     else:
+        kwargs = remove_vmin_vmax_from_kwargs(**kwargs)
         cb = fig.colorbar(mappable, cax=cax, **kwargs)
 
     if not label is None:
@@ -792,6 +865,7 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
     # Adding a color bar may disport the overall balance of the figure. Fix it.
     if tight_layout:
         fig.tight_layout()
+
 
     return cb
 
@@ -1196,7 +1270,51 @@ def addtext(ax, text='text goes here', x=0, y=0, color='k',
     return ax
 
 def draw_power_triangle(ax, x, y, exponent, w=None, h=None, facecolor='none', edgecolor='r', alpha=1.0, flip=False,
-                        fontsize=__fontsize__, set_base_label_one=False, beta=20, **kwargs):
+                        fontsize=__fontsize__, set_base_label_one=False, beta=20, zorder=100, **kwargs):
+    """
+    Draws a triangle which indicates a power law in the log-log plot.
+
+    Parameters
+    ----------
+    ax: matplotlib.axes._subplots.AxesSubplot object
+        ... get it like plt.gca()
+    x: float / int
+        ... x coordinate of the triangle drawn on the plot
+    y: float / int
+        ... x coordinate of the triangle drawn on the plot
+    exponent: float / int
+        ... exponent of the power law
+        ... Y = X^exponent
+    w: float / int
+        ... number of decades for the drawn triangle to span on the plot
+        ... By default, this function draws a triangle with size of 0.4 times the width of the plot
+    h: float / int
+        ... number of decades for the drawn triangle to span on the plot
+    facecolor: str
+        ... face color of the drawn triangle, default: 'none' (transparent)
+        ... passed to mpatches.PathPatch object
+    edgecolor: str
+        ... edge color of the drawn triangle, default: 'r'
+        ... passed to mpatches.PathPatch object
+    alpha: float [0, 1]
+        ... alpha value of the drawn triangle
+    flip: bool
+        ... If True, it will flip the triangle horizontally.
+    fontsize: float / int
+        ... fontsize of the texts to indicate the exponent aside the triangle
+    set_base_label_one: bool, default: False
+        ... If True, it will always annotate the base as '1' and alter the text for the height accordingly.
+        ... By default, it will annotate the base and the height using the closest integer pair.
+    beta: float / int, default: 20
+        ... This is used to control the spacing between the text and the drawn triangle
+        ... The higher beta is, the less spacing between the text and the triangle
+    zorder: zorder of triangle, default: 0
+    kwargs: the other kwargs will be passed to ax.text()
+
+    Returns
+    -------
+
+    """
 
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
@@ -1204,19 +1322,19 @@ def draw_power_triangle(ax, x, y, exponent, w=None, h=None, facecolor='none', ed
     exp_ymax, exp_ymin = np.log10(ymax), np.log10(ymin)
     exp_x, exp_y = np.log10(x), np.log10(y)
 
-    # Default size of the triangle is the fifth of the width of the plot
+    # Default size of the triangle is 0.4 times the width of the plot
     if w is None and h is None:
         exp_w = (exp_xmax - exp_xmin) * 0.4
         exp_h = exp_w * exponent
     elif w is None and h is not None:
-        exp_h = np.log10(h)
+        exp_h = h
         exp_w = exp_h / exponent
     elif w is not None and h is None:
-        exp_w = np.log10(w)
+        exp_w = w
         exp_h = exp_w * exponent
     else:
-        exp_w = np.log10(w)
-        exp_h = np.log10(h)
+        exp_w = w
+        exp_h = h
 
     w = 10 ** (exp_x + exp_w) - 10 ** exp_x  # base of the triangle
     h = 10 ** (exp_y + exp_h) - 10 ** exp_y  # height of the triangle
@@ -1224,23 +1342,23 @@ def draw_power_triangle(ax, x, y, exponent, w=None, h=None, facecolor='none', ed
         path = mpl.path.Path([[x, y], [x + w, y], [x + w, y + h], [x, y]])
     else:
         path = mpl.path.Path([[x, y], [x, y + h], [x + w, y + h], [x, y]])
-    patch = mpatches.PathPatch(path, facecolor=facecolor, edgecolor=edgecolor, alpha=alpha, **kwargs)
+    patch = mpatches.PathPatch(path, facecolor=facecolor, edgecolor=edgecolor, alpha=alpha, zorder=zorder)
     ax.add_patch(patch)
 
 
     # annotate
     # beta = 20. # greater beta corresponds to less spacing between the texts and the triangle edges
     if exponent >= 0 and not flip:
-        x_base, y_base = 10 ** (exp_x + exp_w * 0.4), 10 ** (exp_y - (exp_ymax - exp_ymin) / beta)
-        x_height, y_height = 10 ** (exp_x + (exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.6)
+        x_base, y_base = 10 ** (exp_x + exp_w * 0.5), 10 ** (exp_y - (exp_ymax - exp_ymin) / beta)
+        x_height, y_height = 10 ** (exp_w + exp_x + 0.4*(exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.5)
     elif exponent < 0 and not flip:
-        x_base, y_base = 10 ** (exp_x + exp_w * 0.4), 10 ** (exp_y + (exp_ymax - exp_ymin) / beta)
-        x_height, y_height = 10 ** (exp_x + (exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.6)
+        x_base, y_base = 10 ** (exp_x + exp_w * 0.5), 10 ** (exp_y + 0.3*(exp_ymax - exp_ymin) / beta)
+        x_height, y_height = 10 ** (exp_w + exp_x + 0.4*(exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.5)
     elif exponent >= 0 and flip:
-        x_base, y_base = 10 ** (exp_x + exp_w * 0.4), 10 ** (exp_y + (exp_ymax - exp_ymin) / beta)
-        x_height, y_height = 10 ** (exp_x - (exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.6)
+        x_base, y_base = 10 ** (exp_x + exp_w * 0.4), 10 ** (exp_y + exp_h + 0.3*(exp_ymax - exp_ymin) / beta)
+        x_height, y_height = 10 ** (exp_x - (exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.5)
     else:
-        x_base, y_base = 10 ** (exp_x + exp_w * 0.4), 10 ** (exp_y + exp_h - (exp_ymax - exp_ymin) / beta)
+        x_base, y_base = 10 ** (exp_x + exp_w * 0.5), 10 ** (exp_y + exp_h - (exp_ymax - exp_ymin) / beta)
         x_height, y_height = 10 ** (exp_x - (exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.6)
 
     if set_base_label_one:
@@ -1249,8 +1367,8 @@ def draw_power_triangle(ax, x, y, exponent, w=None, h=None, facecolor='none', ed
     else:
         # get the numbers to put on the graph to indicate the power
         exponent_rational = approximate_fraction(exponent, 0.0001)
-        ax.text(x_base, y_base, str(np.abs(exponent_rational.denominator)), fontsize=fontsize)
-        ax.text(x_height, y_height, str(np.abs(exponent_rational.numerator)), fontsize=fontsize)
+        ax.text(x_base, y_base, str(np.abs(exponent_rational.denominator)), fontsize=fontsize, **kwargs)
+        ax.text(x_height, y_height, str(np.abs(exponent_rational.numerator)), fontsize=fontsize, **kwargs)
 
 
 
@@ -1258,19 +1376,15 @@ def draw_power_triangle(ax, x, y, exponent, w=None, h=None, facecolor='none', ed
 def clf(fignum=None):
     plt.figure(fignum)
     plt.clf()
+def close(*argv, **kwargs):
+    plt.close(*argv, **kwargs)
 
 ## Color cycle
-def reset_colorcycle(color_cycle=__color_cycle__, last_color='#17becf'):
-    for i in range(100):
-        if next(color_cycle) == last_color:
-            break
-    return color_cycle
-
 def skipcolor(numskip, color_cycle=__color_cycle__):
     """ Skips numskip times in the color_cycle iterator
         Can be used to reset the color_cycle"""
     for i in range(numskip):
-        color_cycle.next()
+        next(color_cycle)
 def countcolorcycle(color_cycle = __color_cycle__):
     return sum(1 for color in color_cycle)
 
@@ -1278,7 +1392,6 @@ def get_default_color_cycle():
     return __color_cycle__
 
 def get_first_n_colors_from_color_cycle(n):
-    __color_cycle__ = reset_colorcycle()
     color_list = []
     for i in range(n):
         color_list.append(next(__color_cycle__))
@@ -1308,6 +1421,22 @@ def create_cmap_using_values(colors=None, color1='greenyellow', color2='darkgree
     return newcmap
 
 def get_colors_and_cmap_using_values(values, cmap=None, color1='greenyellow', color2='darkgreen', vmin=None, vmax=None, n=100):
+    """
+    Returns colors (list), cmap instance, mpl.colors.Normalize instance
+    Parameters
+    ----------
+    values
+    cmap
+    color1
+    color2
+    vmin
+    vmax
+    n
+
+    Returns
+    -------
+
+    """
     values = np.asarray(values)
     if vmin is None:
         vmin = np.nanmin(values)
@@ -1349,7 +1478,7 @@ def get_color_list_gradient(color1='greenyellow', color2='darkgreen', n=10):
     r = np.linspace(color1_rgb[0], color2_rgb[0], n)
     g = np.linspace(color1_rgb[1], color2_rgb[1], n)
     b = np.linspace(color1_rgb[2], color2_rgb[2], n)
-    color_list = zip(r, g, b)
+    color_list = list(zip(r, g, b))
     return color_list
 
 
@@ -1386,7 +1515,7 @@ def cname2hex(cname):
         hex = colors[cname]
         return hex
     except NameError:
-        print cname, ' is not registered as default colors by matplotlib!'
+        print(cname, ' is not registered as default colors by matplotlib!')
         return None
 
 def set_color_cycle(ax, colors=__def_colors__):
@@ -1427,7 +1556,7 @@ def update_figure_params(params):
     -------
 
     """
-    pylab.rcParams.update(params)
+   pylab.rcParams.update(params )
 
 def reset_figure_params():
     pylab.rcParams.update(params)
@@ -1443,6 +1572,7 @@ reset_figure_params()
 def add_subplot_axes(ax, rect, axisbg='w'):
     """
     Creates a sub-subplot inside the subplot (ax)
+    rect: list, [x, y, width, height] e.g. rect = [0.2,0.2,0.7,0.7]
     Parameters
     ----------
     ax
@@ -1465,7 +1595,8 @@ def add_subplot_axes(ax, rect, axisbg='w'):
     y = infig_position[1]
     width *= rect[2]
     height *= rect[3]
-    subax = fig.add_axes([x, y, width,height], axisbg=axisbg)
+    subax = fig.add_axes([x, y, width,height])
+    subax.set_facecolor(axisbg)
     x_labelsize = subax.get_xticklabels()[0].get_size()
     y_labelsize = subax.get_yticklabels()[0].get_size()
     x_labelsize *= rect[2]**0.5
@@ -1502,6 +1633,88 @@ def draw_rectangle(ax, x, y, width, height, angle=0.0, linewidth=1, edgecolor='r
     ax.axis('equal') # this ensures to show the rectangle if the rectangle is bigger than the original size
     return rect
 
+
+def draw_box(ax, xx, yy, w_box=325., h_box=325., xoffset=0, yoffset=0, linewidth=5,
+             scalebar=True, sb_length=50., sb_units='$mm$', sb_loc=(0.95, 0.1), sb_txtloc=(0.0, 0.4), sb_lw=10, sb_txtcolor='white',
+             facecolor='k', fluidcolor='skyblue'):
+    """
+    Draws a box and fills the surrounding area with color (default: skyblue)
+    Adds a scalebar by default
+    ... drawn box center coincides with the center of given grids(xx, yy)
+    ... in order to shift the center of the box, use xoffset any yoffset
+    Parameters
+    ----------
+    ax: matplotlib.axes.Axes instance
+    xx: 2d numpy array
+        x coordinates
+    yy: 2d numpy array
+        y coordinates
+    w_box: float/int
+        width of the box
+    h_box: float/int
+        height of the box
+    xoffset: float/int
+        real number to shift the box center in the x direction
+    yoffset:
+        real number to shift the box center in the x direction
+    linewidth: int
+        linewidth of drawn box
+    scalebar: bool (default: True)
+        ... draws a scalebar inside the drawn box
+    sb_length: int
+        ... length of the scale bar in physical units.
+        ...... In principle, this can be float. If you want that, edit the code where ax.text() is called.
+        ...... Generalizing to accept the float requires a format which could vary everytime, so just accept integer.
+    sb_units: str
+        ... units of the sb_length. Default: '$mm$'
+    sb_loc: tuple, (x, y)
+        ... location of the scale bar. Range: [0, 1]
+        ... the units are with respect the width and height of the box
+    sb_txtloc: tuple, (x, y)
+        ... location of the TEXT of the scale bar. Range: [0, 1]
+        ... x=0: LEFT of the scale bar, x=1: RIGHT of the scale bar
+        ... y=0: LEFT of the scale bar, x=1: RIGHT of the scale bar
+
+    sb_lw:
+
+    facecolor
+    fluidcolor
+
+    Returns
+    -------
+
+    """
+    xmin, xmax = np.nanmin(xx), np.nanmax(xx)
+    ymin, ymax = np.nanmin(yy), np.nanmax(yy)
+    if np.nanmean(yy) > 0:
+        xc, yc = (xmax - xmin) / 2., (ymax - ymin) / 2.
+    else:
+        xc, yc = (xmax - xmin) / 2., -(ymax - ymin) / 2.
+    x0, y0 = xc - w_box / 2. + xoffset, yc - h_box / 2. + yoffset
+    draw_rectangle(ax, x0, y0, w_box, h_box, linewidth=linewidth, facecolor=facecolor, zorder=0)
+    ax.set_facecolor(fluidcolor)
+
+    if scalebar:
+        #         x0_sb, y0_sb = x0 + 0.8 * w_box, y0 + 0.1*h_box
+        x1_sb, y1_sb = x0 + sb_loc[0] * w_box, y0 + sb_loc[1] * h_box
+        x0_sb, y0_sb = x1_sb - sb_length, y1_sb
+        if sb_loc[1] < 0.5:
+            x_sb_txt, y_sb_txt = x0_sb + sb_txtloc[0] * sb_length, y0 + sb_loc[1] * h_box * sb_txtloc[1]
+        else:
+            x_sb_txt, y_sb_txt = x0_sb + sb_txtloc[0] * sb_length, y0 - (1 - sb_loc[1]) * h_box * sb_txtloc[1] + sb_loc[1] * h_box
+        x_sb, y_sb = [x0_sb, x1_sb], [y0_sb, y1_sb]
+        xmin, xmax, ymin, ymax = ax.axis()
+        width, height = xmax - xmin, ymax - ymin
+        ax.plot(x_sb, y_sb, linewidth=sb_lw, color=sb_txtcolor)
+        ax.text(x_sb_txt, y_sb_txt, '%d %s' % (sb_length, sb_units), color=sb_txtcolor)
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+
 ## misc.
 def simplest_fraction_in_interval(x, y):
     """Return the fraction with the lowest denominator in [x,y]."""
@@ -1530,3 +1743,38 @@ def approximate_fraction(x, e):
     """Return the fraction with the lowest denominator that differs
     from x by no more than e."""
     return simplest_fraction_in_interval(x - e, x + e)
+
+
+
+# data extraction from fig
+def get_scatter_data_from_fig(fig, axis_number=0):
+    """
+    Return x, y data of scattered data in a figure instance
+    ... It requires a different code to extract scattered data from a Figure instance, compared to plt.plot() output (type: line?)
+    ... Scattered data are stored as an collections.collection object.
+
+    Parameters
+    ----------
+    fig: matplotlib.Figure object
+    axis_number: int, number to specify which axis user refers to. ax = fig.axes[axis_number]
+
+    Returns
+    -------
+    data_list: list, each element of a list is a 2d array which store x,y coordinates of the scattered data points
+    """
+
+    n_col = len(fig.axes[axis_number].collections)
+    data_list = []
+    for i in range(n_col):
+        data_list.append(fig.axes[axis_number].collections[i].get_offsets())
+    return data_list
+
+def get_plot_data_from_fig(fig, axis_number=0):
+    nlines =  len(fig.axes[axis_number].lines)
+    xlist, ylist = [], []
+    for i in range(nlines):
+        x = fig.axes[axis_number].lines[i]._xorig
+        y = fig.axes[axis_number].lines[i]._yorig
+        xlist.append(x)
+        ylist.apppend(y)
+    return xlist, ylist

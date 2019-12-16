@@ -108,10 +108,10 @@ def caller(fileList,step):
                 #make_result_folder]     # output folders for PIV measurements. Everything is stored into a PIV_data file
                                        
     n = len(list_fun)
-    functions = {key:fun for key,fun in zip(range(n),list_fun)}
+    functions = {key:fun for key,fun in zip(list(range(n)),list_fun)}
                      
     if step<n:
-        print(functions[step].__name__)
+        print((functions[step].__name__))
         functions[step](fileList)
         step+=1
     else:
@@ -186,7 +186,7 @@ def make_piv_folders(fileList,step=None):
     for file in fileList[args.start:args.end]:
         print(file)
         cine2pic.cine2tiff(file,'File',step,post='_File')    
-    print(str(len(fileList))+' cine files to be processed')
+    print((str(len(fileList))+' cine files to be processed'))
 
 def make_result_folder(fileList,type_analysis='Sample',algo='PIVlab',W=32,ratio=None):
     """
@@ -210,7 +210,7 @@ def make_result_folder(fileList,type_analysis='Sample',algo='PIVlab',W=32,ratio=
     None
     0	"""    
     types = dict(Sample=ratio,Full_double=2,Full_single=1)
-    if type_analysis in types.keys():
+    if type_analysis in list(types.keys()):
         ratio = types[type_analysis]
     else:
         #use the value given in argument for ratio

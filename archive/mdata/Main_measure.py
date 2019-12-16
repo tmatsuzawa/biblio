@@ -162,7 +162,7 @@ def main_generation():
     indexList=[2,4,6,10]
     
     for index in indexList:
-        print(indexList.index(index))
+        print((indexList.index(index)))
         Mlist_v.append(M_manip.load_Mdata(date,index,0))
 
 #Mlist=[M0,M4,M5,M2]

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 import lepm.data_handling as dh
 import lepm.stringformat as sf
-import cPickle as pkl
+import pickle as pkl
 import glob
 import lepm.dataio as dio
 from matplotlib.ticker import FormatStrFormatter
@@ -61,7 +61,7 @@ if args.geometry == 'shell':
     meshspec = 'dshell' + sf.float2pstr(args.dshell) + '_thetahole' + sf.float2pstr(thole) + \
                '_phihole' + sf.float2pstr(args.phi) + '_thick' + sf.float2pstr(args.thickness)
     meshfile = './meshes/shell_N' + str(Nmesh) + '_n*_R1p000_' + meshspec + '.xml'
-    print 'searching for ', meshfile
+    print('searching for ', meshfile)
     meshfile = glob.glob(meshfile)[0]
     # Load the information about the linesegments that defined the boundary, rmv_lsegs
     meshparamfn = meshfile[0:-3] + 'pkl'
@@ -109,8 +109,8 @@ eps = 1e-2
 ##############################################
 # Save image of Phi
 #############################################
-print('xy = ', xy)
-print('phiv = ', phiv)
+print(('xy = ', xy))
+print(('phiv = ', phiv))
 wfig, hfig = 90, 60
 fig, ax, cax = leplt.initialize_1panel_cbar_cent(wfig, hfig, wsfrac=0.5, cbar_pos='right', wcbarfrac=0.05, hcbarfrac=0.6)
 ax = leplt.plot_pcolormesh(xy[:, 0], xy[:, 1], phiv, 100, ax=ax, cax=cax, zorder=0)
@@ -151,9 +151,9 @@ plt.savefig(outdir + 'potential_flow_shell' + specstr + '_flowfield.png', dpi=30
 #############################################
 # Save vector field components as png
 #############################################
-print('uuv = ', uuv)
-print('xy = ', np.shape(xy))
-print('uuv = ', np.shape(uuv))
+print(('uuv = ', uuv))
+print(('xy = ', np.shape(xy)))
+print(('uuv = ', np.shape(uuv)))
 wfig, hfig = 180., 90.
 y0cbar_frac = 0.3
 wcbarfrac = 0.02

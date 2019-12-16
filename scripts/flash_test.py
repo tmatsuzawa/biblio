@@ -14,7 +14,7 @@ tiffs = sorted(tiffs)
 intensity = []
 time = []
 for i, tiff in enumerate(tiffs):
-    print tiff
+    print(tiff)
     im = Image.open(tiff)
     imarray = np.array(im)
 

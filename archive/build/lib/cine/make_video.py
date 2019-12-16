@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from view4d import *
+from .view4d import *
 
 Z_SHIFT = 1.8
 ANGLES = list(arange(100) * 2 * pi / 100.)
@@ -99,7 +99,7 @@ OUTPUT_DIR = find_new_file(BASENAME + '_video%03d')
 os.mkdir(OUTPUT_DIR)
 FRAME_NAME = os.path.join(OUTPUT_DIR, '%05d.png')
 
-FRAMES = range(*slice(*[if_int(x) for x in args.range.split(':')]).indices(len(DATA)))
+FRAMES = list(range(*slice(*[if_int(x) for x in args.range.split(':')]).indices(len(DATA))))
 UNLOADED_FRAMES = FRAMES[::-1]
 
 WINDOW = GLUTWindow('4D viewer')

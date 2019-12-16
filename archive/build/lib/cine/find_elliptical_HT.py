@@ -1,4 +1,4 @@
-import cine
+from . import cine
 from pylab import *
 from numpy import *
 import scipy
@@ -42,7 +42,7 @@ for n in frame_range:
         scatter(xy[0],xy[1],'o')
         show()
         
-        theta = map(lambda x: atan(x[1]/x[0]), xy)
+        theta = [atan(x[1]/x[0]) for x in xy]
         
         plot(theta)
         show()

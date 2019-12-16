@@ -17,7 +17,7 @@ import library.basics.formatdict as fd
 def read_json(datafilepath, verbose=True):
     data = json.load(open(datafilepath))
     if verbose:
-        print 'Data was successfully loaded from ' + datafilepath
+        print('Data was successfully loaded from ' + datafilepath)
     return data
 
 #pickle
@@ -117,8 +117,8 @@ def read_hdf5(datapath):
 
     """
     f = h5py.File(datapath, 'r')
-    print 'Successfully read %s' %datapath
-    print 'Make sure to close the file after usage'
+    print('Successfully read %s' %datapath)
+    print('Make sure to close the file after usage')
     return f
 
 def read_hdf5_std(datapath):
@@ -149,7 +149,7 @@ def write_json(datafilepath, datadict):
             datadict = fd.make_dict_json_serializable(datadict)
             json.dump(datadict, fyle, sort_keys=True, indent=1, separators=(',', ': '))
             fyle.close()
-    print 'Data was successfully saved as ' + datafilepath
+    print('Data was successfully saved as ' + datafilepath)
 
 def write_pickle(filepath, obj, verbose=True):
     """
@@ -176,11 +176,11 @@ def write_pickle(filepath, obj, verbose=True):
     pickle_out = open(filepath, "wb")
     pickle.dump(obj, pickle_out)
     if verbose:
-        print 'Saved data under ' + filepath
+        print('Saved data under ' + filepath)
     pickle_out.close()
 
 
-def write_hdf5_dict(filepath, data_dict):
+def write_hdf5_dict(filepath, data_dict, overwrite=False, verbose=True):
     """
     Stores data_dict
     Parameters
@@ -200,11 +200,18 @@ def write_hdf5_dict(filepath, data_dict):
 
     ext = '.h5'
     filename = filepath + ext
-    hf = h5py.File(filename, 'w')
+    hf = h5py.File(filename, 'a') # NEVER USE 'w'. 'a' is superior. 
     for key in data_dict:
-        hf.create_dataset(key, data=data_dict[key])
+        if key not in hf.keys():
+            hf.create_dataset(key, data=data_dict[key])
+        else:
+            if verbose:
+                print('... %s already exists in the h5 file. Overwrite?- %r' % (key, overwrite))
+            if overwrite:
+                del hf[key]
+                hf.create_dataset(key, data=data_dict[key])
     hf.close()
-    print 'Data was successfully saved as ' + filename
+    print('Data was successfully saved as ' + filename)
 
 def write_hdf5_simple(filepath, x, y):
     """
@@ -230,6 +237,6 @@ def write_hdf5_simple(filepath, x, y):
     for key in data_dict:
         hf.create_dataset(key, data=data_dict[key])
     hf.close()
-    print 'Data was successfully saved as ' + filename
+    print('Data was successfully saved as ' + filename)
 
 

@@ -29,7 +29,7 @@ def Sdata_gen_day(date):
             failure.append(output)
 
     n = len(cineList)
-    dict_day = {'Names': cineList, 'Index': range(n)}
+    dict_day = {'Names': cineList, 'Index': list(range(n))}
     print(dict_day)
     filename = fileDir + 'Sdata_' + date + '/Cine_index_' + date + '.txt'
     rw_data.write_a_dict(filename, dict_day)
@@ -83,7 +83,7 @@ def load_Sdata_day(date):
                 Slist.append(S)
         return Slist
     else:
-        print("No hdf5 files found at " + Dir)
+        print(("No hdf5 files found at " + Dir))
 
 
 def load_Sdata_file(filename):
@@ -99,7 +99,7 @@ def load_Sdata_file(filename):
         # print(S.fileCine)
         return S
     else:
-        print('No data found for ' + S.filename)
+        print(('No data found for ' + S.filename))
         return None
 
 

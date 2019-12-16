@@ -9,13 +9,13 @@ import glob
 try:
     import dolfin as dolf
 except:
-    print '\n\nWARNING: Could not import dolfin\n (Limits usage of module phasefield_elasticity).'
+    print('\n\nWARNING: Could not import dolfin\n (Limits usage of module phasefield_elasticity).')
 from matplotlib import cm
 
 try:
     from mayavi import mlab
 
-    print 'Imported mayavi successfully!'
+    print('Imported mayavi successfully!')
 except:
     pass
     # print 'WARNING: Could not import mayavi-->This does not matter.'
@@ -28,7 +28,7 @@ if hostname[0:6] != 'midway':
     try:
         import sympy as sp
     except:
-        print 'WARNING: Could not import sympy!\n (Should not matter though).'
+        print('WARNING: Could not import sympy!\n (Should not matter though).')
     from scipy.spatial import Delaunay
 
 '''Module for elasticity of phase field modeling.
@@ -164,7 +164,7 @@ def Vf2xy(Vf, mesh):
 def create_CGspaces(mesh, order=1):
     """Create Lagrangian tensor, vector, and scalar spaces of order 'order' from mesh.
     """
-    print 'Creating Lagrangian function space...'
+    print('Creating Lagrangian function space...')
     Vt = dolf.TensorFunctionSpace(mesh, "Lagrange", order)
     Vv = dolf.VectorFunctionSpace(mesh, "Lagrange", order)
     Vf = dolf.FunctionSpace(mesh, "Lagrange", order)
@@ -204,7 +204,7 @@ def restart_refine(ind, rrIND, N, x, y, phi, outdir, params, dN=20000, n_clearan
     goIND = int(philist[-1].split('/')[-1].split('_')[1].split('.')[0])
     niIND = -1
     if ind - n_clearance < goIND:
-        print '\nt is too soon after last save, going back 2 saves...'
+        print('\nt is too soon after last save, going back 2 saves...')
         goIND = int(philist[-2].split('/')[-1].split('_')[1].split('.')[0])
         niIND = -2
 
@@ -213,7 +213,7 @@ def restart_refine(ind, rrIND, N, x, y, phi, outdir, params, dN=20000, n_clearan
     rrIND += 1
     ind = goIND
     t = ind * params['dt']
-    print '\n\n--> RESTARTED at t=', t, ' and ind=', ind
+    print('\n\n--> RESTARTED at t=', t, ' and ind=', ind)
 
     # New mesh
     N += dN
@@ -225,8 +225,8 @@ def restart_refine(ind, rrIND, N, x, y, phi, outdir, params, dN=20000, n_clearan
     Vt, Vv, Vf = create_CGspaces(mesh)
 
     # Match phase for new mesh at goIND
-    print 'Matching last phase for new mesh...'
-    print '  ... using file: ', philist[niIND], ' \n'
+    print('Matching last phase for new mesh...')
+    print('  ... using file: ', philist[niIND], ' \n')
     phi_file = dolf.File(philist[niIND])
     phi_file >> phi
     phiv = phi.vector().array()
@@ -239,21 +239,21 @@ def restart_refine(ind, rrIND, N, x, y, phi, outdir, params, dN=20000, n_clearan
 
     # Reassign phi to new function phi_k
     phi_k = dolf.Function(Vf)
-    print 'lookupXYZ = ', lookupXYZ
+    print('lookupXYZ = ', lookupXYZ)
     fine_phiv = lookupZ_avgN(lookupXYZ, xy)
-    print 'np.shape(phi_k.vector().array()) = ', np.shape(phi_k.vector().array())
-    print 'np.shape(fine_phiv) = ', np.shape(fine_phiv)
+    print('np.shape(phi_k.vector().array()) = ', np.shape(phi_k.vector().array()))
+    print('np.shape(fine_phiv) = ', np.shape(fine_phiv))
     phi_k.vector()[:] = np.ascontiguousarray(fine_phiv[:, 2], dtype=np.float64)
 
     # If this is a pulling experiment, there will be params['velocity'],
     # so redefine U
     if 'velocity' in params:
-        print 'Initially: U=', params['U']
+        print('Initially: U=', params['U'])
         U = params['U'] + t * params['velocity'] * 0.5
-        print 'Redefining U to be U =', U
+        print('Redefining U to be U =', U)
 
     # Redefine problem
-    print '\nRedefining problem...'
+    print('\nRedefining problem...')
     u, phi, h, bcu, u_0, P, alph, arngmt, au, Lu, g, gprime, epsilon_k, Es_phi, aphi, Lphi, ds = \
         quasistatic_KKL_PDEs_iterative(mesh, Vv, Vf, phi_k, params['BCUP'], params['BCtype'], params['E'], params['nu'], \
                                        U, 0.5 * params['L'], params['N'], params['surf'], params['x0'], \
@@ -287,47 +287,47 @@ def def_bcu(Vv, BCtype, U, R=0.06, xc=0., yc=0., val=1.0, N=40000, shape='square
     """
 
     if BCtype == 'shear':
-        print 'Creating shear BCs...'
+        print('Creating shear BCs...')
         u_0 = dolf.Expression(('0.0',
                                'U*(x[0]-xc)'), U=U, xc=xc)
     elif BCtype == 'biaxial':
-        print 'Creating biaxial BCs...'
+        print('Creating biaxial BCs...')
         u_0 = dolf.Expression(('U*sqrt( pow(x[0]-xc,2)+pow(x[1]-yc, 2) )*cos(atan2(x[1]-yc,x[0]-xc))',
                                'U*sqrt( pow(x[0]-xc,2)+pow(x[1]-yc, 2) )*sin(atan2(x[1]-yc,x[0]-xc))'), U=U, xc=xc,
                               yc=yc)
     elif BCtype == 'uniaxial' or BCtype == 'fixleftX' or BCtype == 'uniaxial-PURL':
-        print 'Creating uniaxial BCs: (U*(x[0]-xc) , 0.0) ...'
+        print('Creating uniaxial BCs: (U*(x[0]-xc) , 0.0) ...')
         u_0 = dolf.Expression(('U*(x[0]-xc)', '0.0'), U=U, xc=xc, yc=yc)
     elif BCtype == 'uniaxialfree':
-        print 'Creating uniaxialfree BCs (constrained in 1D only)...'
+        print('Creating uniaxialfree BCs (constrained in 1D only)...')
         u_0 = dolf.Expression('U*(x[0]-xc)', U=U, xc=xc, yc=yc)
         # testing 20151103
         # u_0 = dolf.Expression(('U*(x[0]-xc)','0.0'), U=U, xc=xc, yc=yc)
     elif BCtype == 'uniaxialfreeX':
-        print 'Creating uniaxialfreeX BCs (fix LR and pull in X )...'
+        print('Creating uniaxialfreeX BCs (fix LR and pull in X )...')
         u_0 = dolf.Expression(('U*(x[0]-xc)', '0.0'), U=U, xc=xc, yc=yc)
     elif BCtype == 'uniaxialfreeY':
-        print 'Creating uniaxialfreeY BCs (fix TB and pull in Y)...'
+        print('Creating uniaxialfreeY BCs (fix TB and pull in Y)...')
         u_0 = dolf.Expression(('0.0', 'U*(x[1]-xc)'), U=U, xc=xc, yc=yc)
     elif BCtype == 'uniaxialDisc':
-        print 'Creating uniaxial BCs on disc...'
+        print('Creating uniaxial BCs on disc...')
         u_0 = dolf.Expression(('U*sqrt( pow(x[0]-xc,2)+pow(x[1]-yc, 2) )*cos(atan2(x[1]-yc,x[0]-xc))',
                                '0.0'), U=U, xc=xc, yc=yc)
     elif BCtype == 'uniaxialmixedfree_u1s1':
-        print 'Creating mixed BCs...'
+        print('Creating mixed BCs...')
         u_0 = dolf.Expression(('U*(x[0]-xc)', 'U*(x[0]-xc)'), U=U, xc=xc, yc=yc)
     elif BCtype == 'uniaxialmixedfree_uvals1':
-        print 'Creating mixed BCs...'
+        print('Creating mixed BCs...')
         u_0 = dolf.Expression(('val*U*(x[0]-xc)', 'U*(x[0]-xc)'), U=U, xc=xc, yc=yc, val=val)
     elif BCtype == 'uniaxialmixedfree_u1sval':
-        print 'Creating mixed BCs: tensile U*(x[0]-xc), but shear val*U*(x[0]-xc) applied to sides...'
+        print('Creating mixed BCs: tensile U*(x[0]-xc), but shear val*U*(x[0]-xc) applied to sides...')
         u_0 = dolf.Expression(('U*(x[0]-xc)', 'val*U*(x[0]-xc)'), U=U, xc=xc, yc=yc, val=val)
     elif BCtype == 'mixed_u1s1':
-        print 'Creating Dirichlet BCs (mixed or fixbotY)...'
+        print('Creating Dirichlet BCs (mixed or fixbotY)...')
         u_0 = dolf.Expression(('U*(x[1]-xc)', 'U*(x[1]-yc)'), U=U, xc=xc, yc=yc)
     elif BCtype == 'free' or BCtype == 'fixbotY' or BCtype == 'fixtopY' or BCtype == 'fixbotcorner' \
             or BCtype[0:15] == 'Usingleptcorner':
-        print 'Defining u_0 = (0,0)...'
+        print('Defining u_0 = (0,0)...')
         u_0 = dolf.Expression(('0.', '0.'), U=U, xc=xc, yc=yc)
 
     # APPLY BOUNDARY CONDITION
@@ -433,15 +433,15 @@ def apply_bcu(Vv, BCtype, u_0, R, xc, yc, N, shape):
     elif BCtype[0:15] == 'Usingleptcorner':
         bcu = dolf.DirichletBC(Vv, u_0, boundary_singleptcorner)
     elif BCtype == 'uniaxialfreeX':
-        print 'constrain both dimensions on sides'
+        print('constrain both dimensions on sides')
         bcu = dolf.DirichletBC(Vv, u_0, boundary_sides)
     elif BCtype == 'uniaxialfreeY':
-        print 'constrain both dimensions on top and bottom'
+        print('constrain both dimensions on top and bottom')
         bcu = dolf.DirichletBC(Vv, u_0, boundary_topbot)
     elif BCtype == 'fixleftX' or BCtype == 'uniaxial-PURL':
         bcu = dolf.DirichletBC(Vv, u_0, boundary_leftside)
     elif BCtype != 'free':
-        print 'Assigning BCs to all boundaries...'
+        print('Assigning BCs to all boundaries...')
         bcu = dolf.DirichletBC(Vv, u_0, boundary)
 
     return bcu
@@ -473,15 +473,15 @@ def genmesh(shape, meshtype, N, xi, theta, R, eta, fenicsdir='../'):
         nx = int(np.sqrt(N))
         meshd = nx / (2 * R) * float(xi)
         if meshtype == 'UnitSquare':
-            print 'Creating unit square mesh of ', meshtype, ' lattice topology...'
+            print('Creating unit square mesh of ', meshtype, ' lattice topology...')
             mesh = dolf.UnitSquareMesh(nx, nx)
         else:
-            print 'Creating square-shaped mesh of ', meshtype, ' lattice topology...'
+            print('Creating square-shaped mesh of ', meshtype, ' lattice topology...')
             meshfile = fenicsdir + 'meshes/' + shape + 'Mesh_' + meshtype + '_eta' + etastr + '_R' + Rstr + '_N' + \
                        str(int(N)) + '.xml'
             mesh = dolf.Mesh(meshfile)
     elif shape == 'circle':
-        print 'Creating circle-shaped mesh of ', meshtype, ' lattice topology...'
+        print('Creating circle-shaped mesh of ', meshtype, ' lattice topology...')
         meshd = 2 * np.sqrt(N / np.pi) * float(xi) / (2 * R)
         if meshtype == 'Trisel':
             add_exten = '_Nsp' + str(Nsp) + '_H' + '{0:.2f}'.format(H / R).replace('.', 'p') + \
@@ -495,7 +495,7 @@ def genmesh(shape, meshtype, N, xi, theta, R, eta, fenicsdir='../'):
             int(N)) + '.xml'
         mesh = dolf.Mesh(meshfile)
     elif shape == 'rectangle2x1' or shape == 'rectangle1x2':
-        print 'Creating circle-shaped mesh of ', meshtype, ' lattice topology...'
+        print('Creating circle-shaped mesh of ', meshtype, ' lattice topology...')
         meshd = np.sqrt(N * 0.5) * float(xi) / (2 * R)
         if meshtype == 'Trisel':
             H, Y, beta = crack_loc()
@@ -508,10 +508,10 @@ def genmesh(shape, meshtype, N, xi, theta, R, eta, fenicsdir='../'):
 
         meshfile = fenicsdir + 'meshes/' + shape + 'Mesh_' + meshtype + add_exten + '_eta' + etastr + '_R' + Rstr + '_N' + str(
             int(N)) + '.xml'
-        print 'loading meshfile = ', meshfile
+        print('loading meshfile = ', meshfile)
         mesh = dolf.Mesh(meshfile)
 
-    print 'found meshfile = ', meshfile
+    print('found meshfile = ', meshfile)
     return mesh, meshd, meshfile
 
 
@@ -540,13 +540,13 @@ def initialPhase_Ncrack(xy, spacing, Number, Y, beta, W, a, xi, fallofftype='pol
     """
     if np.mod(Number, 2) < 1e-7:
         num = (Number - 1) * 0.5
-        print 'num = ', num
+        print('num = ', num)
         H = np.arange(-num * spacing, (num + 0.8) * spacing, spacing)
-        print '\n\npositioning even number of bumps at ==> ', H, '\n'
+        print('\n\npositioning even number of bumps at ==> ', H, '\n')
     else:
         num = (Number - 1) * 0.5
         H = np.arange(-num * spacing, (num + 1) * spacing, spacing)
-        print 'positioning odd number of bumps at ==> ', H
+        print('positioning odd number of bumps at ==> ', H)
     C = 0.966
     polysig = W / xi
     polya = -0.392
@@ -639,7 +639,7 @@ def initialPhase_vec(xy, H, Y, beta, W, a, xi, fallofftype='polygauss', polysig=
     val = np.ones_like(xy[:, 0])
     # print 'val = ', val
     # print 'closeIND = ', closeIND
-    print 'Found distances, evaluating phi on mesh...'
+    print('Found distances, evaluating phi on mesh...')
     if fallofftype == 'linear':
         closeIND = (dist <= 1.0 * W)
         val[closeIND] = (dist[closeIND] / W) * 0.95 + 0.05  # linear/abs
@@ -1019,7 +1019,7 @@ def surf_geom():
         x0 = [0.2 * R, 0.2 * R, 0.2 * R, 0.2 * R, 0.2 * R]
         bspace = 0.8 * R
         dspace = 1.5 * x0[0]  # dodging space
-        print '\n\n --> dspace = ', dspace, '\n\n'
+        print('\n\n --> dspace = ', dspace, '\n\n')
         mux0 = -dspace
         mux1 = dspace
         mux2 = -dspace
@@ -1075,7 +1075,7 @@ def surf_geom():
         x0 = [0.2 * R, 0.2 * R, 0.2 * R, 0.2 * R, 0.2 * R, 0.2 * R]
         bspace = 0.6 * R
         dspace = 1.5 * x0[0]  # dodging space
-        print '\n\n --> dspace = ', dspace, '\n\n'
+        print('\n\n --> dspace = ', dspace, '\n\n')
         mux0 = -dspace
         mux1 = dspace
         mux2 = -dspace
@@ -2048,7 +2048,7 @@ def BL2TRI_slow(BL, nn):
 
     for kk in range(len(NLp)):
         if np.mod(kk, 400) == 200:
-            print('BL2TRI: assembling row ' + str(kk) + '/' + str(len(NLp)))
+            print(('BL2TRI: assembling row ' + str(kk) + '/' + str(len(NLp))))
 
         idx = np.logical_and(ismember(BLp[:, 0], NLp[kk, :]), ismember(BLp[:, 1], NLp[kk, :]))
         TRIS = BL[idx, :]
@@ -2736,7 +2736,7 @@ def nearest_gL_fit(lookupdir, beta, rho, fit_mean):
     """Lookup Griffith length for given rho value in table, could be table based on a quadratic fit or of the mean gLs for a given rho.
     Note that for fit_mean==fit, rho = r/R, wherease for fit_mean==mean, rho = r/x0."""
     print('looking for file:')
-    print(lookupdir + fit_mean + '_rho_gLmeters_beta' + '{0:.2f}'.format(beta / np.pi).replace('.', 'p') + '*.txt')
+    print((lookupdir + fit_mean + '_rho_gLmeters_beta' + '{0:.2f}'.format(beta / np.pi).replace('.', 'p') + '*.txt'))
     gLfile = \
     glob.glob(lookupdir + fit_mean + '_rho_gLmeters_beta' + '{0:.2f}'.format(beta / np.pi).replace('.', 'p') + '*.txt')[
         0]
@@ -2749,7 +2749,7 @@ def nearest_gL_fit(lookupdir, beta, rho, fit_mean):
 def constP_gL_fit(lookupdir, alph):
     """Lookup Griffith length for given aspect ratio in table of the mean gLs vs aspect ratio, returned in meters"""
     print('looking for file:')
-    print(lookupdir + 'constP_means_alph_gLinches.txt')
+    print((lookupdir + 'constP_means_alph_gLinches.txt'))
     gLfile = glob.glob(lookupdir + 'constP_means_alph_gLinches.txt')[0]
     alphV, gLV = np.loadtxt(gLfile, delimiter=',', skiprows=1, usecols=(0, 1), unpack=True)
     diff = abs(alphV - alph)
@@ -2831,7 +2831,7 @@ def load_params(outdir, paramsfn='parameters'):
                 # print val
                 if key == 'date':
                     val = val[:-1].strip()
-                    print '\nloading params for: date= ', val
+                    print('\nloading params for: date= ', val)
                 elif is_number(val):
                     # val is a number, so convert to a float
                     val = float(val[:-1].strip())
@@ -2850,8 +2850,8 @@ def load_params(outdir, paramsfn='parameters'):
                         # Make array if found '[' and ','
                         if make_ndarray:
                             val = np.array(val)
-                        print key, ' --> is a numpy array:'
-                        print 'val = ', val
+                        print(key, ' --> is a numpy array:')
+                        print('val = ', val)
 
                     except:
                         # print 'type(val) = ', type(val)
@@ -2919,7 +2919,7 @@ def write_parameters(paramfile, params, padding_var=7):
     with open(paramfile, 'w') as myfile:
         myfile.write('# Parameters\n')
     with open(paramfile, 'a') as myfile:
-        for key in params.keys():
+        for key in list(params.keys()):
             # print 'Writing param ', str(key)
             # print ' with value ', str(params[key])
             # print ' This param is of type ', type(params[key])
@@ -2935,7 +2935,7 @@ def write_parameters(paramfile, params, padding_var=7):
                 ##########################
                 # print params[key].dtype
                 if key == 'BIND':
-                    print 'BIND = ', str(params[key]).replace('\n', '')
+                    print('BIND = ', str(params[key]).replace('\n', ''))
 
                 myfile.write('{{0: <{}}}'.format(padding_var).format(key) + \
                              '= ' + ", ".join(np.array_str(params[key]).split()).replace('[,', '[') + '\n')
@@ -2963,7 +2963,7 @@ def save_images_OUT(OUT, x, y, Bxy, phi, u, params, title, title2, subtext, subs
     for key in OUT:
         if OUT[key][0]:
             name = OUT[key][1]
-            print 'Writing ', name, '...'
+            print('Writing ', name, '...')
             title = pe.title_scalar(OUT[key][2], params, t)
             if name == 'phase':
                 pe.pf_plot_scatter_scalar(x, y, phiv, imdir + name, name, ind, title, title2, subtext, subsubtext,
@@ -3058,7 +3058,7 @@ def collect_lines(xy, BL, bs, climv):
     line_segments : matplotlib.collections.LineCollection
         Collection of line segments
     """
-    lines = [zip(xy[BL[i, :], 0], xy[BL[i, :], 1]) for i in range(len(BL))]
+    lines = [list(zip(xy[BL[i, :], 0], xy[BL[i, :], 1])) for i in range(len(BL))]
     line_segments = LineCollection(lines,  # Make a sequence of x,y pairs
                                    linewidths=(1.),  # could iterate over list
                                    linestyles='solid',
@@ -3102,7 +3102,7 @@ def movie_plot_2D(xy, BL, bs, fname, title, xlimv, ylimv, climv=0.1):
         lw = (30 / np.sqrt(len(xy)))
 
     # Efficiently plot many lines in a single set of axes using LineCollection
-    lines = [zip(xy[BL[i, :], 0], xy[BL[i, :], 1]) for i in range(len(BL))]
+    lines = [list(zip(xy[BL[i, :], 0], xy[BL[i, :], 1])) for i in range(len(BL))]
     line_segments = LineCollection(lines,  # Make a sequence of x,y pairs
                                    linewidths=lw,  # could iterate over list
                                    linestyles='solid',
@@ -3152,13 +3152,13 @@ def pf_mlabplot(X, Y, Z, C, fname, XYZboundary=np.array([]), SZ=800, elang=75, a
     """
     # Define the points in 3D space
     # including color code based on Z coordinate.
-    print 'Setting up figure...'
+    print('Setting up figure...')
     mlab.close(all=True)
     fig = mlab.figure(size=(1600, 1200))
     pts = mlab.points3d(X, Y, Z, C)
 
     # Triangulate based on X, Y with Delaunay 2D algorithm.
-    print 'Triangulating points...'
+    print('Triangulating points...')
     mesh = mlab.pipeline.delaunay2d(pts)
 
     # Remove the point representation from the plot
@@ -3227,10 +3227,10 @@ def pf_mlabplot(X, Y, Z, C, fname, XYZboundary=np.array([]), SZ=800, elang=75, a
             SZY = SZ
 
     if fname == '':
-        print 'fname =', fname, '\n --> so showing image...'
+        print('fname =', fname, '\n --> so showing image...')
         mlab.show()
     else:
-        print 'fname =', fname, '\n --> so saving image...'
+        print('fname =', fname, '\n --> so saving image...')
         mlab.savefig(fname, size=(SZX, SZY))
 
     mlab.close('all')
@@ -3308,10 +3308,10 @@ def pf_display_2panel(x, y, C0, C1, title0, title1='', vmin='auto', vmax='auto',
     fig, ax = plt.subplots(1, 2)
     if isinstance(vmin, str):
         vmin = min(np.nanmin(C0[:]), np.nanmin(C1[:]))
-        print 'vmin=', vmin
+        print('vmin=', vmin)
     if isinstance(vmax, str):
         vmax = max(np.nanmax(C0[:]), np.nanmax(C1[:]))
-        print 'vmax=', vmax
+        print('vmax=', vmax)
     # scatter scale (for color scale)
     scsc0 = ax[0].scatter(x, y, c=C0, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
     scsc1 = ax[1].scatter(x, y, c=C1, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
@@ -3322,7 +3322,7 @@ def pf_display_2panel(x, y, C0, C1, title0, title1='', vmin='auto', vmax='auto',
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     if np.nanmax(C0) > np.nanmax(C1):
-        print 'maxC0>maxC1'
+        print('maxC0>maxC1')
         fig.colorbar(scsc0, cax=cbar_ax)
     else:
         fig.colorbar(scsc1, cax=cbar_ax)
@@ -3355,10 +3355,10 @@ def pf_display_vector(x, y, C0, C1, varchar, title='', subscripts='cartesian', v
     fig, ax = plt.subplots(1, 2)
     if isinstance(vmin, str):
         vmin = min(np.nanmin(C0[:]), np.nanmin(C1[:]))
-        print 'vmin=', vmin
+        print('vmin=', vmin)
     if isinstance(vmax, str):
         vmax = max(np.nanmax(C0[:]), np.nanmax(C1[:]))
-        print 'vmax=', vmax
+        print('vmax=', vmax)
     # scatter scale (for color scale)
     scsc0 = ax[0].scatter(x, y, c=C0, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
     scsc1 = ax[1].scatter(x, y, c=C1, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
@@ -3367,7 +3367,7 @@ def pf_display_vector(x, y, C0, C1, varchar, title='', subscripts='cartesian', v
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     if np.nanmax(C0) > np.nanmax(C1):
-        print 'maxC0>maxC1'
+        print('maxC0>maxC1')
         fig.colorbar(scsc0, cax=cbar_ax)
     else:
         fig.colorbar(scsc1, cax=cbar_ax)
@@ -3393,10 +3393,10 @@ def pf_display_4panel(x, y, C0, C1, C2, C3, title0, title1='', title2='', title3
     fig, ax = plt.subplots(2, 2)
     if isinstance(vmin, str):
         vmin = min(np.nanmin(C0[:]), np.nanmin(C1[:]))
-        print 'vmin=', vmin
+        print('vmin=', vmin)
     if isinstance(vmax, str):
         vmax = max(np.nanmax(C0[:]), np.nanmax(C1[:]))
-        print 'vmax=', vmax
+        print('vmax=', vmax)
     # scatter scale (for color scale)
     scsc0 = ax[0, 0].scatter(x, y, c=C0, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
     ax[0, 1].scatter(x, y, c=C1, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
@@ -3443,10 +3443,10 @@ def pf_display_tensor(x, y, C0, C1, C2, C3, varchar, title='', subscripts='carte
     fig, ax = plt.subplots(2, 2)
     if isinstance(vmin, str):
         vmin = min(np.nanmin(C0[:]), np.nanmin(C1[:]))
-        print 'vmin=', vmin
+        print('vmin=', vmin)
     if isinstance(vmax, str):
         vmax = max(np.nanmax(C0[:]), np.nanmax(C1[:]))
-        print 'vmax=', vmax
+        print('vmax=', vmax)
     # scatter scale (for color scale)
     scsc0 = ax[0, 0].scatter(x, y, c=C0, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
     ax[0, 1].scatter(x, y, c=C1, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
@@ -4022,7 +4022,7 @@ def pf_titles(field, params, t):
                     params['L'] / 2) + r' $\theta=$' + '{0:.3f}'.format(params['theta'] / np.pi)
                 HRx0str = r' $H/R$=' + '{0:.3f}'.format(params['H'] * 2. / params['L'])
             elif params['surf'] == 'bumps2x1':
-                print r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']'
+                print(r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']')
                 title2 = r'Corrugated: $U=$' + '{0:.3f}'.format(params['U']) + ' BC=' + params[
                     'BCtype'] + r' $R=$' + str(params['L'] / 2) + \
                          r' arngmt=[[' + '{0:.4f}'.format(params['arngmt'][0][0] * 2 / params['L']) + ',' + \
@@ -4036,7 +4036,7 @@ def pf_titles(field, params, t):
                          r' $\theta=$' + '{0:.3f}'.format(params['theta'] / np.pi)
                 HRx0str = r' $H/R$=' + '{0:.3f}'.format(params['H'] * 2. / params['L'])
             elif params['surf'][0:4] == 'bump':
-                print r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',...]'
+                print(r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',...]')
                 title2 = params['surf'] + r': $U=$' + '{0:.3f}'.format(params['U']) + ' BC=' + params[
                     'BCtype'] + r' $R=$' + str(params['L'] / 2) + \
                          r' arngmt=[[' + '{0:.4f}'.format(params['arngmt'][0][0] * 2 / params['L']) + ',' + \
@@ -4050,7 +4050,7 @@ def pf_titles(field, params, t):
                          r' $\theta=$' + '{0:.3f}'.format(params['theta'] / np.pi)
                 HRx0str = r' $H/R$=' + '{0:.3f}'.format(params['H'] * 2. / params['L'])
             elif params['surf'] == 'saddlebumps2x2':
-                print r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']'
+                print(r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']')
                 title2 = r'Corrugated: $U=$' + '{0:.3f}'.format(params['U']) + ' BC=' + params[
                     'BCtype'] + r' $R=$' + str(params['L'] / 2) + \
                          r' arngmt=[[' + '{0:.4f}'.format(params['arngmt'][0][0] * 2 / params['L']) + ',' + \
@@ -4079,7 +4079,7 @@ def pf_titles(field, params, t):
                     params['L'] / 2) + r' $\theta=$' + '{0:.3f}'.format(params['theta'] / np.pi)
                 HRx0str = r' $H/R$=' + '{0:.3f}'.format(params['H'] * 2. / params['L'])
             elif params['surf'] == 'bumps2x1':
-                print r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']'
+                print(r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']')
                 title2 = r'Corrugated: $P=$' + '{0:.3f}'.format(params['U']) + 'E BC=' + params[
                     'BCtype'] + r' $R=$' + str(params['L'] / 2) + \
                          r' arngmt=[[' + '{0:.4f}'.format(params['arngmt'][0][0] * 2 / params['L']) + ',' + \
@@ -4093,7 +4093,7 @@ def pf_titles(field, params, t):
                          r' $\theta=$' + '{0:.3f}'.format(params['theta'] / np.pi)
                 HRx0str = r' $H/R$=' + '{0:.3f}'.format(params['H'] * 2. / params['L'])
             elif params['surf'] == 'saddlebumps2x2':
-                print r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']'
+                print(r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']')
                 title2 = r'Corrugated: $P=$' + '{0:.3f}'.format(params['U']) + 'E BC=' + params[
                     'BCtype'] + r' $R=$' + str(params['L'] / 2) + \
                          r' arngmt=[[' + '{0:.4f}'.format(params['arngmt'][0][0] * 2 / params['L']) + ',' + \
@@ -4128,7 +4128,7 @@ def pf_titles(field, params, t):
                          ' coldL0=' + '{0:2f}'.format(params['coldL0'])
                 HRx0str = r' $H/R$=' + '{0:.3f}'.format(params['H'] * 2. / params['L'])
     else:
-        print 'WARNING: BCUP is not defined in parameters! Continuing anyway...'
+        print('WARNING: BCUP is not defined in parameters! Continuing anyway...')
         if params['surf'] in ['bump', 'monkeysaddle', 'hyperbolic-paraboloid', 'hyperbolic-paraboloid-transp']:
             title2 = params['surf'] + r': $x_0$=' + '{0:.3f}'.format(params['x0']) + r' $\alpha$=' + \
                      '{0:.3f}'.format(params['alph']) + r' $U=$' + '{0:.3f}'.format(params['U']) + \
@@ -4140,7 +4140,7 @@ def pf_titles(field, params, t):
                 params['L'] / 2) + r' $\theta=$' + '{0:.3f}'.format(params['theta'] / np.pi)
             HRx0str = r' $H/R$=' + '{0:.3f}'.format(params['H'] * 2. / params['L'])
         elif params['surf'] == 'bumps2x1':
-            print r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']'
+            print(r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']')
             title2 = r'Corrugated: $U=$' + '{0:.3f}'.format(params['U']) + ' BC=' + params['BCtype'] + r' $R=$' + str(
                 params['L'] / 2) + \
                      r' arngmt=[[' + '{0:.4f}'.format(params['arngmt'][0][0] * 2 / params['L']) + ',' + \
@@ -4154,7 +4154,7 @@ def pf_titles(field, params, t):
                      r' $\theta=$' + '{0:.3f}'.format(params['theta'] / np.pi)
             HRx0str = r' $H/R$=' + '{0:.3f}'.format(params['H'] * 2. / params['L'])
         elif params['surf'][0:4] == 'bump':  # this is for channel, bumps1x5, etc
-            print r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',...]'
+            print(r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',...]')
             title2 = params['surf'] + r': $U=$' + '{0:.3f}'.format(params['U']) + ' BC=' + params[
                 'BCtype'] + r' $R=$' + str(params['L'] / 2) + \
                      r' arngmt=[[' + '{0:.4f}'.format(params['arngmt'][0][0] * 2 / params['L']) + ',' + \
@@ -4168,7 +4168,7 @@ def pf_titles(field, params, t):
                      r' $\theta=$' + '{0:.3f}'.format(params['theta'] / np.pi)
             HRx0str = r' $H/R$=' + '{0:.3f}'.format(params['H'] * 2. / params['L'])
         elif params['surf'] == 'saddlebumps2x2':
-            print r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']'
+            print(r' x0=[' + '{0:0.2f}'.format(params['x0'][0]) + ',' + '{0:0.2f}'.format(params['x0'][1]) + ']')
             title2 = r'Corrugated: $U=$' + '{0:.3f}'.format(params['U']) + ' BC=' + params['BCtype'] + r' $R=$' + str(
                 params['L'] / 2) + \
                      r' arngmt=[[' + '{0:.4f}'.format(params['arngmt'][0][0] * 2 / params['L']) + ',' + \
@@ -4205,7 +4205,7 @@ def title_scalar(field, params, t):
             rrIND_tmp = 0
             while 'restart_refine' + str(rrIND_tmp + 1) in params:
                 rrIND_tmp += 1
-                print '\n rrIND_tmp=', rrIND_tmp
+                print('\n rrIND_tmp=', rrIND_tmp)
 
             t3 = r' n/$\xi$=' + '{0:.3f}'.format(params['restart_refine' + str(rrIND_tmp) + '_meshd'])
     else:
@@ -4304,7 +4304,7 @@ def find_subdirs(string, maindir):
     is_subdir = [os.path.isdir(ii) for ii in contents]
 
     if len(is_subdir) == 0:
-        print 'WARNING! Found no matching subdirectory: returning empty list'
+        print('WARNING! Found no matching subdirectory: returning empty list')
         return is_subdir
     else:
         subdirs = [prepdir(contents[ii]) for ii in np.where(is_subdir)[0].tolist()]
@@ -4323,7 +4323,7 @@ def find_subsubdirectory(string, maindir):
     is_subdir = [os.path.isdir(ii) for ii in contents]
 
     if len(is_subdir) == 0:
-        print 'WARNING! Found no matching subdirectory: returning empty list'
+        print('WARNING! Found no matching subdirectory: returning empty list')
         return is_subdir, is_subdir
     else:
         # print 'contents = ', contents
@@ -4334,7 +4334,7 @@ def find_subsubdirectory(string, maindir):
     subsubdir = []
     for ii in subdirs:
         # print 'ii =', ii
-        print 'prepdir(ii)+string = ', prepdir(ii) + string
+        print('prepdir(ii)+string = ', prepdir(ii) + string)
         subcontents = glob.glob(prepdir(ii) + string)
         # print 'glob.glob(',prepdir(ii),string,') = ',subcontents
         is_subsubdir = [os.path.isdir(jj) for jj in subcontents]
@@ -4362,25 +4362,25 @@ def find_subsubdirectory(string, maindir):
                 # Add subdir to list
                 if isinstance(subdir, str):
                     subdir = [subdir, prepdir(ii)]
-                    print 'adding second to subdir = ', subdir
+                    print('adding second to subdir = ', subdir)
                     if len(subsubdirs) > 1:
                         for kk in range(1, len(subsubdirs)):
                             subdir.append(prepdir(ii))
-                        print 'adding second (multiple) to subdir = ', subdir
+                        print('adding second (multiple) to subdir = ', subdir)
                 else:
-                    print 'subsubdirs'
+                    print('subsubdirs')
                     for kk in range(1, len(subsubdirs)):
                         subdir.append(prepdir(ii))
                         # print 'subsubdirs = ', subsubdirs
-                        print 'adding more to subdir = ', subdir
+                        print('adding more to subdir = ', subdir)
                 # Add subsubdir to list
                 for jj in subsubdirs:
                     if isinstance(subsubdir, str):
                         subsubdir = [subsubdir, prepdir(jj)]
-                        print 'adding second to subsubdirs = ', subsubdir
+                        print('adding second to subsubdirs = ', subsubdir)
                     else:
                         subsubdir.append(prepdir(jj))
-                        print 'adding more to subsubdirs = ', subsubdir
+                        print('adding more to subsubdirs = ', subsubdir)
 
     if found:
         return subdir, subsubdir
@@ -4614,7 +4614,7 @@ if __name__ == "__main__":
     from mpl_toolkits.mplot3d import Axes3D
 
     if demo_arrow_mesh:
-        print 'Demonstrating arrow_mesh function: makes custom arrows in 3D'
+        print('Demonstrating arrow_mesh function: makes custom arrows in 3D')
         fig = plt.figure()  # figsize=plt.figaspect(1.0))
         ax = fig.gca(projection='3d')
         x = .5;
@@ -4640,8 +4640,8 @@ if __name__ == "__main__":
 
     if demo_tensor:
         # Show gaussian bump stress
-        print('Demonstrating calculation and easy display of Stress field for Gaussian Bump and ' +
-              'conversion to Cartesian coords')
+        print(('Demonstrating calculation and easy display of Stress field for Gaussian Bump and ' +
+              'conversion to Cartesian coords'))
         x = np.linspace(-5, 5)
         y = np.linspace(-5, 5)
         xv, yv = np.meshgrid(x, y)
@@ -4702,8 +4702,8 @@ if __name__ == "__main__":
                           title2=r'Sine field $u_x$', title3=r'Sine field $u_y$', ptsz=20, axis_on=0)
 
     if demo_linept:
-        print 'Demo: Define value based on distance from a line segment (used for creating initial state of phase for a crack).'
-        print 'This demo focuses on a function that does this for one point at a time (inefficient in numpy but useful in some contexts in FEniCS).'
+        print('Demo: Define value based on distance from a line segment (used for creating initial state of phase for a crack).')
+        print('This demo focuses on a function that does this for one point at a time (inefficient in numpy but useful in some contexts in FEniCS).')
         pts = np.random.random((4000, 2))
         W = .3
         endpt1 = [W, W]
@@ -4712,9 +4712,9 @@ if __name__ == "__main__":
         value = np.zeros_like(pts[:, 0])
         ind = 0
         for pt in pts:
-            print 'pt=', pt
+            print('pt=', pt)
             x = [pt[0], pt[1]]
-            print 'x=', x
+            print('x=', x)
             # p, d = closest_pt_on_lineseg(x,endpt1, endpt2)
             value[ind] = initphase_linear_slit(x, endpt1, endpt2, W, contour='linear')
             ind += 1
@@ -4722,7 +4722,7 @@ if __name__ == "__main__":
         plt.show()
 
     if demo_gaussiancurvature:
-        print 'Demo: Demonstrating gaussian_curvature_unstructured: measuring the Gaussian curvature of a surface defined by a collection of points'
+        print('Demo: Demonstrating gaussian_curvature_unstructured: measuring the Gaussian curvature of a surface defined by a collection of points')
         X = np.arange(-5, 5, 0.2)
         Y = np.arange(-5, 5, 0.2)
         X, Y = np.meshgrid(X, Y)
@@ -4738,8 +4738,8 @@ if __name__ == "__main__":
         ax[1].set_title('Curvature --evenly spaced array pts')
         plt.colorbar(color)
         plt.show()
-        print np.shape(xgrid), np.shape(ygrid), np.shape(Kgrid)
-        print np.shape(X), np.shape(Y), np.shape(K)
+        print(np.shape(xgrid), np.shape(ygrid), np.shape(Kgrid))
+        print(np.shape(X), np.shape(Y), np.shape(K))
 
         ## Load x,y,z from text file and compute curvature
         # fname = '/Users/npmitchell/Desktop/data_local/20151022/20151022-1120_QGP_fixbotY_Tri_N10000_dt0p000_HoR0p080_beta0p50/height.txt'
@@ -4754,7 +4754,7 @@ if __name__ == "__main__":
         # print np.shape(X), np.shape(Y), np.shape(K)
 
     if demo_gaussiancurvature2:
-        print 'Demo: Demonstrating gaussian_curvature_unstructured2: measuring the Gaussian curvature of a surface defined by a collection of points in another way.'
+        print('Demo: Demonstrating gaussian_curvature_unstructured2: measuring the Gaussian curvature of a surface defined by a collection of points in another way.')
         x = np.random.random((5000,)).ravel() - 0.5
         y = np.random.random((5000,)).ravel() - 0.5
         sigma = 0.8
@@ -4762,19 +4762,19 @@ if __name__ == "__main__":
 
         xy = np.dstack((x, y))[0]
         xyz = np.dstack((x, y, z))[0]
-        print 'Triangulating...'
+        print('Triangulating...')
         Triang = Delaunay(xy)
         temp = Triang.vertices
-        print 'Flipping orientations...'
+        print('Flipping orientations...')
         Tri = flip_orientations_tris(temp, xyz)
         # proxy for avg distance between points
         dist = np.mean(np.sqrt((x[Tri[:, 0]] - x[Tri[:, 1]]) ** 2 + (y[Tri[:, 0]] - y[Tri[:, 1]]) ** 2))
         dx = dist * 0.5
-        print 'x=', x
-        print 'y=', y
+        print('x=', x)
+        print('y=', y)
 
         K, xgrid, ygrid, Kgrid = gaussian_curvature_unstructured(x, y, z, dx, N=3)
-        print 'shape(K)=', np.shape(K)
+        print('shape(K)=', np.shape(K))
         fig, ax = plt.subplots(1, 2)
         color = ax[0].scatter(x, y, c=K, edgecolor='')
         ax[1].scatter(xgrid.ravel(), ygrid.ravel(), c=Kgrid.ravel(), edgecolor='')
@@ -4783,7 +4783,7 @@ if __name__ == "__main__":
         plt.show()
 
     if demo_Ztube:
-        print 'Demonstrating Z_Ttube_approx: the projection of xy points to a tube with a piecewise defined shape: flat, polynomial, exponential'
+        print('Demonstrating Z_Ttube_approx: the projection of xy points to a tube with a piecewise defined shape: flat, polynomial, exponential')
         Y = np.arange(-1, 1, 0.005)
         X = np.arange(-1, 1, 0.005)  # np.zeros_like(Y)
         X, Y = np.meshgrid(X, Y)
@@ -4858,16 +4858,16 @@ if __name__ == "__main__":
 
         U = -0.01
         P0 = GB_P_uDirichlet(alph, x0, R, U, nu)
-        print 'U =', U, ' P0 = ', P0
+        print('U =', U, ' P0 = ', P0)
         U = 0.0
         P0 = GB_P_uDirichlet(alph, x0, R, U, nu)
-        print 'U =', U, ' P0 = ', P0
+        print('U =', U, ' P0 = ', P0)
         U = 0.012
         P0 = GB_P_uDirichlet(alph, x0, R, U, nu)
-        print 'U =', U, ' P0 = ', P0
+        print('U =', U, ' P0 = ', P0)
         U = 0.03
         P0 = GB_P_uDirichlet(alph, x0, R, U, nu)
-        print 'U =', U, ' P0 = ', P0
+        print('U =', U, ' P0 = ', P0)
 
         alph = 0.706446
         P = 0.0679
@@ -4875,21 +4875,21 @@ if __name__ == "__main__":
         R = 0.06
         nu = 0.45
         U0 = GB_U_from_P(alph, x0, R, P, nu)
-        print 'U0 = ', U0
-        print 'GB_U_from_P(alph,x0,R,P,nu) =>>  U =  0.0153414532992', '\n'
+        print('U0 = ', U0)
+        print('GB_U_from_P(alph,x0,R,P,nu) =>>  U =  0.0153414532992', '\n')
 
         U0 = GB_U_from_P(alph, x0, R, 0.01, nu)
-        print 'P=0.01, U0 = ', U0
+        print('P=0.01, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.02, nu)
-        print 'P=0.02, U0 = ', U0
+        print('P=0.02, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.03, nu)
-        print 'P=0.03, U0 = ', U0
+        print('P=0.03, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.04, nu)
-        print 'P=0.04, U0 = ', U0
+        print('P=0.04, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.05, nu)
-        print 'P=0.05, U0 = ', U0
+        print('P=0.05, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.06, nu)
-        print 'P=0.06, U0 = ', U0, '\n'
+        print('P=0.06, U0 = ', U0, '\n')
 
         alph = 0.706446
         P = 0.0679
@@ -4897,28 +4897,28 @@ if __name__ == "__main__":
         R = 0.12
         nu = 0.45
         U0 = GB_U_from_P(alph, x0, R, P, nu)
-        print 'U0 = ', U0
-        print 'GB_U_from_P(alph,x0,R,P,nu) =>>  U =  0.0153414532992', '\n'
+        print('U0 = ', U0)
+        print('GB_U_from_P(alph,x0,R,P,nu) =>>  U =  0.0153414532992', '\n')
 
         U0 = GB_U_from_P(alph, x0, R, 0.01, nu)
-        print 'P=0.01, U0 = ', U0
+        print('P=0.01, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.02, nu)
-        print 'P=0.02, U0 = ', U0
+        print('P=0.02, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.03, nu)
-        print 'P=0.03, U0 = ', U0
+        print('P=0.03, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.04, nu)
-        print 'P=0.04, U0 = ', U0
+        print('P=0.04, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.05, nu)
-        print 'P=0.05, U0 = ', U0
+        print('P=0.05, U0 = ', U0)
         U0 = GB_U_from_P(alph, x0, R, 0.06, nu)
-        print 'P=0.06, U0 = ', U0, '\n'
+        print('P=0.06, U0 = ', U0, '\n')
 
         alph = 0.4242640687119285
         U0 = GB_U_from_P(alph, 0.02553, 0.06, P0, nu)
-        print 'U0 = ', U0
+        print('U0 = ', U0)
 
         alph = 0.2121320343559643
         U0 = GB_U_from_P(alph, 1., 2.35, P0, 0.5)
-        print 'U0 = ', U0
+        print('U0 = ', U0)
         U0 = GB_U_from_P(0.000, 1., 2.35, P0, 0.5)
-        print 'U0 = ', U0
+        print('U0 = ', U0)

@@ -92,7 +92,7 @@ def get_duidxj_tensor(udata, dx=1, dy=1, dz=1):
         sij[..., 2, 1] = duzdy
         sij[..., 2, 2] = duzdz
     elif shape[0] > 3:
-        print 'Not implemented yet.'
+        print('Not implemented yet.')
         return None
     return sij
 
@@ -175,8 +175,8 @@ def fft_velocity(udata, x0=0, x1=None, y0=0, y1=None, z0=0, z1=None, dx=None, dy
     ukdata
     """
     if dx is None or dy is None:
-        print 'ERROR: dx or dy is not provided! dx is grid spacing in real space.'
-        print '... k grid will be computed based on this spacing! Please provide.'
+        print('ERROR: dx or dy is not provided! dx is grid spacing in real space.')
+        print('... k grid will be computed based on this spacing! Please provide.')
         raise ValueError
     if x1 is None:
         x1 = udata[0].shape[1]
@@ -191,8 +191,8 @@ def fft_velocity(udata, x0=0, x1=None, y0=0, y1=None, z0=0, z1=None, dx=None, dy
         if z1 is None:
             z1 = udata[0].shape[2]
         if dz is None:
-            print 'ERROR: dz is not provided! dx is grid spacing in real space.'
-            print '... k grid will be computed based on this spacing! Please provide.'
+            print('ERROR: dz is not provided! dx is grid spacing in real space.')
+            print('... k grid will be computed based on this spacing! Please provide.')
             raise ValueError
         udata = udata[:, y0:y1, x0:x1, z0:z1, :]
 
@@ -200,8 +200,8 @@ def fft_velocity(udata, x0=0, x1=None, y0=0, y1=None, z0=0, z1=None, dx=None, dy
     ukdata = np.zeros_like(udata)
 
     for i in range(dim):
-        ukdata[i, ...] = np.fft.fftn(udata[i, ...], axes=range(dim))
-        ukdata[i, ...] = np.fft.fftshift(ukdata[i, ...], axes=range(dim))
+        ukdata[i, ...] = np.fft.fftn(udata[i, ...], axes=list(range(dim)))
+        ukdata[i, ...] = np.fft.fftshift(ukdata[i, ...], axes=list(range(dim)))
 
     if dim == 2:
         ncomp, height, width, duration = ukdata.shape
@@ -276,7 +276,7 @@ def curl(udata):
         omega1, omega2, omega3 = 2.* gij[..., 2, 1], 2.* gij[..., 0, 2], 2.* gij[..., 1, 0]
         omega = np.stack((omega1, omega2, omega3))
     else:
-        print 'Not implemented yet!'
+        print('Not implemented yet!')
         return None
     return omega
 
@@ -452,8 +452,8 @@ def fft_nd(field, dx=1, dy=1, dz=1):
     # for d in range(dim):
     #     n_samples *= field.shape[d]
 
-    field_fft = np.abs(np.fft.fftn(field, axes=range(dim)))
-    field_fft = np.fft.fftshift(field_fft, axes=range(dim))
+    field_fft = np.abs(np.fft.fftn(field, axes=list(range(dim))))
+    field_fft = np.fft.fftshift(field_fft, axes=list(range(dim)))
     # field_fft /= n_samples# Divide the result by the number of samples (this is because of discreteness of FFT)
 
     if dim == 2:
@@ -520,8 +520,8 @@ def get_energy_spectrum_nd(udata, x0=0, x1=None, y0=0, y1=None,
 
     """
     if dx is None or dy is None:
-        print 'ERROR: dx or dy is not provided! dx is grid spacing in real space.'
-        print '... k grid will be computed based on this spacing! Please provide.'
+        print('ERROR: dx or dy is not provided! dx is grid spacing in real space.')
+        print('... k grid will be computed based on this spacing! Please provide.')
         raise ValueError
     if x1 is None:
         x1 = udata[0].shape[1]
@@ -536,8 +536,8 @@ def get_energy_spectrum_nd(udata, x0=0, x1=None, y0=0, y1=None,
         if z1 is None:
             z1 = udata[0].shape[2]
         if dz is None:
-            print 'ERROR: dz is not provided! dx is grid spacing in real space.'
-            print '... k grid will be computed based on this spacing! Please provide.'
+            print('ERROR: dz is not provided! dx is grid spacing in real space.')
+            print('... k grid will be computed based on this spacing! Please provide.')
             raise ValueError
         udata = udata[:, y0:y1, x0:x1, z0:z1, :]
 
@@ -549,8 +549,8 @@ def get_energy_spectrum_nd(udata, x0=0, x1=None, y0=0, y1=None,
     for d in range(len(energy.shape) - 1):
         n_samples *= energy.shape[d]
 
-    energy_fft = np.abs(np.fft.fftn(energy, axes=range(dim)))
-    energy_fft = np.fft.fftshift(energy_fft, axes=range(dim))
+    energy_fft = np.abs(np.fft.fftn(energy, axes=list(range(dim))))
+    energy_fft = np.fft.fftshift(energy_fft, axes=list(range(dim)))
     # energy_fft /= n_samples
 
     if dim == 2:
@@ -606,7 +606,7 @@ def get_energy_spectrum(udata, x0=0, x1=None, y0=0, y1=None,
     """
     if notebook:
         from tqdm import tqdm_notebook as tqdm
-        print 'Using tqdm_notebook. If this is a mistake, set notebook=False'
+        print('Using tqdm_notebook. If this is a mistake, set notebook=False')
     else:
         from tqdm import tqdm
 
@@ -713,7 +713,7 @@ def get_energy_spectrum(udata, x0=0, x1=None, y0=0, y1=None,
         k1ds = np.empty(shape)
 
 
-        for t in tqdm(range(duration), desc='time'):
+        for t in tqdm(list(range(duration)), desc='time'):
             # flatten arrays to feed to binned_statistic
             kk_flatten, e_knd_flatten = kk.flatten(), e_ks[..., t].flatten()
             # get a histogram
@@ -854,7 +854,7 @@ def get_rescaled_dissipation_spectrum(udata, epsilon=10**5, nu=1.0034,x0=0, x1=N
     # Kolmogorov length scale
     eta = (nu ** 3 / epsilon) ** 0.25  # mm
     u_eta = (nu * epsilon) ** 0.25
-    print 'dissipation rate, Kolmogorov scale: ', epsilon, eta
+    print('dissipation rate, Kolmogorov scale: ', epsilon, eta)
 
     k_norm = k1d * eta
     D_k_norm = D_k[...] / (u_eta ** 3)
@@ -993,7 +993,7 @@ def compute_spatial_autocorr(ui, x, y, roll_axis=1, n_bins=None, x0=None, x1=Non
     """
     if notebook:
         from tqdm import tqdm_notebook as tqdm
-        print 'Using tqdm_notebook. If this is a mistake, set notebook=False'
+        print('Using tqdm_notebook. If this is a mistake, set notebook=False')
     else:
         from tqdm import tqdm
     # Array sorting
@@ -1011,7 +1011,7 @@ def compute_spatial_autocorr(ui, x, y, roll_axis=1, n_bins=None, x0=None, x1=Non
         Sorted arr1, and arr2
 
         """
-        arr1, arr2 = zip(*sorted(zip(arr1, arr2)))
+        arr1, arr2 = list(zip(*sorted(zip(arr1, arr2))))
         return arr1, arr2
 
     if x0 is None:  # if None, use the whole space
@@ -1035,12 +1035,12 @@ def compute_spatial_autocorr(ui, x, y, roll_axis=1, n_bins=None, x0=None, x1=Non
     # Initialization
     rrs, corrs, corr_errs = np.empty((n_bins, t1 - t0)), np.empty((n_bins, t1 - t0)), np.empty((n_bins, t1 - t0))
 
-    for t in tqdm(range(t0, t1), desc='time'):
+    for t in tqdm(list(range(t0, t1)), desc='time'):
         # Call velocity field at time t as uu
         uu = ui[y0:y1, x0:x1, t]
 
         uu2_norm = np.nanmean(ui[y0:y1, x0:x1, ...] ** 2, axis=(0, 1))  # mean square velocity
-        roll_indices = range(0, limits[roll_axis], int(1. / coarse))
+        roll_indices = list(range(0, limits[roll_axis], int(1. / coarse)))
         m = len(roll_indices)
         n = int(x_grid.size * coarse2)
 
@@ -1132,7 +1132,7 @@ def compute_spatial_autocorr3d(ui, x, y, z, roll_axis=1, n_bins=None, x0=None, x
     """
     if notebook:
         from tqdm import tqdm_notebook as tqdm
-        print 'Using tqdm_notebook. If this is a mistake, set notebook=False'
+        print('Using tqdm_notebook. If this is a mistake, set notebook=False')
     # Array sorting
     def sort2arr(arr1, arr2):
         """
@@ -1148,7 +1148,7 @@ def compute_spatial_autocorr3d(ui, x, y, z, roll_axis=1, n_bins=None, x0=None, x
         Sorted arr1, and arr2
 
         """
-        arr1, arr2 = zip(*sorted(zip(arr1, arr2)))
+        arr1, arr2 = list(zip(*sorted(zip(arr1, arr2))))
         return arr1, arr2
 
     if x0 is None:  # if None, use the whole space
@@ -1173,7 +1173,7 @@ def compute_spatial_autocorr3d(ui, x, y, z, roll_axis=1, n_bins=None, x0=None, x
     # Initialization
     rrs, corrs, corr_errs = np.zeros((n_bins, t1 - t0)), np.ones((n_bins, t1 - t0)), np.zeros((n_bins, t1 - t0))
 
-    for t in tqdm(range(t0, t1), desc='time'):
+    for t in tqdm(list(range(t0, t1)), desc='time'):
         # Call velocity field at time t as uu
         uu = ui[y0:y1, x0:x1, z0:z1, t]
 
@@ -1183,7 +1183,7 @@ def compute_spatial_autocorr3d(ui, x, y, z, roll_axis=1, n_bins=None, x0=None, x
         # rr = np.empty((x_grid.size, int(coarse * limits[roll_axis]) * 2 - 1))
         # corr = np.empty((x_grid.size, int(coarse * limits[roll_axis]) * 2 - 1))
 
-        roll_indices = range(0, limits[roll_axis], int(1./coarse))
+        roll_indices = list(range(0, limits[roll_axis], int(1./coarse)))
         m = len(roll_indices)
         n = int(x_grid.size * coarse2)
 
@@ -1256,7 +1256,7 @@ def get_two_point_vel_corr_iso(udata, x, y, z=None, time=None, n_bins=None, x0=N
         height, width, depth, duration = udata[0].shape
         ux, uy, uz = udata[0], udata[1], udata[2]
 
-    print 'Compute two-point velocity autocorrelation tensor Rij'
+    print('Compute two-point velocity autocorrelation tensor Rij')
     if dim == 2:
         r_long, f_long, f_err_long = compute_spatial_autocorr(ux, x, y, roll_axis=1, n_bins=n_bins, x0=x0, x1=x1,
                                                               y0=y0, y1=y1, t0=t0, t1=t1, coarse=coarse, coarse2=coarse2, notebook=notebook)
@@ -1292,7 +1292,7 @@ def get_two_point_vel_corr_iso(udata, x, y, z=None, time=None, n_bins=None, x0=N
         r_norm = np.sqrt(r2_norm)
         Rij_value = u2_avg[t] * (g(r_norm, t) * klonecker_delta(i, j) + (f(r_norm , t)-g(r_norm , t)) * r[i] * r[j] / (r_norm ** 2))
         return Rij_value
-    print '... Returning two-point velocity autocorrelation tensor Rij(r, t). Arguments: i, j, r, t. Pope Eq. 6.44.'
+    print('... Returning two-point velocity autocorrelation tensor Rij(r, t). Arguments: i, j, r, t. Pope Eq. 6.44.')
 
     # Return autocorrelation values and rs
     autocorrs = (r_long, f_long, f_err_long, r_tran, g_tran, g_err_tran)
@@ -1362,7 +1362,7 @@ def get_structure_function_long(udata, x, y, z=None, p=2, roll_axis=1, n_bins=No
     """
     if notebook:
         from tqdm import tqdm_notebook as tqdm
-        print 'Using tqdm_notebook. If this is a mistake, set notebook=False'
+        print('Using tqdm_notebook. If this is a mistake, set notebook=False')
     # Array sorting
     def sort2arr(arr1, arr2):
         """
@@ -1378,7 +1378,7 @@ def get_structure_function_long(udata, x, y, z=None, p=2, roll_axis=1, n_bins=No
         Sorted arr1, and arr2
 
         """
-        arr1, arr2 = zip(*sorted(zip(arr1, arr2)))
+        arr1, arr2 = list(zip(*sorted(zip(arr1, arr2))))
         return arr1, arr2
 
 
@@ -1420,7 +1420,7 @@ def get_structure_function_long(udata, x, y, z=None, p=2, roll_axis=1, n_bins=No
     # Initialization
     rrs, Dxxs, Dxx_errs = np.zeros((n_bins, t1 - t0)), np.ones((n_bins, t1 - t0)), np.zeros((n_bins, t1 - t0))
 
-    for t in tqdm(range(t0, t1), desc='time'):
+    for t in tqdm(list(range(t0, t1)), desc='time'):
         # Call velocity field at time t as uu
         uu = ui[..., t]
 
@@ -1429,7 +1429,7 @@ def get_structure_function_long(udata, x, y, z=None, p=2, roll_axis=1, n_bins=No
         #### coarse=1: Compute DLL(r,t) for all possible r. if coarse=0.5, it samples only a half of possible rs.
         ## n: number of data points from which DLL statistics is computed.
         #### coarse2=1: use all data points. (e.g. for 1024*1024 grid, use 1024*1024*coarse2 data points)
-        roll_indices = range(0, limits[roll_axis], int(1./coarse))
+        roll_indices = list(range(0, limits[roll_axis], int(1./coarse)))
         m = len(roll_indices)
         n = int(x_grid.size * coarse2)
 
@@ -1942,7 +1942,7 @@ def get_sample_turb_field_3d(return_coord=True):
     datapath = os.path.join(pdir, 'sample_data/isoturb_slice2.h5')
     data = rw.read_hdf5(datapath)
 
-    keys = data.keys()
+    keys = list(data.keys())
     keys_u = [key for key in keys if 'u' in key]
     keys_u = fa.natural_sort(keys_u)
     duration = len(keys_u)
@@ -1960,7 +1960,7 @@ def get_sample_turb_field_3d(return_coord=True):
     data.close()
 
     if return_coord:
-        x, y, z = range(width), range(height), range(depth)
+        x, y, z = list(range(width)), list(range(height)), list(range(depth))
         xx, yy, zz = np.meshgrid(y, x, z)
         return udata, xx * dx, yy * dy, zz  * dz
     else:
@@ -2039,12 +2039,12 @@ def get_equally_spaced_grid(udata, spacing=1):
     dim = len(udata)
     if dim == 2:
         height, width, duration = udata[0].shape
-        x, y = range(width), range(height)
+        x, y = list(range(width)), list(range(height))
         xx, yy = np.meshgrid(x, y)
         return xx * spacing, yy * spacing
     elif dim == 3:
         height, width, depth, duration = udata[0].shape
-        x, y, z = range(width), range(height), range(depth)
+        x, y, z = list(range(width)), list(range(height)), list(range(depth))
         xx, yy, zz = np.meshgrid(y, x, z)
         return xx * spacing, yy * spacing, zz * spacing
 

@@ -59,17 +59,17 @@ class Clicker:
         """ Extracts locations from the user"""
         if event.key == 'shift':
             # Shift + click to remove all selections
-            print 'cleared click events'
+            print('cleared click events')
             self.clear()
             return
         if event.xdata is None or event.ydata is None:
             return
         if event.button == 1:
-            print 'click event: xdata = %f, ydata= %f' % (event.xdata, event.ydata)
+            print('click event: xdata = %f, ydata= %f' % (event.xdata, event.ydata))
             self.pt_lst.append((event.xdata, event.ydata))
         elif event.button == 3:
             # Right click to remove selected pt
-            print 'removed click event near: data = %f, ydata = %f' % (event.xdata, event.ydata)
+            print('removed click event near: data = %f, ydata = %f' % (event.xdata, event.ydata))
             self.remove_pt((event.xdata, event.ydata))
 
         self.redraw()
@@ -77,7 +77,7 @@ class Clicker:
     def remove_pt(self, loc):
         """ Removes point from pt_lst that is nearest to loc"""
         if len(self.pt_lst) > 0:
-            self.pt_lst.pop(argmin(map(lambda x: sqrt((x[0] - loc[0]) ** 2 + (x[1] - loc[1]) ** 2), self.pt_lst)))
+            self.pt_lst.pop(argmin([sqrt((x[0] - loc[0]) ** 2 + (x[1] - loc[1]) ** 2) for x in self.pt_lst]))
 
     def redraw(self):
         """ Scatter points from pt_lst onto the figure"""
@@ -228,7 +228,7 @@ def directed_fast_march(raw_data, seed_points, SEEDS_PER_PATH):
     N = len(seed_points)
 
     if N / SEEDS_PER_PATH != int(N / SEEDS_PER_PATH):
-        print "WARNING -- NUMBER OF SEED POINTS PER PATH MUST BE %d" % SEEDS_PER_PATH
+        print("WARNING -- NUMBER OF SEED POINTS PER PATH MUST BE %d" % SEEDS_PER_PATH)
 
     Npaths = N / SEEDS_PER_PATH
 
@@ -241,7 +241,7 @@ def directed_fast_march(raw_data, seed_points, SEEDS_PER_PATH):
             source = seed_points[i + j * SEEDS_PER_PATH]
             target = seed_points[(i + 1) % SEEDS_PER_PATH + j * SEEDS_PER_PATH]
 
-            zr, yr, xr = map(lambda x: x.flatten(), mgrid[-1:2, -1:2, -1:2])
+            zr, yr, xr = [x.flatten() for x in mgrid[-1:2, -1:2, -1:2]]
             rr = array([xr, yr, zr]).T
             tp = vstack([t + rr for t in [target]])
 
@@ -364,7 +364,7 @@ def get_total_loop_length(loops_xyz):
     -------
 
     """
-    lengths = map(get_loop_length, loops_xyz)
+    lengths = list(map(get_loop_length, loops_xyz))
     return sum(lengths)
 
 
@@ -384,7 +384,7 @@ def make_log(sparse_file):
         json.dump(data, out_file)
         out_file.close()
 
-        print 'log generated for ' + sparse_file[:-7]
+        print('log generated for ' + sparse_file[:-7])
 
 
 def perspective_correct(lines_xyz, setup_info):
@@ -426,7 +426,7 @@ def perspective_invert(X, setup_info, suppress_output=True):
     if suppress_output:
         setup_info = setup_info.replace('print ', '')
 
-    exec setup_info
+    exec(setup_info)
 
     re_X = X - (frame_shape[0] / 2., frame_shape[1] / 2., x_size / 2.)
     re_X = re_X / (x_size / 2.)
@@ -493,7 +493,7 @@ def propagate_seed_points(raw_data, old_seed_points, window=3):
     """
     xs, ys = old_seed_points[:, 0], old_seed_points[:, 1]
     width = (raw_data.shape[0] / 2, window, window)
-    z, y, x = asarray(map(lambda x: argmax_neighborhood(raw_data, (width[0], x[1], x[0]), width), zip(xs, ys)),
+    z, y, x = asarray([argmax_neighborhood(raw_data, (width[0], x[1], x[0]), width) for x in zip(xs, ys)],
                       dtype='float').T
 
     return asarray([x, y, z]).T
@@ -526,9 +526,9 @@ def select_seed_points(raw_data, axis=0, fig_size=10, window=3):
     guidepost = Clicker(plt.gca())
     plt.show()
 
-    xs, ys = zip(*guidepost.pt_lst)
+    xs, ys = list(zip(*guidepost.pt_lst))
     width = (raw_data.shape[0] / 2, window, window)
-    z, y, x = asarray(map(lambda x: argmax_neighborhood(raw_data, (width[0], x[1], x[0]), width), zip(xs, ys)),
+    z, y, x = asarray([argmax_neighborhood(raw_data, (width[0], x[1], x[0]), width) for x in zip(xs, ys)],
                       dtype='float').T
 
     return asarray([x, y, z]).T
@@ -619,9 +619,9 @@ def save_trace(frame, lines_xyz, setup_info, sparse_file,
     if 'hydrofoil_info' in info:
         hydrofoil_codex = json.load(open(HYDROFOIL_CODEX_JSON))
         hydrofoil_code = name_parts[3]
-        if hydrofoil_code in hydrofoil_codex.keys():
+        if hydrofoil_code in list(hydrofoil_codex.keys()):
             hydrofoil_info = hydrofoil_codex[hydrofoil_code]
-            for k, v in zip(hydrofoil_info.keys(), hydrofoil_info.values()):
+            for k, v in zip(list(hydrofoil_info.keys()), list(hydrofoil_info.values())):
                 T.info['hydrofoil_' + k] = v
             T.info['hydrofoil_code'] = hydrofoil_code
 
@@ -675,7 +675,7 @@ def organize_lines(lines_xyz, sparse_file, f, kind):
     while i < 11:
         fn = get_path_name(f - i, sparse_file)
         if os.path.exists(fn):
-            print 'i == ', i
+            print('i == ', i)
             T_last = path.load_tangle(fn)
             if len(T_last) != len(lines_xyz):
                 i += 1
@@ -684,7 +684,7 @@ def organize_lines(lines_xyz, sparse_file, f, kind):
             lines = perspective_correct(lines, setup_info)
             T_current = path.Tangle(lines)
             if kind == 'Writhe':
-                print 'Checking Writhe Diffs'
+                print('Checking Writhe Diffs')
                 writhe_diffs = [T_current.crossing_matrix()[0].sum(1)[0] - wr for wr in
                                 T_last.crossing_matrix()[0].sum(1)]
                 if writhe_diffs[0] < writhe_diffs[1]:
@@ -692,14 +692,14 @@ def organize_lines(lines_xyz, sparse_file, f, kind):
                 else:
                     return lines_xyz[::-1]
             if kind == 'Length':
-                print 'Checking Length Diffs'
+                print('Checking Length Diffs')
                 len_diffs = [T_current.L[0] - l for l in T_last.L]
                 if len_diffs[0] < len_diffs[1]:
                     return lines_xyz
                 else:
                     return lines_xyz[::-1]
             if kind == 'Center':
-                print 'Checking Center Diffs'
+                print('Checking Center Diffs')
                 center_diffs = [T_current[0].center() - c for c in [p.center() for p in T_last]]
                 r1 = sqrt(asarray([p ** 2 for p in center_diffs[0]]).sum())  # print 'zero ', center_diffs[0].sum()
                 r2 = sqrt(asarray([p ** 2 for p in center_diffs[1]]).sum())  # print 'one ', center_diffs[1].sum()
@@ -708,13 +708,13 @@ def organize_lines(lines_xyz, sparse_file, f, kind):
                 else:
                     return lines_xyz[::-1]
             else:
-                print 'Sorting Method Not Specified!'
+                print('Sorting Method Not Specified!')
                 return lines_xyz
         else:
             i += 1
             continue
 
-    print 'No Comparison Path Within Range'
+    print('No Comparison Path Within Range')
     return lines_xyz
 
 
@@ -744,10 +744,10 @@ if __name__ == '__main__':
     frames = []
     if len(args.frames) == 1 and ',' not in args.frames[0]:
         for sparse_file in sparse_files:
-            frames.append(eval('x[%s]' % args.frames[0], {'x': range(1000)}))
+            frames.append(eval('x[%s]' % args.frames[0], {'x': list(range(1000))}))
     elif len(args.frames) == len(sparse_files) and ',' not in args.frames[0]:
         for f in args.frames:
-            frames.append(eval('x[%s]' % f, {'x': range(1000)}))
+            frames.append(eval('x[%s]' % f, {'x': list(range(1000))}))
     elif ',' in args.frames[0]:
         for sparse_file in sparse_files:
             temp_frames = []
@@ -785,11 +785,11 @@ if __name__ == '__main__':
 
             # CHECK TO SEE IF THE PATH EXISTS FOR THIS FRAME
             path_existence = check_for_path(sparse_file, f)
-            print 'Working on Frame ', f
+            print('Working on Frame ', f)
             if j > 0:
                 k = frames[0][j-1] + 1
                 while f > k:
-                    print 'Propagating points through frame ', k
+                    print('Propagating points through frame ', k)
                     raw_data = filter_raw_data(s4d, k)
                     new_seed_points = propagate_seed_points(raw_data, propagated_seed_points[-1])
                     propagated_seed_points.append(new_seed_points)
@@ -806,7 +806,7 @@ if __name__ == '__main__':
                 # LOG BAD FRAME IF A CLOSED PATH COULDN'T BE TRACED
                 if not lines:
                     # update_log(sparse_file, f, 'frames', 'bad')
-                    print 'No Closed Path Found'
+                    print('No Closed Path Found')
 
                 # SAVE IF A CLOSED PATH WAS FOUND
                 else:
@@ -819,7 +819,7 @@ if __name__ == '__main__':
                     else:
                         attempt = 1
                         while attempt < 3:
-                            print 'Attempt: ' + str(attempt)
+                            print('Attempt: ' + str(attempt))
                             lines = directed_fast_march(raw_data, propagated_seed_points[-1] + attempt * EPSILON, seeds)
                             if len(lines) > 1:
                                 lines = organize_lines(lines, sparse_file, f, kind)
@@ -832,18 +832,18 @@ if __name__ == '__main__':
                                 attempt += 1
                     # path_length = get_total_loop_length(lines)
                     # update_log(sparse_file, f, 'length', path_length)
-                    print 'Closed Path Traced'
+                    print('Closed Path Traced')
 
             # SKIP FRAME IF PATH EXISTS AND OVERWRITE WAS NOT SPECIFIED
             else:
                 # raw_data = filter_raw_data(s4d, f)
                 # new_seed_points = propagate_seed_points(raw_data, propagated_seed_points[-1])
                 # propagated_seed_points.append(new_seed_points)
-                print 'Path Already Traced... Skipping Frame ', f
+                print('Path Already Traced... Skipping Frame ', f)
                 continue
 
         # UPDATE LOG
         # check_trace_with_statistics(sparse_file)
         plot_lengths(sparse_file)
-        print 'Finished Tracing in Sparse File ', sparse_file
-    print 'Done in %s' % fmt_time(time.time() - start)
+        print('Finished Tracing in Sparse File ', sparse_file)
+    print('Done in %s' % fmt_time(time.time() - start))

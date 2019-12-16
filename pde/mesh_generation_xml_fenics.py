@@ -6,7 +6,7 @@ import copy
 import lepm.lattice_elasticity as le
 import lepm.line_segments as lsegs
 from matplotlib.collections import LineCollection
-import cPickle as pkl
+import pickle as pkl
 
 """Build xml file for mesh generation in FEniCS xml mesh format"""
 
@@ -68,10 +68,10 @@ def write_mesh_ILPM2dolf(mesh_ilpm, fname):
         with open(fname, 'a') as myfile:
             myfile.write('</dolfin>')
 
-        print 'done! Wrote mesh to: ', fname
+        print('done! Wrote mesh to: ', fname)
         try:
             import dolfin as dolf
-            print 'loading meshfile = ', meshfile
+            print('loading meshfile = ', meshfile)
             out = dolf.Mesh(meshfile)
             return out
         except:
@@ -124,7 +124,7 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             L = np.ceil(np.sqrt(N / 3.))  # --> L x 3*L = N
         elif shape == 'rectangle4x1':
             L = np.ceil(np.sqrt(N / 4.))  # --> L x 4*L = N
-        print('L=' + str(L))
+        print(('L=' + str(L)))
 
         if LatticeTop == 'SquareLatt':
             # Establish square lattice, rotated by theta
@@ -143,12 +143,12 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             else:
                 add_exten = '_theta' + '{0:.3f}'.format(theta / np.pi).replace('.', 'p') + 'pi'
                 # ROTATE BY THETA
-                print 'Rotating by theta= ', theta, '...'
+                print('Rotating by theta= ', theta, '...')
                 xys = copy.deepcopy(xypts_tmp)
                 xypts_tmp = np.array([[x * np.cos(theta) - y * np.sin(theta), y * np.cos(theta) + x * np.sin(theta)]
                                       for x, y in xys])
-                print 'max x = ', max(xypts_tmp[:, 0])
-                print 'max y = ', max(xypts_tmp[:, 1])
+                print('max x = ', max(xypts_tmp[:, 0]))
+                print('max y = ', max(xypts_tmp[:, 1]))
 
         # mask to rectangle
         tmp2 = xypts_tmp * 2 * R / L
@@ -172,7 +172,7 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
                 xypts_skew = np.dstack((xy[:, 0] + 0.1 * xy[:, 1], xy[:, 1]))[0]
                 # print(xypts_skew)
         elif LatticeTop == 'Triangular':
-            print 'Triangular: skipping skew...'
+            print('Triangular: skipping skew...')
             xypts_skew = xy
             methodstr = LatticeTop
 
@@ -184,12 +184,12 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
         BL = pe.Tri2BL(TRItmp)
         # bL = bond_length_list(xy,BL)
         thres = np.sqrt(2.0) * 1.000001  # cut off everything longer than a diagonal
-        print('thres = ' + str(thres))
+        print(('thres = ' + str(thres)))
         # dist = np.sqrt( (xy[BL[100,1],1]-xy[BL[100,0],1])**2 +(xy[BL[100,1],0]-xy[BL[100,0],0])**2 )
         # print('random bond length = '+str(dist))
         print('Trimming bond list...\n')
         BLtrim = pe.cut_bonds(BL, xy, thres)
-        print('Trimmed ' + str(len(BL) - len(BLtrim)) + ' bonds.')
+        print(('Trimmed ' + str(len(BL) - len(BLtrim)) + ' bonds.'))
 
         print('Recomputing TRI...\n')
         TRI = pe.BL2TRI(BLtrim)
@@ -198,13 +198,13 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
         if eta == 0:
             xypts = xy * 2 * R / L
         else:
-            print 'Randomizing lattice by eta=', eta
+            print('Randomizing lattice by eta=', eta)
             jitter = eta * np.random.rand(np.shape(xy)[0], np.shape(xy)[1])
             xypts = np.dstack((xy[:, 0] + jitter[:, 0], xy[:, 1] + jitter[:, 1]))[0] * 2 * R / L
 
     if shape == 'rectangle2x1':
         L = np.ceil(np.sqrt(N * 0.5))  # --> L x 2*L = N
-        print('L=' + str(L))
+        print(('L=' + str(L)))
 
         if LatticeTop == 'SquareLatt':
             # Establish square lattice, rotated by theta
@@ -223,12 +223,12 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             else:
                 add_exten = '_theta' + '{0:.3f}'.format(theta / np.pi).replace('.', 'p') + 'pi'
                 # ROTATE BY THETA
-                print 'Rotating by theta= ', theta, '...'
+                print('Rotating by theta= ', theta, '...')
                 xys = copy.deepcopy(xypts_tmp)
                 xypts_tmp = np.array([[x * np.cos(theta) - y * np.sin(theta), y * np.cos(theta) + x * np.sin(theta)]
                                       for x, y in xys])
-                print 'max x = ', max(xypts_tmp[:, 0])
-                print 'max y = ', max(xypts_tmp[:, 1])
+                print('max x = ', max(xypts_tmp[:, 0]))
+                print('max y = ', max(xypts_tmp[:, 1]))
 
         # mask to rectangle
         tmp2 = xypts_tmp * 2 * R / L
@@ -247,7 +247,7 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
                 xypts_skew = np.dstack((xy[:, 0] + 0.1 * xy[:, 1], xy[:, 1]))[0]
                 # print(xypts_skew)
         elif LatticeTop == 'Triangular':
-            print 'Triangular: skipping skew...'
+            print('Triangular: skipping skew...')
             xypts_skew = xy
             methodstr = LatticeTop
 
@@ -259,12 +259,12 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
         BL = pe.Tri2BL(TRItmp)
         # bL = bond_length_list(xy,BL)
         thres = np.sqrt(2.0) * 1.000001  # cut off everything longer than a diagonal
-        print('thres = ' + str(thres))
+        print(('thres = ' + str(thres)))
         # dist = np.sqrt( (xy[BL[100,1],1]-xy[BL[100,0],1])**2 +(xy[BL[100,1],0]-xy[BL[100,0],0])**2 )
         # print('random bond length = '+str(dist))
         print('Trimming bond list...\n')
         BLtrim = pe.cut_bonds(BL, xy, thres)
-        print('Trimmed ' + str(len(BL) - len(BLtrim)) + ' bonds.')
+        print(('Trimmed ' + str(len(BL) - len(BLtrim)) + ' bonds.'))
 
         print('Recomputing TRI...\n')
         TRI = pe.BL2TRI(BLtrim)
@@ -273,13 +273,13 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
         if eta == 0:
             xypts = xy * 2 * R / L
         else:
-            print 'Randomizing lattice by eta=', eta
+            print('Randomizing lattice by eta=', eta)
             jitter = eta * np.random.rand(np.shape(xy)[0], np.shape(xy)[1])
             xypts = np.dstack((xy[:, 0] + jitter[:, 0], xy[:, 1] + jitter[:, 1]))[0] * 2 * R / L
 
     elif shape == 'rectangle1x2':
         L = np.ceil(np.sqrt(N * 2.0))  # --> L x 2*L = N
-        print('L=' + str(L))
+        print(('L=' + str(L)))
 
         if LatticeTop == 'SquareLatt':
             # Establish square lattice, rotated by theta
@@ -298,12 +298,12 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             else:
                 add_exten = '_theta' + '{0:.3f}'.format(theta / np.pi).replace('.', 'p') + 'pi'
                 # ROTATE BY THETA
-                print 'Rotating by theta= ', theta, '...'
+                print('Rotating by theta= ', theta, '...')
                 xys = copy.deepcopy(xypts_tmp)
                 xypts_tmp = np.array([[x * np.cos(theta) - y * np.sin(theta), y * np.cos(theta) + x * np.sin(theta)]
                                       for x, y in xys])
-                print 'max x = ', max(xypts_tmp[:, 0])
-                print 'max y = ', max(xypts_tmp[:, 1])
+                print('max x = ', max(xypts_tmp[:, 0]))
+                print('max y = ', max(xypts_tmp[:, 1]))
 
         # mask to rectangle
         tmp2 = xypts_tmp * 2 * R / L
@@ -322,7 +322,7 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
                 xypts_skew = np.dstack((xy[:, 0] + 0.1 * xy[:, 1], xy[:, 1]))[0]
                 # print(xypts_skew)
         elif LatticeTop == 'Triangular':
-            print 'Triangular: skipping skew...'
+            print('Triangular: skipping skew...')
             xypts_skew = xy
             methodstr = LatticeTop
 
@@ -334,12 +334,12 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
         BL = pe.Tri2BL(TRItmp)
         # bL = bond_length_list(xy,BL)
         thres = np.sqrt(2.0) * 1.000001  # cut off everything longer than a diagonal
-        print('thres = ' + str(thres))
+        print(('thres = ' + str(thres)))
         # dist = np.sqrt( (xy[BL[100,1],1]-xy[BL[100,0],1])**2 +(xy[BL[100,1],0]-xy[BL[100,0],0])**2 )
         # print('random bond length = '+str(dist))
         print('Trimming bond list...\n')
         BLtrim = pe.cut_bonds(BL, xy, thres)
-        print('Trimmed ' + str(len(BL) - len(BLtrim)) + ' bonds.')
+        print(('Trimmed ' + str(len(BL) - len(BLtrim)) + ' bonds.'))
 
         print('Recomputing TRI...\n')
         TRI = pe.BL2TRI(BLtrim)
@@ -348,7 +348,7 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
         if eta == 0:
             xypts = xy * 2 * R / L
         else:
-            print 'Randomizing lattice by eta=', eta
+            print('Randomizing lattice by eta=', eta)
             jitter = eta * np.random.rand(np.shape(xy)[0], np.shape(xy)[1])
             xypts = np.dstack((xy[:, 0] + jitter[:, 0], xy[:, 1] + jitter[:, 1]))[0] * 2 * R / L
 
@@ -379,7 +379,7 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
 
         elif LatticeTop == 'SquareLatt' or LatticeTop == 'Triangular':
             L = np.ceil(np.sqrt(4 * N / np.pi))
-            print('L=' + str(L))
+            print(('L=' + str(L)))
 
             if LatticeTop == 'SquareLatt':
                 # Establish square lattice, rotated by theta
@@ -398,12 +398,12 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
                 else:
                     add_exten = '_theta' + '{0:.3f}'.format(theta / np.pi).replace('.', 'p') + 'pi'
                     # ROTATE BY THETA
-                    print 'Rotating by theta= ', theta, '...'
+                    print('Rotating by theta= ', theta, '...')
                     xys = copy.deepcopy(xypts_tmp)
                     xypts_tmp = np.array([[x * np.cos(theta) - y * np.sin(theta), y * np.cos(theta) + x * np.sin(theta)]
                                           for x, y in xys])
-                    print 'max x = ', max(xypts_tmp[:, 0])
-                    print 'max y = ', max(xypts_tmp[:, 1])
+                    print('max x = ', max(xypts_tmp[:, 0]))
+                    print('max y = ', max(xypts_tmp[:, 1]))
 
             if shape == 'circle':
                 tmp2 = xypts_tmp * 2 * R / L
@@ -424,7 +424,7 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
                     xypts_skew = np.dstack((xy[:, 0] + 0.1 * xy[:, 1], xy[:, 1]))[0]
                     # print(xypts_skew)
             elif LatticeTop == 'Triangular':
-                print 'Triangular: skipping skew...'
+                print('Triangular: skipping skew...')
                 xypts_skew = xy
                 methodstr = LatticeTop
 
@@ -436,12 +436,12 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             BL = pe.Tri2BL(TRItmp)
             # bL = bond_length_list(xy,BL)
             thres = np.sqrt(2.0) * 1.000001  # cut off everything longer than a diagonal
-            print('thres = ' + str(thres))
+            print(('thres = ' + str(thres)))
             # dist = np.sqrt( (xy[BL[100,1],1]-xy[BL[100,0],1])**2 +(xy[BL[100,1],0]-xy[BL[100,0],0])**2 )
             # print('random bond length = '+str(dist))
             print('Trimming bond list...\n')
             BLtrim = pe.cut_bonds(BL, xy, thres)
-            print('Trimmed ' + str(len(BL) - len(BLtrim)) + ' bonds.')
+            print(('Trimmed ' + str(len(BL) - len(BLtrim)) + ' bonds.'))
 
             print('Recomputing TRI...\n')
             TRI = pe.BL2TRI(BLtrim)
@@ -450,7 +450,7 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             if eta == 0:
                 xypts = xy * 2 * R / L
             else:
-                print 'Randomizing lattice by eta=', eta
+                print('Randomizing lattice by eta=', eta)
                 jitter = eta * np.random.rand(np.shape(xy)[0], np.shape(xy)[1])
                 xypts = np.dstack((xy[:, 0] + jitter[:, 0], xy[:, 1] + jitter[:, 1]))[0] * 2 * R / L
 
@@ -462,7 +462,7 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
                         '_theta' + '{0:.2f}'.format(theta / np.pi).replace('.', 'p')
 
             L = np.ceil(np.sqrt(4 * N / np.pi))
-            print('L=' + str(L))
+            print(('L=' + str(L)))
             latticevecs = [[1, 0], [0.5, np.sqrt(3) * 0.5]]
             # Dense part of mesh
             xy_dens = pe.generate_lattice([L, L], latticevecs) * 2 * R / L
@@ -470,8 +470,8 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             # Sparse part of mesh
             Lsp = np.ceil(np.sqrt(4 * Nsp / np.pi))
             xy_sprs = pe.generate_lattice([Lsp, Lsp], latticevecs) * 2 * R / Lsp
-            print 'max dense x=', np.max(xy_dens[:, 0])
-            print 'max sparse x=', np.max(xy_sprs[:, 0])
+            print('max dense x=', np.max(xy_dens[:, 0]))
+            print('max sparse x=', np.max(xy_sprs[:, 0]))
 
             # Define shape of dense
             if H == 0:
@@ -481,15 +481,15 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             # Cut out dense part
             keep = np.where(pe.pts_are_near_lineseg(xy_dens, endpt1, endpt2, W))[0]
             keepsp = np.where(~pe.pts_are_near_lineseg(xy_sprs, endpt1, endpt2, W))[0]
-            print 'len(keep)=', len(keep)
-            print 'len(keepsp)=', len(keepsp)
+            print('len(keep)=', len(keep))
+            print('len(keepsp)=', len(keepsp))
 
             xyc_dens = xy_dens[keep, :]
             xyc_sprs = xy_sprs[keepsp, :]
-            print 'max dense_c x=', np.max(xyc_dens[:, 0])
-            print 'max sparse_c x=', np.max(xyc_sprs[:, 0])
+            print('max dense_c x=', np.max(xyc_dens[:, 0]))
+            print('max sparse_c x=', np.max(xyc_sprs[:, 0]))
             xypts_tmp = np.vstack((xyc_dens, xyc_sprs))
-            print xypts_tmp
+            print(xypts_tmp)
 
             if shape == 'circle':
                 tmp2 = xypts_tmp
@@ -504,10 +504,10 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             print('Computing bond list...\n')
             BL = pe.Tri2BL(TRItmp)
             thres = np.sqrt(2.0) * 2 * R / Lsp * 1.000001  # cut off everything longer than a diagonal
-            print('thres = ' + str(thres))
+            print(('thres = ' + str(thres)))
             print('Trimming bond list...\n')
             BLtrim = pe.cut_bonds(BL, xy, thres)
-            print('Trimmed ' + str(len(BL) - len(BLtrim)) + ' bonds.')
+            print(('Trimmed ' + str(len(BL) - len(BLtrim)) + ' bonds.'))
 
             print('Recomputing TRI...\n')
             TRI = pe.BL2TRI(BLtrim)
@@ -516,7 +516,7 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             if eta == 0:
                 xys = xy
             else:
-                print 'Randomizing lattice by eta=', eta
+                print('Randomizing lattice by eta=', eta)
                 interparticle_spacing = np.sqrt((xy[TRI[0, 0], 0] - xy[0, 0]) ** 2 + (xy[TRI[0, 0], 1] - xy[0, 1]) ** 2)
                 jitter = eta * np.random.rand(np.shape(xy)[0], np.shape(xy)[1]) * interparticle_spacing
                 xys = np.dstack((xy[:, 0] + jitter[:, 0], xy[:, 1] + jitter[:, 1]))[0]
@@ -524,15 +524,15 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
             # ROTATE BY THETA
             xypts = np.array(
                 [[x * np.cos(theta) - y * np.sin(theta), y * np.cos(theta) + x * np.sin(theta)] for x, y in xys])
-            print 'max x = ', max(xypts[:, 0])
-            print 'max y = ', max(xypts[:, 1])
+            print('max x = ', max(xypts[:, 0]))
+            print('max y = ', max(xypts[:, 1]))
 
     # Naming 
     Rstr = '{0:.3f}'.format(R).replace('.', 'p')
     etastr = '{0:.3f}'.format(eta).replace('.', 'p')
     exten = shape + 'Mesh_' + methodstr + add_exten + '_eta' + etastr + '_R' + Rstr + '_N' + str(N)
     fname = outdir + exten + '.xml'
-    print 'Writing to file: ', fname
+    print('Writing to file: ', fname)
 
     ################
     # Write header #
@@ -571,11 +571,11 @@ def generate_mesh_xml_fenics(shape, N, R, LatticeTop, eta=0., theta=0., force_pl
     with open(fname, 'a') as myfile:
         myfile.write('</dolfin>')
 
-    print 'done!'
+    print('done!')
 
     # PLOT IT
     if force_plot:
-        print 'Plotting the result as triangulation...'
+        print('Plotting the result as triangulation...')
         plt.triplot(xypts[:, 0], xypts[:, 1], TRI)
         plt.axis('equal')
         plt.savefig(outdir + exten + '.png')
@@ -598,7 +598,7 @@ def generate_mesh_remove_lsegs(fname, xy, rmv_lsegs, eps=1e-9, force_plot=True, 
     # dist = np.sqrt( (xy[BL[100,1],1]-xy[BL[100,0],1])**2 +(xy[BL[100,1],0]-xy[BL[100,0],0])**2 )
     # print('random bond length = '+str(dist))
     if thres is not None:
-        print('thres = ' + str(thres))
+        print(('thres = ' + str(thres)))
         print('Trimming bond list...\n')
         BL = pe.cut_bonds(BL, xy, thres)
 
@@ -610,17 +610,17 @@ def generate_mesh_remove_lsegs(fname, xy, rmv_lsegs, eps=1e-9, force_plot=True, 
     #     print 'poly = ', poly
     lsa = lsegs.xyBL2linesegs(xy, BL)
     kill = lsegs.linesegs_intersect_linesegs(lsa, rmv_lsegs, thres=eps)
-    print 'kill = ', np.where(kill)
+    print('kill = ', np.where(kill))
     BL = BL[~kill]
 
     # sys.exit()
 
-    print('Trimmed ' + str(lenBL0 - len(BL)) + ' bonds.')
+    print(('Trimmed ' + str(lenBL0 - len(BL)) + ' bonds.'))
 
     print('Recomputing TRI...\n')
     TRI = pe.BL2TRI(BL)
 
-    print 'Writing to file: ', fname
+    print('Writing to file: ', fname)
 
     ################
     # Write header #
@@ -660,7 +660,7 @@ def generate_mesh_remove_lsegs(fname, xy, rmv_lsegs, eps=1e-9, force_plot=True, 
         myfile.write('</dolfin>')
 
     ########################
-    print 'done! Writing pkl with linesegs and additional parameters...'
+    print('done! Writing pkl with linesegs and additional parameters...')
     with open(fname[0:-4] + '.pkl', "wb") as fn:
         params = {'rmv_lsegs': rmv_lsegs,
                   'xy': rmv_lsegs}
@@ -668,14 +668,14 @@ def generate_mesh_remove_lsegs(fname, xy, rmv_lsegs, eps=1e-9, force_plot=True, 
         if add_params is not None:
             for key in add_params:
                 params[key] = add_params[key]
-                print 'added ' + key + ' to params'
+                print('added ' + key + ' to params')
 
         pkl.dump(params, fn)
 
     # PLOT IT
     if force_plot:
         fnamebase = fname.split('.xml')[0]
-        print 'Plotting the result as triangulation...'
+        print('Plotting the result as triangulation...')
         # plt.triplot(xypts[:, 0], xypts[:, 1], TRI)
         bl_tmp = le.TRI2BL(TRI)
         bondslist = []
@@ -692,11 +692,11 @@ def generate_mesh_remove_lsegs(fname, xy, rmv_lsegs, eps=1e-9, force_plot=True, 
             plt.plot(pair[inds0], pair[inds1], 'r-')
 
         plt.axis('equal')
-        print 'saving to ' + fnamebase + '.png'
+        print('saving to ' + fnamebase + '.png')
         plt.savefig(fnamebase + '.png')
         # plt.show()
 
-        print 'top = ', np.max(xy[:, 1])
+        print('top = ', np.max(xy[:, 1]))
 
     return xy, TRI
 
@@ -768,5 +768,5 @@ if __name__ == '__main__':
 
         generate_mesh_remove_lsegs(fname, xy, rmv_lsegs, thres=1.2, force_plot=True)
     else:
-        print('Generating ' + shape + '-shaped mesh with ' + LatticeTop + ' lattice topology...')
+        print(('Generating ' + shape + '-shaped mesh with ' + LatticeTop + ' lattice topology...'))
         generate_mesh_xml_fenics(shape, nsz, rsz, LatticeTop, eta, theta, force_plot, args.outdir, Trisel)

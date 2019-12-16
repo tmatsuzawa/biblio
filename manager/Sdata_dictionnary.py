@@ -70,7 +70,7 @@ def generate_dictionnary():
                 # try:
                 dirdata = file_architecture.get_dir(date)
                 paramList = glob.glob(dirdata + '/*param.txt')
-                print(dirdata + '/*param.txt', paramList)
+                print((dirdata + '/*param.txt', paramList))
                 for filename in paramList:
                     os.remove(filename)
                 #                input()
@@ -92,7 +92,7 @@ def generate_dictionnary():
             else:
                 #            except:
                 failure = failure + [date]
-                print(date + 'failed')
+                print((date + 'failed'))
 
         # generate a root dictionnary from any cine files info (!)
         date = 'to_2016_10_11'
@@ -102,7 +102,7 @@ def generate_dictionnary():
         print(general_dict)
         write(general_dict, rootDir, date)
 
-    print('Cinefiles that fail to load :' + str(failure))
+    print(('Cinefiles that fail to load :' + str(failure)))
 
 
 def write(dictList, Dir, date):
@@ -152,7 +152,7 @@ def Sdata_to_list(S, List_info):
     for key in key_dict:
         value = find_attr(S, key)
         if value == '':
-            print(key + 'attribute is missing ! White space instead')
+            print((key + 'attribute is missing ! White space instead'))
         List_info[key_dict.index(key)].append(value)
 
     return List_info
@@ -173,10 +173,10 @@ def find_attr(S, name):
         return getattr(l, name)
     else:
         # look in the default register
-        if name in default.keys():
+        if name in list(default.keys()):
             return default[name]
         else:
-            print("S and is subobject have no attribute " + name + ' ,' + S.fileCine)
+            print(("S and is subobject have no attribute " + name + ' ,' + S.fileCine))
             print('Arbitrary set to Unknown')
             #            val=input('Manual input for "'+name+'"')
             return 'Unknown'

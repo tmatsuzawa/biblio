@@ -332,7 +332,7 @@ def correct(u, a=5.):
 
 
 def average(plist):
-    keys = plist[0].keys()
+    keys = list(plist[0].keys())
     p_mean = {}
     imin = 0
     imax = min([len(p['Xmin']) for p in plist])
@@ -473,7 +473,7 @@ def dispersion(Data, j, savedir):
 def main(Mlist):
     savedir = title(Mlist[0])
 
-    indices = range(400, 2000, 10)
+    indices = list(range(400, 2000, 10))
     n = len(indices)
     N = len(Mlist)
     print(N)

@@ -86,7 +86,7 @@ def generate_dictionnary():
         write(general_dict,rootDir,date)
         print(general_dict)
     
-    print('Cinefiles that fail to load :' + str(failure))
+    print(('Cinefiles that fail to load :' + str(failure)))
 
 
 def write(dictList,Dir,date):
@@ -132,7 +132,7 @@ def Sdata_to_list(S,List_info):
     for key in key_dict:
         value=find_attr(S,key)
         if value=='':
-            print(key+'attribute is missing ! White space instead')
+            print((key+'attribute is missing ! White space instead'))
         List_info[key_dict.index(key)].append(value)
 
     return List_info  
@@ -152,10 +152,10 @@ def find_attr(S,name):
         return getattr(l,name)
     else:
         #look in the default register
-        if name in default.keys():
+        if name in list(default.keys()):
             return default[name]
         else:
-            print("S and is subobject have no attribute "+name+' ,'+S.fileCine)
+            print(("S and is subobject have no attribute "+name+' ,'+S.fileCine))
             print('Arbitrary set to Unknown')
 #            val=input('Manual input for "'+name+'"')
             return 'Unknown'

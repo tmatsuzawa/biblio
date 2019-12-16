@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-import cine
+from . import cine
 from numpy import clip as nclip
 from numpy import iinfo
 
@@ -19,7 +19,7 @@ def convert_file(ifn, ofn=None, clip=0, max_frame=None, overwrite=False):
         outfyle = os.path.join(ofn, os.path.splitext(name)[0] + '.sparse')
 
     if not overwrite and os.path.exists(outfyle):
-        print "%s exists... skipping. (use --overwrite to override)" % ofn
+        print("%s exists... skipping. (use --overwrite to override)" % ofn)
         return
     
     c = cine.Cine(ifn)
@@ -43,8 +43,8 @@ def convert_file(ifn, ofn=None, clip=0, max_frame=None, overwrite=False):
     
     # max_len = 70
     
-    print ifn
-    print '  -> ' + ofn
+    print(ifn)
+    print('  -> ' + ofn)
 #    msg = ' --> %s' %(ofn if ofp != ifp else ofnn)
 #    if len(msg) > max_len: msg = msg[:max_len-3] + '...'   
 #    print msg,
@@ -72,12 +72,12 @@ def convert_file(ifn, ofn=None, clip=0, max_frame=None, overwrite=False):
         
         pn = i * 100 // max_frame
         if pn != p:
-            print '\r  %3d%% (load:%6d s, clip:%6d s, save:%6d s)' % (pn, gtot, ctot, stot),
+            print('\r  %3d%% (load:%6d s, clip:%6d s, save:%6d s)' % (pn, gtot, ctot, stot), end=' ')
             sys.stdout.flush()
             #print gtot, ctot, stot
             p = pn
         
-    print '\r  done. (load:%6d s, clip:%6d s, save:%6d s)' % (gtot, ctot, stot)
+    print('\r  done. (load:%6d s, clip:%6d s, save:%6d s)' % (gtot, ctot, stot))
         
     s.close()
     #c.close()
@@ -91,7 +91,7 @@ def crawl(p, ext=None):
             for f in os.listdir(p):
                 fns += crawl(os.path.join(p, f), ext)
         except:
-            print 'Failed to list dir "%s," probably permissions problem. (ignoring)' % p
+            print('Failed to list dir "%s," probably permissions problem. (ignoring)' % p)
         
         return fns
     else:
@@ -129,11 +129,11 @@ if __name__ == '__main__':
             try:
                 fs = os.path.getsize(fn) / 1E9
                 if fs < args.size:
-                    print "'%s' < %.3fGB, ignoring..." % (fn, args.size)
+                    print("'%s' < %.3fGB, ignoring..." % (fn, args.size))
                 else:
                     convert_file(fn, ofn=args.ofl, clip=args.clip, overwrite=args.overwrite)
             except:
-                print "!!! ERROR CONVERTING '%s' !!!\n   (run with one input to see full error output.)" % fn
+                print("!!! ERROR CONVERTING '%s' !!!\n   (run with one input to see full error output.)" % fn)
     
 #if __name__ == '__main__':
 #    from pylab import *

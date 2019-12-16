@@ -14,7 +14,7 @@ except:
     import Image
 import numpy as N
 import struct
-import StringIO
+import io
 import os, sys
 
 #from decode_test import hex, dwords
@@ -49,7 +49,7 @@ def asimage(x):
 
 
 def jpeg_string(img, **kwargs):
-    buf = StringIO.StringIO()
+    buf = io.StringIO()
     img.save(buf, format='JPEG', **kwargs)
     s = buf.getvalue()
     buf.close()

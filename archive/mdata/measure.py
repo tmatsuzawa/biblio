@@ -62,7 +62,7 @@ class M:
     def get_fileList(self,display=False):
         fileList,n=browse.get_fileList(self.dataDir+'/','npz',display)
         if n==0:
-            print("No PIV files found ! at "+self.dataDir)
+            print(("No PIV files found ! at "+self.dataDir))
         return fileList,n
         
     def load_ref(self):
@@ -174,7 +174,7 @@ class M:
            # print(fileList.index(name))            
             if n>100:
                 if count%(n//100)==0:
-                    print(str(count*100//n) + " %")
+                    print((str(count*100//n) + " %"))
             
             self.Ux[:,:,fileList.index(name)]=fact*S['ux']
             self.Uy[:,:,fileList.index(name)]=fact*S['uy']
@@ -243,8 +243,8 @@ class M:
         maxy=np.max(y)*scale        
     
         print('bounds:')
-        print(labelx+' in ['+str(minx)+', '+str(maxx)+'] mm')
-        print(labely+' in ['+str(miny)+', '+str(maxy)+'] mm')
+        print((labelx+' in ['+str(minx)+', '+str(maxx)+'] mm'))
+        print((labely+' in ['+str(miny)+', '+str(maxy)+'] mm'))
         
         boolList=[x0>=minx,x0<=maxx,y0>=minx,y0<=maxx]
         if all(boolList):

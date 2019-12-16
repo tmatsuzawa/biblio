@@ -88,8 +88,8 @@ class StatusPrinter(object):
         
         msg = ('%%-%ds' % self.max_len) % msg
         
-        if final: print '\r' + msg
-        else: print '\r' + msg,
+        if final: print('\r' + msg)
+        else: print('\r' + msg, end=' ')
             
         sys.stdout.flush()        
 
@@ -122,7 +122,7 @@ class StatusPrinter(object):
     def __iter__(self):
         return self
     
-    def next(self):
+    def __next__(self):
         self.update()
         
         if self.current < self.count:
@@ -136,7 +136,7 @@ def noneint(s):
 
 def single_avi(args):
     if args.timestamp:
-        print(os.path.join(script_dir, 'Helvetica.ttf'))
+        print((os.path.join(script_dir, 'Helvetica.ttf')))
         font = ImageFont.truetype(args.font, args.ts)
 
     for i, fn in enumerate(args.cines):
@@ -147,18 +147,18 @@ def single_avi(args):
             if fn[-1] == ']':
                 fn, s = fn.split('[')
                 try:
-                    frame_slice = slice(*map(noneint, s[:-1].split(':')))
+                    frame_slice = slice(*list(map(noneint, s[:-1].split(':'))))
                 except:
                     raise ValueError("Couldn't convert '[%s' to slice notation" % s)
 
             else:
-                print "Warning, found '[' in input, but it didn't end with ']', so I'll assume you didn't mean to give a frame range."
+                print("Warning, found '[' in input, but it didn't end with ']', so I'll assume you didn't mean to give a frame range.")
     
         base, ext = os.path.splitext(fn)
         ext = ext.lower()
     
         if not os.path.exists(fn):
-            print "File %s not found, ignoring." % fn
+            print("File %s not found, ignoring." % fn)
             continue
     
         output = args.output
@@ -186,7 +186,7 @@ def single_avi(args):
         bpps = inp[0].dtype.itemsize * 8
         if bpp is None: bpp = bpps
     
-        frames = range(*frame_slice.indices(len(inp)))
+        frames = list(range(*frame_slice.indices(len(inp))))
     
         if args.clip == 0:
             map = linspace(0., 2.**(bpps - bpp), 2**bpps)
@@ -269,7 +269,7 @@ def multiple_avi(args):
     None
     """
     if args.timestamp:
-        print(os.path.join(script_dir, 'Helvetica.ttf'))
+        print((os.path.join(script_dir, 'Helvetica.ttf')))
         font = ImageFont.truetype(args.font, args.ts)
 
     files = args.cines
@@ -280,18 +280,18 @@ def multiple_avi(args):
         if fn[-1] == ']':
             fn, s = fn.split('[')
             try:
-                frame_slice = slice(*map(noneint, s[:-1].split(':')))
+                frame_slice = slice(*list(map(noneint, s[:-1].split(':'))))
             except:
                 raise ValueError("Couldn't convert '[%s' to slice notation" % s)
 
         else:
-            print "Warning, found '[' in input, but it didn't end with ']', so I'll assume you didn't mean to give a frame range."
+            print("Warning, found '[' in input, but it didn't end with ']', so I'll assume you didn't mean to give a frame range.")
     
     base, ext = os.path.splitext(fn)
     ext = ext.lower()
     
     if not os.path.exists(fn):
-        print "File %s not found, ignoring." % fn
+        print("File %s not found, ignoring." % fn)
       #  continue
     
     output = args.output
@@ -328,9 +328,9 @@ def multiple_avi(args):
     if bpp is None: bpp = bpps
     
     lengths = [len(i) for i in inp]
-    print('Movie lengths :'+str(lengths))
+    print(('Movie lengths :'+str(lengths)))
     Nmax = min(lengths)
-    frames = range(*frame_slice.indices(Nmax))
+    frames = list(range(*frame_slice.indices(Nmax)))
     
     if args.clip == 0:
         map = linspace(0., 2.**(bpps - bpp), 2**bpps)
@@ -426,14 +426,14 @@ def make(cinename,**kwargs):
     
     args = set_parser(cineList)
 #    args = python_parser()
-    print(args.cines)
+    print((args.cines))
     argList = dir(args)
-    for kwarg in kwargs.keys():
+    for kwarg in list(kwargs.keys()):
         if kwarg in argList:
             print('Value found, set to the value given in kwarg')
             setattr(args,kwarg,kwargs[kwarg])    
-            print(kwarg,getattr(args,kwarg))
-    print(args.rect)
+            print((kwarg,getattr(args,kwarg)))
+    print((args.rect))
     main(args)
 
 def set_parser(cineList):
@@ -453,7 +453,7 @@ def set_parser(cineList):
     argList = dict(cines=cineList, clip=0, font=os.path.join(script_dir, 'Helvetica.ttf'), framerate=30, gamma=1.0, hist_skip=10, output='%s.avi', quality=75, rect=None, rotate=0, tb=255, td=None, timestamp=False, ts=40, tx=25, ty=50, type='single')
     args = type('Parser',(object,),{})
     
-    for key in argList.keys():
+    for key in list(argList.keys()):
         setattr(args,key,argList[key])
 
     return args

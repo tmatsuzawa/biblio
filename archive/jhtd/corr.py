@@ -25,7 +25,7 @@ def spatial_corr(data, N=1024, Dt=10, outdir='/Users/npmitchell/Dropbox/Soft_Mat
 
     for p in range(3):
         for k in range(Dt):
-            key = data.keys()[k]
+            key = list(data.keys())[k]
             Z = np.asarray(data[key])
 
             Ex = np.nanmean(np.power(Z[:N / 2, 0, 0, p], 2))
@@ -42,7 +42,7 @@ def spatial_corr(data, N=1024, Dt=10, outdir='/Users/npmitchell/Dropbox/Soft_Mat
 
 
 def corr_fun():
-    print 'jhtd.corr.corr_fun(): not implemented'
+    print('jhtd.corr.corr_fun(): not implemented')
     sys.exit()
     pass
 
@@ -60,7 +60,7 @@ def time_corr(data, param, N=800, outdir='/Users/npmitchell/Dropbox/Soft_Matter/
     -------
 
     """
-    keys = data.keys()
+    keys = list(data.keys())
 
     figs = {}
 

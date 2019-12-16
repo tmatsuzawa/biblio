@@ -95,7 +95,7 @@ def get_dir(date):
             Dirdata.append(Dir + date)
 
     if not Dirdata:
-        print('No folder found for ' + date)
+        print(('No folder found for ' + date))
         return ''
     if len(Dirdata) == 1:
         return Dirdata[0]
@@ -125,7 +125,7 @@ def os_c(Dir):
             return distant_root + Dir[n:]
         if linux_root_2 in Dir:
             n = len(linux_root_2)
-            print(distant_root + Dir[n:])
+            print((distant_root + Dir[n:]))
             return distant_root + Dir[n:]
 
     if (distant_root in Dir) and 'linux' in sys.platform:

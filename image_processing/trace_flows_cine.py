@@ -153,15 +153,15 @@ if args.end is None:
 else:
     end = args.end
 if args.end > len(cc):
-    print '... Invalid Entry: end you entered is greater than the total number of frames in a cine file.'
+    print('... Invalid Entry: end you entered is greater than the total number of frames in a cine file.')
     sys.exit(1)
 # Print some basic info
-print '##########Info. about cine being processed######################################'
-print 'Total frames:', len(cc)
-print 'Bit depth:', cc.real_bpp
-print 'Frame size: %d x %d' % (cc.width, cc.height)
-print 'Frame rate:', cc.frame_rate
-print '##########Info. about cine being processed######################################'
+print('##########Info. about cine being processed######################################')
+print('Total frames:', len(cc))
+print('Bit depth:', cc.real_bpp)
+print('Frame size: %d x %d' % (cc.width, cc.height))
+print('Frame rate:', cc.frame_rate)
+print('##########Info. about cine being processed######################################')
 
 step = args.step
 todo = np.arange(args.start, end-args.ftm, step)
@@ -175,7 +175,7 @@ if not os.path.exists(outdir):
 
 # Get a median/mean intensity
 if args.subtract_median or args.subtract_mean:
-    print '... Computing a median image'
+    print('... Computing a median image')
     imarr = []
     im_med = np.empty((cc.width, cc.height))
     for frame in todo:
@@ -192,7 +192,7 @@ if args.subtract_median or args.subtract_mean:
         im_mean[im_mean > 255] = 255
         result = Image.fromarray(im_mean)
         result.save(outdir + 'trace_flows_im_mean' + '.png')
-    print '... Done'
+    print('... Done')
 elif args.subtract_first_im:
     first_im = np.asarray(cc.get_frame(0))
     first_im = fix_frame(first_im, cc.real_bpp)
@@ -206,7 +206,7 @@ elif args.subtract_ref:
 # If the frames are not already saved, or if we are to overwrite, go through and sum adjacent frames
 if len(glob.glob(outdir + 'trace_flows*.png')) < len(todo) or args.overwrite:
     for (start, kk) in zip(todo, np.arange(len(todo))):
-        print 'start=' + str(start) + ', index = ' + str(kk) + '/' + str(len(todo))
+        print('start=' + str(start) + ', index = ' + str(kk) + '/' + str(len(todo)))
         end = start + args.ftm
         # initialize
         imsum = np.zeros((cc.height, cc.width))

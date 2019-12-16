@@ -252,17 +252,17 @@ def vfield(sigma, modes, fignum=1):
 
 def suf(args, no_points=True):
     s = ''
-    greek = dict((zip([-6, -3, -2, -1, 0, 2, 3, 6], ['mu', 'm', 'c', 'd', '', 'h', 'k', 'M'])))
+    greek = dict((list(zip([-6, -3, -2, -1, 0, 2, 3, 6], ['mu', 'm', 'c', 'd', '', 'h', 'k', 'M']))))
 
-    for key in args.keys():
+    for key in list(args.keys()):
         if type(args[key]) == int:
             add = str(args[key])
         if type(args[key]) == float:
             if no_points:
                 ndigit = np.ceil(np.log10(args[key]))
                 ndigit = ndigit - 2 + (1 if np.sign(ndigit) > 0 else 0)
-                i = np.argmin(np.abs(np.asarray(greek.keys()) - ndigit))
-                n = greek.keys()[i]
+                i = np.argmin(np.abs(np.asarray(list(greek.keys())) - ndigit))
+                n = list(greek.keys())[i]
                 name = greek[n]
                 add = str(int(round(args[key] * 10 ** (-n)))) + name
 

@@ -27,7 +27,7 @@ def collect_lines(xy, BL, bs, climv):
     line_segments : matplotlib.collections.LineCollection
         Collection of line segments
     """
-    lines = [zip(xy[BL[i, :], 0], xy[BL[i, :], 1]) for i in range(len(BL))]
+    lines = [list(zip(xy[BL[i, :], 0], xy[BL[i, :], 1])) for i in range(len(BL))]
     line_segments = LineCollection(lines,  # Make a sequence of x,y pairs
                                    linewidths=(1.),  # could iterate over list
                                    linestyles='solid',
@@ -61,13 +61,13 @@ def pf_mlabplot(X, Y, Z, C, fname, XYZboundary=np.array([]), SZ=800, elang=75, a
     from mayavi import mlab
     # Define the points in 3D space
     # including color code based on Z coordinate.
-    print 'Setting up figure...'
+    print('Setting up figure...')
     mlab.close(all=True)
     fig = mlab.figure(size=(1600, 1200))
     pts = mlab.points3d(X, Y, Z, C)
 
     # Triangulate based on X, Y with Delaunay 2D algorithm.
-    print 'Triangulating points...'
+    print('Triangulating points...')
     mesh = mlab.pipeline.delaunay2d(pts)
 
     # Remove the point representation from the plot
@@ -136,10 +136,10 @@ def pf_mlabplot(X, Y, Z, C, fname, XYZboundary=np.array([]), SZ=800, elang=75, a
             SZY = SZ
 
     if fname == '':
-        print 'fname =', fname, '\n --> so showing image...'
+        print('fname =', fname, '\n --> so showing image...')
         mlab.show()
     else:
-        print 'fname =', fname, '\n --> so saving image...'
+        print('fname =', fname, '\n --> so saving image...')
         mlab.savefig(fname, size=(SZX, SZY))
 
     mlab.close('all')
@@ -152,10 +152,10 @@ def pf_display_2panel(x, y, C0, C1, title0, title1='', vmin='auto', vmax='auto',
     fig, ax = plt.subplots(1, 2)
     if isinstance(vmin, str):
         vmin = min(np.nanmin(C0[:]), np.nanmin(C1[:]))
-        print 'vmin=', vmin
+        print('vmin=', vmin)
     if isinstance(vmax, str):
         vmax = max(np.nanmax(C0[:]), np.nanmax(C1[:]))
-        print 'vmax=', vmax
+        print('vmax=', vmax)
     # scatter scale (for color scale)
     scsc0 = ax[0].scatter(x, y, c=C0, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
     scsc1 = ax[1].scatter(x, y, c=C1, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
@@ -166,7 +166,7 @@ def pf_display_2panel(x, y, C0, C1, title0, title1='', vmin='auto', vmax='auto',
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     if np.nanmax(C0) > np.nanmax(C1):
-        print 'maxC0>maxC1'
+        print('maxC0>maxC1')
         fig.colorbar(scsc0, cax=cbar_ax)
     else:
         fig.colorbar(scsc1, cax=cbar_ax)
@@ -199,10 +199,10 @@ def pf_display_vector(x, y, C0, C1, varchar, title='', subscripts='cartesian', v
     fig, ax = plt.subplots(1, 2)
     if isinstance(vmin, str):
         vmin = min(np.nanmin(C0[:]), np.nanmin(C1[:]))
-        print 'vmin=', vmin
+        print('vmin=', vmin)
     if isinstance(vmax, str):
         vmax = max(np.nanmax(C0[:]), np.nanmax(C1[:]))
-        print 'vmax=', vmax
+        print('vmax=', vmax)
     # scatter scale (for color scale)
     scsc0 = ax[0].scatter(x, y, c=C0, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
     scsc1 = ax[1].scatter(x, y, c=C1, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
@@ -211,7 +211,7 @@ def pf_display_vector(x, y, C0, C1, varchar, title='', subscripts='cartesian', v
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     if np.nanmax(C0) > np.nanmax(C1):
-        print 'maxC0>maxC1'
+        print('maxC0>maxC1')
         fig.colorbar(scsc0, cax=cbar_ax)
     else:
         fig.colorbar(scsc1, cax=cbar_ax)
@@ -237,10 +237,10 @@ def pf_display_4panel(x, y, C0, C1, C2, C3, title0, title1='', title2='', title3
     fig, ax = plt.subplots(2, 2)
     if isinstance(vmin, str):
         vmin = min(np.nanmin(C0[:]), np.nanmin(C1[:]))
-        print 'vmin=', vmin
+        print('vmin=', vmin)
     if isinstance(vmax, str):
         vmax = max(np.nanmax(C0[:]), np.nanmax(C1[:]))
-        print 'vmax=', vmax
+        print('vmax=', vmax)
     # scatter scale (for color scale)
     scsc0 = ax[0, 0].scatter(x, y, c=C0, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
     ax[0, 1].scatter(x, y, c=C1, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
@@ -287,10 +287,10 @@ def pf_display_tensor(x, y, C0, C1, C2, C3, varchar, title='', subscripts='carte
     fig, ax = plt.subplots(2, 2)
     if isinstance(vmin, str):
         vmin = min(np.nanmin(C0[:]), np.nanmin(C1[:]))
-        print 'vmin=', vmin
+        print('vmin=', vmin)
     if isinstance(vmax, str):
         vmax = max(np.nanmax(C0[:]), np.nanmax(C1[:]))
-        print 'vmax=', vmax
+        print('vmax=', vmax)
     # scatter scale (for color scale)
     scsc0 = ax[0, 0].scatter(x, y, c=C0, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)
     ax[0, 1].scatter(x, y, c=C1, s=ptsz, cmap=cmap, edgecolor='', vmin=vmin, vmax=vmax)

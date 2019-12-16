@@ -51,7 +51,7 @@ TIFF_TAGS = { #Baseline TIFF tags
 }
 
 TIFF_TAGS_I = {}
-for k, (n, t) in TIFF_TAGS.iteritems():
+for k, (n, t) in TIFF_TAGS.items():
     TIFF_TAGS_I[n] = (k, t)
 
 DEFAULT_TAGS = {
@@ -162,7 +162,7 @@ class Tiff(object):
         #Offset of end of IFD tag = offset + 2 [count] + 4 [next_IFD] + 12 * nentries [+1 for strip offset]
         
         self.pack('H', len(tags) + 1)
-        for tag, value in tags.iteritems():
+        for tag, value in tags.items():
             num = tag
             if type(value) not in (list, tuple): value = (value, )
             
@@ -252,7 +252,7 @@ class Tiff(object):
             
     def tag_list(self, page=0):
         tags = []
-        for tag, value in self.mtags[page].iteritems():
+        for tag, value in self.mtags[page].items():
             if type(tag) == int:
                 tags.append((tag, TIFF_TAGS.get(tag, ('?',))[0], value))
                 
@@ -280,7 +280,7 @@ class Tiff(object):
 
     def __getitem__(self, key):
         if type(key) == slice:
-            return map(self.read_page, range(len(self))[key])
+            return list(map(self.read_page, list(range(len(self)))[key]))
 
         return self.read_page(key)
         
@@ -330,7 +330,7 @@ class Tiff(object):
         self._iter_current_frame = -1
         return self
     
-    def next(self):
+    def __next__(self):
         self._iter_current_frame += 1
         if self._iter_current_frame >= len(self):
             raise StopIteration

@@ -5,7 +5,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 try:
     from PIL import Image
 except:
-    print 'Could not import PIL, trying to import Image directly...'
+    print('Could not import PIL, trying to import Image directly...')
     import Image
 import os
 

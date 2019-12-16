@@ -1,5 +1,5 @@
 from numpy import *
-import v4d
+from . import v4d
 from scipy import ndimage
 
 #Make something 4D that looks cool

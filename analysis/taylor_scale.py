@@ -51,7 +51,7 @@ def compute(M, i, Dt=50, display=False):
 
     lambda_R0 = np.mean(E) / np.std(E_dE)
     print('')
-    print(str(M.t[i]) + ' : ' + str(lambda_R0))
+    print((str(M.t[i]) + ' : ' + str(lambda_R0)))
     #    input()
 
     dtheta = np.pi / 100
@@ -85,8 +85,8 @@ def compute(M, i, Dt=50, display=False):
     lambda_Rl_std = np.std(np.asarray(lambda_R_l))
     lambda_Rt_std = np.std(np.asarray(lambda_R_t))
 
-    print(str(M.t[i]) + ' : ' + str(lambda_Rl))
-    print(str(M.t[i]) + ' : ' + str(lambda_Rt))
+    print((str(M.t[i]) + ' : ' + str(lambda_Rl)))
+    print((str(M.t[i]) + ' : ' + str(lambda_Rt)))
 
     #    graphes.graph(angles,E_dE_l,fignum=1,label='ko')
     #    graphes.graph(angles,E_dE_t,fignum=1,label='r^')
@@ -116,10 +116,10 @@ def taylor_scale(M, fignum=1, display=True, label='k^'):
         lambdas, U = compute(M, i, Dt=Dt)
         Urms.append(U)
         if lambda_R == {}:
-            for key in lambdas.keys():
+            for key in list(lambdas.keys()):
                 lambda_R[key] = [lambdas[key]]
         else:
-            for key in lambdas.keys():
+            for key in list(lambdas.keys()):
                 lambda_R[key] += [lambdas[key]]
 
     graphes.semilogx(t_R, lambda_R['t_moy'], fignum=fignum, label=label[0] + '^')

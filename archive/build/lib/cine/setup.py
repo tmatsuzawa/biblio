@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import cine.svn_info
+from . import cine.svn_info
 from distutils.core import setup
 
-print "Installing cine tools revision %s, dated %s." % (cine.svn_info.revision, cine.svn_info.date)
+print("Installing cine tools revision %s, dated %s." % (cine.svn_info.revision, cine.svn_info.date))
 
 setup(
     name='cine',

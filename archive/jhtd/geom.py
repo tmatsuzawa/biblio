@@ -78,7 +78,7 @@ def subset(eigen, omega, cosine, condition, val, type='>'):
     """
     # print(cosine_t['lambda_omega_1'])
     indices = np.where(np.abs(np.asarray(cosine[condition])) > val)[0]
-    print('Subset ratio : ' + str(len(indices) * 100. / len(cosine['lambda_omega_2'])))
+    print(('Subset ratio : ' + str(len(indices) * 100. / len(cosine['lambda_omega_2']))))
 
     eigen_extract = dict2list.extract_dict(eigen, indices)
     cosine_extract = dict2list.extract_dict(cosine, indices)
@@ -111,7 +111,7 @@ def average_values(eigen, omega, cosine, d=3):
     values = [0.32, 0.15, 0.53]
     val = np.zeros(3)
 
-    print(eigen.keys())
+    print((list(eigen.keys())))
     for i in range(d):
         var = np.power(eigen['Lambda_' + str(i)], 2) * omega_2[:, i] * np.power(cosine['lambda_omega_' + str(i)], 2)
         #      print(var.shape)
@@ -122,7 +122,7 @@ def average_values(eigen, omega, cosine, d=3):
     print("")
     print("<omega^2 L^2 cos^2 > :")
     for i in range(d):
-        print(str(val[i]) + " (" + str(values[i]) + ")")
+        print((str(val[i]) + " (" + str(values[i]) + ")"))
 
     values = [0.38, 0.11, 0.51]
     print("")
@@ -134,7 +134,7 @@ def average_values(eigen, omega, cosine, d=3):
 
     val = val / np.sum(np.power(val, 1))
     for i in range(d):
-        print(str(val[i]) + " (" + str(values[i]) + ")")
+        print((str(val[i]) + " (" + str(values[i]) + ")"))
 
     # odd quantities
     values = [-0.63, 0.46, 1.17]
@@ -147,7 +147,7 @@ def average_values(eigen, omega, cosine, d=3):
 
     val = val / np.sum(np.power(val, 1))
     for i in range(d):
-        print(str(val[i]) + " (" + str(values[i]) + ")")
+        print((str(val[i]) + " (" + str(values[i]) + ")"))
 
     values = [-0.51, 0.51, 1.06]
     print("")
@@ -159,7 +159,7 @@ def average_values(eigen, omega, cosine, d=3):
 
     val = val / np.sum(np.power(val, 1))
     for i in range(d):
-        print(str(val[i]) + " (" + str(values[i]) + ")")
+        print((str(val[i]) + " (" + str(values[i]) + ")"))
 
 
 def norm(u, axis=1):
@@ -248,11 +248,11 @@ if __name__ == '__main__':
     N = 24000
     step = 500
 
-    print(len(fileList))
+    print((len(fileList)))
     for i, file in enumerate(fileList[:N]):
 
         if i % 100 == 0:
-            print(str(i * 100 // N) + ' %')
+            print((str(i * 100 // N) + ' %'))
             #    file ='/Users/stephane/Documents/JHT_Database/Data_sample_2015_10_07/Serie/isotropic1024coarse_'+str(i)+'.h5'
         try:
             data = read_jhdt(file)
@@ -268,7 +268,7 @@ if __name__ == '__main__':
         eigen_t = dict2list.add_list_to_dict(eigen_t, eigen)
         cosine_t = dict2list.add_list_to_dict(cosine_t, cosine)
 
-    print("Percentage of data files corrupted : " + str((100 * count) / len(fileList)) + " %")
+    print(("Percentage of data files corrupted : " + str((100 * count) / len(fileList)) + " %"))
 
     plots(eigen, omega, cosine, step)
 
@@ -276,7 +276,7 @@ if __name__ == '__main__':
     # print(cosine_t['lambda_omega_1'])
     indices = np.where(np.abs(np.asarray(cosine_t['lambda_omega_1'])) > T)[0]
 
-    print(len(indices) * 100. / len(cosine_t['lambda_omega_2']))
+    print((len(indices) * 100. / len(cosine_t['lambda_omega_2'])))
 
     eigen_extract = dict2list.extract_dict(eigen_t, indices)
     cosine_extract = dict2list.extract_dict(cosine_t, indices)

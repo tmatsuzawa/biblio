@@ -32,7 +32,7 @@ def get(M, field, frame, Dt=1, Dt_filt=1, compute=False, **kwargs):
         Uy = getattr(M, 'Uy')[..., frame:frame + Dt]
 
         d = len(M.shape())
-        tup = tuple(range(1, d + 1) + [0])
+        tup = tuple(list(range(1, d + 1)) + [0])
 
         data = np.transpose(np.asarray([Ux, Uy]), tup)
         return data

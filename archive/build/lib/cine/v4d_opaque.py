@@ -7,7 +7,7 @@ from OpenGL.GL.ARB.framebuffer_object import *
 from OpenGL.GL.ARB.multitexture import *
 
 try: from OpenGL.GLUT.freeglut import *
-except: print "No freeglut!"
+except: print("No freeglut!")
 
 from OpenGL.GLU import *
 from numpy import *
@@ -15,7 +15,7 @@ import sys, os, shutil, glob
 import time
 #from cine import Cine, Tiff
 #from sparse4d import Sparse4D
-from cine import Sparse4D
+from .cine import Sparse4D
 import argparse
 import Image
 import traceback
@@ -132,7 +132,7 @@ def get_line(f):
 def eval_str_commands(l):
     ns = basic_namespace.copy()
     dummy = eval('True', ns) #import __builtins__, etc.
-    import_vars = ns.keys()   
+    import_vars = list(ns.keys())   
 
     for k, v in l: ns[k] = eval(v, ns)
     for var in import_vars: del ns[var]
@@ -143,11 +143,11 @@ def eval_str_commands(l):
 def get_setup(filter='*.setup', search_dirs=[''], filter_vars={}, default_namespace=basic_namespace, first_line='**setup**', verbose=False, default={}, skip_filters=False, get_string=False):
     default_namespace = default_namespace.copy()
     dummy = eval('True', default_namespace) #import __builtins__, etc.
-    import_vars = default_namespace.keys()
+    import_vars = list(default_namespace.keys())
     
     f = None
     #print search_dirs
-    str_commands = filter_vars.items()
+    str_commands = list(filter_vars.items())
     
     for dir in search_dirs:
         for fn in sorted(glob.glob(os.path.join(dir, filter))):
@@ -158,40 +158,40 @@ def get_setup(filter='*.setup', search_dirs=[''], filter_vars={}, default_namesp
             if first_line and not line.startswith(first_line): continue
             else: line = get_line(f)
             
-            if verbose >= 1: print "--%s--" % fn
+            if verbose >= 1: print("--%s--" % fn)
             
             while line.startswith('filter:'):
                 line = line[len('filter:'):].strip()
                 if not skip_filters:
                     try:
                         filter = eval(line, filter_vars)
-                        if verbose >= 1: print "   '%s' -> %s" % (line, bool(filter))
+                        if verbose >= 1: print("   '%s' -> %s" % (line, bool(filter)))
                         if not filter:
                             break
                     except:
-                        if verbose >= 1: print "   Couldn't evaluate line '%s'" % line
+                        if verbose >= 1: print("   Couldn't evaluate line '%s'" % line)
                         break
                     
                 line = get_line(f)
                 
             else: #Passed filters!
-                if verbose >= 1: print "   Passed all filters, evaluating!"
+                if verbose >= 1: print("   Passed all filters, evaluating!")
                 namespace = basic_namespace.copy()
                 namespace.update(filter_vars)
                 
                 try:
                     while line is not None:
-                        var, statement = map(str.strip, line.split('=', 1))
+                        var, statement = list(map(str.strip, line.split('=', 1)))
                         if verbose >= 2:
-                            print 'Evaluating: "%s" -> "%s"' % (var, statement)
+                            print('Evaluating: "%s" -> "%s"' % (var, statement))
                         namespace[var] = eval(statement, namespace)
                         if verbose >= 1:
-                            print '%s = %s' % (var, namespace[var])
+                            print('%s = %s' % (var, namespace[var]))
                         str_commands.append((var, statement))
                         
                         line = get_line(f)
                 except:
-                    print "Error evaulating '%s' in setup file '%s' -- aborting setup that passed filters!" % (line, fn)
+                    print("Error evaulating '%s' in setup file '%s' -- aborting setup that passed filters!" % (line, fn))
                     continue
                 
                 
@@ -203,7 +203,7 @@ def get_setup(filter='*.setup', search_dirs=[''], filter_vars={}, default_namesp
                     return (fn, namespace)
                     
     else:
-        if verbose >= 1: print "No valid setup files found, returning default."
+        if verbose >= 1: print("No valid setup files found, returning default.")
         if get_string:
             return (None, default, str_commands)
         else:
@@ -215,12 +215,12 @@ def make_movie(source, sequence, export_dir, s=slice(None), window_kwargs={}):
     
     SEQUENCE = sequence
     
-    print 'Exporting movie to %s' % export_dir
+    print('Exporting movie to %s' % export_dir)
     if not os.path.exists(export_dir):
         os.mkdir(export_dir)
     else:
-        print "Export directory already exists!  Overwrite? [y/N] (All files will be deleted!)"
-        answer = raw_input()
+        print("Export directory already exists!  Overwrite? [y/N] (All files will be deleted!)")
+        answer = input()
         if answer.lower().startswith('y'):
             shutil.rmtree(export_dir)
             os.mkdir(export_dir)
@@ -244,7 +244,7 @@ def make_movie(source, sequence, export_dir, s=slice(None), window_kwargs={}):
 #        TEXTURE_PERSPECTIVE_SCALE = 0
     EDGES *= array([[DATA.shader_vars['size_x'], DATA.shader_vars['size_y'], DATA.shader_vars['size_z']]]).T
 
-    FRAMES = range(*s.indices(len(DATA)))
+    FRAMES = list(range(*s.indices(len(DATA))))
 
     WINDOW.start()
 
@@ -271,9 +271,9 @@ def show(source, s=slice(None), window_name='4d viewer', mem_buffer=True, window
     #if 'perspective' in DATA.header:
     #    TEXTURE_PERSPECTIVE_SCALE = 0.0
     
-    FRAMES = range(*s.indices(len(DATA)))
+    FRAMES = list(range(*s.indices(len(DATA))))
      
-    print '''----Keys----
+    print('''----Keys----
 wasdqe -> Rotate volume
 zx -> Zoom
 i -> Reset rotation
@@ -303,7 +303,7 @@ QAWSEDRFTGYH -> Adjust display extents
 u -> Reset display extents
 b -> Toggle outline
 n -> Toggle background color
-'''
+''')
 #90 -> Adjust x shear
 #78 -> Adjust perspective correction
 
@@ -401,7 +401,7 @@ glUniforms = {
 
 def set_uniforms(program, **vars):
     
-    for key, val in vars.iteritems():
+    for key, val in vars.items():
         val = asarray(val)
         if not val.shape: val.shape = (1,)
         
@@ -463,7 +463,7 @@ def tock(message=''):
         return None
 
     now = time.time()
-    print message + '%.3f' % (now - TICK_TIME)
+    print(message + '%.3f' % (now - TICK_TIME))
     TICK_TIME = now
     
 I3x = lambda x, y, z: x
@@ -578,14 +578,14 @@ class Image4D(object):
                     setup_dirs, filter_vars, default={'x_func':I3x, 'y_func':I3y, 'z_func':I3z})
         
         if self.setup_file:
-            print "Using 3d setup file: %s" % self.setup_file
+            print("Using 3d setup file: %s" % self.setup_file)
             for fn, func in zip(('x_func', 'y_func', 'z_func'), (I3x, I3y, I3z)):
                 if fn not in self.setup:
-                    print "Warning: '%s' not in setup file -- no correction applied on this axis." % fn
+                    print("Warning: '%s' not in setup file -- no correction applied on this axis." % fn)
                     self.setup[fn] = func
         
         else:
-            print "No filter matching setup file found; no perspective correction applied."
+            print("No filter matching setup file found; no perspective correction applied.")
             
         #print self.setup
          
@@ -799,15 +799,15 @@ class FuncSetter(object):
     def __set__(self, obj, val):
         try:
             if self.glut_func is not None: self.glut_func(val)
-            else: print 'Warning: %s property is ignored.' % self.prop_name
+            else: print('Warning: %s property is ignored.' % self.prop_name)
         except:
-            print "Failed to set callback for %s" % self.prop_name
+            print("Failed to set callback for %s" % self.prop_name)
         
         
 try:
     MWF = glutMouseWheelFunc
 except:
-    print "Warning: mouse scroll wheel disabled."
+    print("Warning: mouse scroll wheel disabled.")
     MWF = None
         
 
@@ -935,9 +935,9 @@ class GLUTWindow(object):
             self.volume_shader = compileProgram(self.volume_shader_frag,
                     back_buffer=1, volume=0, brightness=2. / OPACITY, opacity=OPACITY)
             
-        except Exception, err:
-            print "Shader compile error: "
-            for l in err: print l
+        except Exception as err:
+            print("Shader compile error: ")
+            for l in err: print(l)
             #QtCore.QEventLoop.exit()
             sys.exit(1)
             
@@ -1203,7 +1203,7 @@ def movie_draw_scene():
     
         fn = os.path.join(EXPORT_DIR, '%08d.tga' % FRAME_COUNT)
         WINDOW.screenshot(fn)
-        print fn
+        print(fn)
         FRAME_COUNT += 1
     
     
@@ -1414,7 +1414,7 @@ def draw_scene():
             R = rot_y(AUTOROTATE_SPEED * elapsed, R)
             #R = dot(rot_y(AUTOROTATE_SPEED * elapsed), R)
 
-        display_settings = (FOV, int(CURRENT_FRAME), EYE_SPLIT, map(tuple, R), DISPLAY_3D,
+        display_settings = (FOV, int(CURRENT_FRAME), EYE_SPLIT, list(map(tuple, R)), DISPLAY_3D,
                             BRIGHTNESS, WINDOW.width, WINDOW.height,
                             MOUSE_CAPTURED, FOV, Z_SHIFT, DRAW_BOX, Z_STEP,
                             #TEXTURE_SHEAR, TEXTURE_PERSPECTIVE_SCALE,
@@ -1435,7 +1435,7 @@ def draw_scene():
                 FRAME_TIMES.append(time.time() - current_time)
                 
                 if current_time - FRAME_COUNT_START > 1:
-                    print '%5.1f' % (1. / mean(FRAME_TIMES))
+                    print('%5.1f' % (1. / mean(FRAME_TIMES)))
                     FRAME_COUNT_START = current_time
                     FRAME_TIMES = []
 
@@ -1447,7 +1447,7 @@ def mouse_wheel_func(button, dir, x, y):
     Z_SHIFT *= (1 + Z_RATE * dir)
 
 def find_new_file(name_str, max=10000):
-    for i in xrange(max):
+    for i in range(max):
         if not os.path.exists(name_str % i):
             return name_str % i
     else:
@@ -1505,20 +1505,20 @@ def key_pressed(*args):
         DISPLAY_3D = not DISPLAY_3D
     elif args[0] in ('[', '{'):
         EYE_SPLIT /= 2**(1./8)
-        print "Total eye shear: %.3f" % (EYE_SPLIT*2)
+        print("Total eye shear: %.3f" % (EYE_SPLIT*2))
     elif args[0] in (']', '}'):
         EYE_SPLIT *= 2**(1./8)
-        print "Total eye shear: %.3f" % (EYE_SPLIT*2)
+        print("Total eye shear: %.3f" % (EYE_SPLIT*2))
     elif args[0] in ('\\', '|'):
         EYE_SPLIT *= -1
     elif args[0] == 'g':
         FOV *= sqrt(2.)
         Z_SHIFT /= sqrt(2.)
-        print 'FOV = %.2f' % FOV
+        print('FOV = %.2f' % FOV)
     elif args[0] == 'h':
         FOV /= sqrt(2.)
         Z_SHIFT *= sqrt(2.)
-        print 'FOV = %.2f' % FOV
+        print('FOV = %.2f' % FOV)
     elif args[0] == 'a':
         display_rot(y = -ROTATE_AMOUNT)
     elif args[0] == 'd':
@@ -1547,7 +1547,7 @@ def key_pressed(*args):
     elif args[0] == 'o':
         CURRENT_FRAME = 0.;
     elif args[0] == 'f':
-        print int(CURRENT_FRAME)
+        print(int(CURRENT_FRAME))
     elif args[0] == 'r':
         AUTOROTATE = not AUTOROTATE
     elif args[0] == 't':
@@ -1567,7 +1567,7 @@ def key_pressed(*args):
             FOV = 45
     elif args[0] == 'P':
         PERSPECTIVE_CORRECT = not PERSPECTIVE_CORRECT
-        print 'Perspective correction: %s' % str(PERSPECTIVE_CORRECT)
+        print('Perspective correction: %s' % str(PERSPECTIVE_CORRECT))
     elif args[0] == '2':
         PRINT_FRAMERATE = not PRINT_FRAMERATE
             
@@ -1578,7 +1578,7 @@ def key_pressed(*args):
             
     elif args[0] == '1':
         fn = find_new_file('%s_frame%03d_%%04d.png' % (BASENAME, int(CURRENT_FRAME)))
-        print "Saving screenshot to " + fn
+        print("Saving screenshot to " + fn)
         SCREENSHOT = fn
         #WINDOW.screenshot(fn)
 
@@ -1598,7 +1598,7 @@ def key_pressed(*args):
 
     elif args[0] == '4':
         USE_ALIGNED = not USE_ALIGNED
-        print 'USE_ALIGNED = %s' % repr(USE_ALIGNED)
+        print('USE_ALIGNED = %s' % repr(USE_ALIGNED))
 
     elif args[0] == 'u':
         EDGES = array([[0., 1]]*3)
@@ -1620,7 +1620,7 @@ def key_pressed(*args):
         
         settings = []
         
-        for k, v in movie_settings.iteritems():
+        for k, v in movie_settings.items():
             if getattr(LAST_MOVIE_SETTINGS, k, None) != v:
                 settings.append('    %s: %s' % (k, v))
         
@@ -1628,7 +1628,7 @@ def key_pressed(*args):
        
         if MOVIE_FILE is None:
             MOVIE_FILE = find_new_file('%s_movie_%%04d.txt' % BASENAME)
-            print "Created movie file: %s" % MOVIE_FILE
+            print("Created movie file: %s" % MOVIE_FILE)
             open(MOVIE_FILE, 'w').write('#Autogenerated on: %s\n\nsource: %s\n\nsingle:\n%s\n' % (time.strftime("%Y %b %d %a %H:%M:%S %Z"), DATA.source.fn, '\n'.join(settings)))
             #, format_array(R[:2, :]), int(CURRENT_FRAME), Z_SHIFT, BRIGHTNESS, DISPLAY_3D, DRAW_BOX, Z_STEP, FOV, format_array(EDGES)))
 
@@ -1648,7 +1648,7 @@ def key_pressed(*args):
         
         EDGES[axis, side] += pm * 0.05
         
-        print '(' + ', '.join('%.2f' % n for n in tuple(EDGES.flatten())) + ')'
+        print('(' + ', '.join('%.2f' % n for n in tuple(EDGES.flatten())) + ')')
     
     elif args[0] == 'n':
         if BACKGROUND_COLOR in BACKGROUND_COLORS:

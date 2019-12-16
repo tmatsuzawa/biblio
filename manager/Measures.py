@@ -46,7 +46,7 @@ Main programm to run the different kind of data analysis :
 def measure(Mlist,start):
     functions=[decay.decay,Fourier.display_fft_vs_t,early_time.isotropy,corr.compute_Ct,corr.spatial_correlation]#]#]#c]#corr.compute_Ct]#]#,,,,taylor_scale.taylor_scale]            
     for i,fun in enumerate(functions):
-        print(str(fun.__name__))
+        print((str(fun.__name__)))
         iterate(Mlist,fun,start)
        
 #    input()
@@ -77,7 +77,7 @@ def iterate(Mlist,fun,i):
             if fignum>0:
                 fun(M,label=label,display=True,fignum=fignum)
                 print(j)                
-                print(M.id.get_id())                
+                print((M.id.get_id()))                
 
 def chose_figure(M,i=0):
     fx_bound = 0.115

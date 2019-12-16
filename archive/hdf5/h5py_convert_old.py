@@ -31,7 +31,7 @@ def get_attributes(obj):
             
             if isinstance(elem,type(f)) or isinstance(elem,type(obj)) or 'Sdata' in str(type(elem)): 
                 #Last boolean condition is bad, but how to do otherwise ???
-                print(str(type(elem)))
+                print((str(type(elem))))
                 unfound = False
                 recursive.append(elem)
 
@@ -72,7 +72,7 @@ def get_attributes(obj):
             
             if isinstance(elem,type(f)) or isinstance(elem,type(obj)) or 'Sdata' in str(type(elem)): 
                 #Last boolean condition is bad, but how to do otherwise ???
-                print(str(type(elem)))
+                print((str(type(elem))))
                 unfound = False
                 recursive.append(elem)
 
@@ -80,7 +80,7 @@ def get_attributes(obj):
                 unfound = False
 
             if unfound:
-                print(str(arg))
+                print((str(arg)))
                 dict_attr.update({str(arg):elem})
         else:
             pass
@@ -116,7 +116,7 @@ def write_attributes(obj):
     #print(dict_attr)
     
 def convert_array(dict_attr,erase=False):
-    for key in dict_attr.keys():
+    for key in list(dict_attr.keys()):
         if type(dict_attr[key])==type(np.zeros(0)):
             if erase==False:
             #    print(key+" converted from np array to List")
@@ -138,7 +138,7 @@ def read(filename,class_obj):
 def read_rec(f):
     
     if True:
-        for key in f.keys():
+        for key in list(f.keys()):
             read_rec(f[key])
     else:
         pass
@@ -148,11 +148,11 @@ def load(obj,data):
     Load a h5py group into the attributes of obj. If the h5py group contains subgroup, recursively saved them
     """
     if isinstance(data,h5py._hl.group.Group):
-        for key,item in data.attrs.items():
+        for key,item in list(data.attrs.items()):
             setattr(obj,key,item)
          #       print(key,getattr(self,key))
                 
-        for key,item in data.items():
+        for key,item in list(data.items()):
             if type(item) is h5py._hl.dataset.Dataset:
                 setattr(obj,key,item.value)
                 #    print(key,getattr(self,key))
@@ -176,10 +176,10 @@ def load_dict(data):
 
 def load_rec(data):
     ans = {}
-    for key,item in data.attrs.items():
+    for key,item in list(data.attrs.items()):
         ans[key] = item         
         
-    for key,item in data.items():
+    for key,item in list(data.items()):
         if type(item) is h5py._hl.dataset.Dataset:
             ans[key] = item.value
         elif type(item) is h5py._hl.group.Group:
@@ -204,7 +204,7 @@ def recursively_load_dict_contents_from_group(h5file, path):
     treat them like dicts and continue to load them recursively.
     """
     ans = {}
-    for key, item in h5file[path].items():
+    for key, item in list(h5file[path].items()):
         if type(item) is h5py._hl.dataset.Dataset:
             ans[key] = item.value
         elif type(item) is h5py._hl.group.Group:
@@ -251,7 +251,7 @@ def open(filename,typ='r'):
     if os.path.exists(filename):
         f = h5py.File(filename,typ)
     else:
-        print("File "+filename+" does not exist")
+        print(("File "+filename+" does not exist"))
         f = h5py.File(filename,'w')
     return f
    # print('done')
@@ -265,7 +265,7 @@ def create(filename,overwrite=True):
         os.remove(filename)
         return create(filename)
     else:
-        print("File "+filename+" already exists, skip ")
+        print(("File "+filename+" already exists, skip "))
         return None,False
         
 """        
@@ -295,7 +295,7 @@ def write_data(f,data,name):
         # print(key)
         grp.attrs[key] = Dict
     if not done:
-        print("Unrecognized : "+str(key) +' of type '+str(type(Dict)))
+        print(("Unrecognized : "+str(key) +' of type '+str(type(Dict))))
             
 def write_rec(f,Dict,key='',grp=None,group=None,t=0,tmax=3):
     """
@@ -316,7 +316,7 @@ def write_rec(f,Dict,key='',grp=None,group=None,t=0,tmax=3):
         if group not in f:
             print("f")
             print(key)
-            print(f.keys())     
+            print((list(f.keys())))     
             print(group)
             s = group
             for key in ['instance','object']:
@@ -338,7 +338,7 @@ def write_rec(f,Dict,key='',grp=None,group=None,t=0,tmax=3):
         else:
             grp = f[group]
 #        print(Dict.keys())            
-        for key in Dict.keys():
+        for key in list(Dict.keys()):
             if t<tmax:#limit the number of recursion to 2 : protection against overflow
                # print(key)
                 write_rec(f,Dict[key],key=key,group=group,grp=grp,t=t+1)
@@ -359,18 +359,18 @@ def write_rec(f,Dict,key='',grp=None,group=None,t=0,tmax=3):
        # print(key)
         grp.attrs[key] = Dict
     if not done:
-        print("Unrecognized : "+str(key) +' of type '+str(type(Dict))) 
+        print(("Unrecognized : "+str(key) +' of type '+str(type(Dict)))) 
         
 def display(Dict,key=None):
     #recursive display of a dictionnary
     if type(Dict)==dict:
         print("")
-        print("iterate "+str(key))
-        for key in Dict.keys():
+        print(("iterate "+str(key)))
+        for key in list(Dict.keys()):
             #print(key)
             display(Dict[key],key=key)
     else:
-        print('     '+key+'  , ' + str(type(Dict)))
+        print(('     '+key+'  , ' + str(type(Dict))))
 
 class Fake:
     def __init__(self):

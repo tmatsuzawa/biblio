@@ -3,8 +3,8 @@ import numpy as np
 
 def add_list_to_dict(a_t,a):
     #concatene a primary dictionnaray (a_t) with a new one (a) in which each field of a_t (and a) are lists
-    for key in a.keys():
-        if key in a_t.keys():
+    for key in list(a.keys()):
+        if key in list(a_t.keys()):
             a_t[key]+=a[key]
         else:
           #  print("No "+key+" key, create a new dict key")
@@ -12,7 +12,7 @@ def add_list_to_dict(a_t,a):
     return a_t
     
 def dict_to_dictlist(d):
-    for key in d.keys():
+    for key in list(d.keys()):
         d[key] = to_1d_list(d[key])
     return d
 
@@ -29,6 +29,6 @@ def to_1d_list(a,d=3,t=False):
 
 def extract_dict(d,indices):
     d_extract = {}
-    for key in d.keys():
+    for key in list(d.keys()):
         d_extract[key] = np.asarray(d[key])[indices]
     return d_extract

@@ -80,7 +80,7 @@ def interpolate_using_mask_new(arr, mask, method='cubic'):
             xx = stack_m(xx)
             m = yy
             yy = stack_m(yy)
-        print xx.shape, yy.shape
+        print(xx.shape, yy.shape)
 
 
         arr_interp = []
@@ -93,7 +93,7 @@ def interpolate_using_mask_new(arr, mask, method='cubic'):
 
 def get_mask_for_unphysical(U, cutoffU=2000., fill_value=99999., verbose=True):
     """
-    Returns a mask (N-dim boolean array). If elements were below/above a cutoff, np.nan, or np.inf, then they get masked.
+    Returns a mask (N-d∂im boolean array). If elements were below/above a cutoff, np.nan, or np.inf, then they get masked.
     Parameters
     ----------
     U: array-like
@@ -109,17 +109,17 @@ def get_mask_for_unphysical(U, cutoffU=2000., fill_value=99999., verbose=True):
     """
     U = np.array(U)
     if verbose:
-        print '...Note that nan/inf values in U are replaced by ' + str(fill_value)
-        print '...number of invalid values (nan and inf) in the array: ' + str(np.isnan(U).sum() + np.isinf(U).sum())
-        print '...number of nan values in U: ' + str(np.isnan(U).sum())
-        print '...number of inf values in U: ' + str(np.isinf(U).sum()) + '\n'
+        print('...Note that nan/inf values in U are replaced by ' + str(fill_value))
+        print('...number of invalid values (nan and inf) in the array: ' + str(np.isnan(U).sum() + np.isinf(U).sum()))
+        print('...number of nan values in U: ' + str(np.isnan(U).sum()))
+        print('...number of inf values in U: ' + str(np.isinf(U).sum()) + '\n')
 
     # Replace all nan and inf values with fill_value.
     # fix_invalid still enforces a mask on elements with originally invalid values
     U_fixed = ma.fix_invalid(U, fill_value=fill_value)
     n_invalid = ma.count_masked(U_fixed)
     if verbose:
-        print '...number of masked elements by masked_invalid: ' + str(n_invalid)
+        print('...number of masked elements by masked_invalid: ' + str(n_invalid))
     # Update the mask to False (no masking)
     U_fixed.mask = False
 
@@ -131,8 +131,8 @@ def get_mask_for_unphysical(U, cutoffU=2000., fill_value=99999., verbose=True):
     n_greater = ma.count_masked(b) - n_invalid
     n_less = ma.count_masked(c)
     if verbose:
-        print '...number of masked elements greater than cutoff: ' + str(n_greater)
-        print '...number of masked elements less than -cutoff: ' + str(n_less)
+        print('...number of masked elements greater than cutoff: ' + str(n_greater))
+        print('...number of masked elements less than -cutoff: ' + str(n_less))
 
     # Generate a mask for all nonsense values in the array U
     mask = ~(~b.mask * ~c.mask)
@@ -145,7 +145,7 @@ def get_mask_for_unphysical(U, cutoffU=2000., fill_value=99999., verbose=True):
     N = 1
     for i in range(len(U.shape)):
         N *= U.shape[i]
-    print '...total number of unphysical values: ' + str(ma.count_masked(d)) + '  (' + str((float(n_total)/N*100)) + '%)\n'
+    print('...total number of unphysical values: ' + str(ma.count_masked(d)) + '  (' + str((float(n_total)/N*100)) + '%)\n')
     return mask
 
 def get_mask_for_unphysical2(U, low_tld=-2000., high_tld=2000., fill_value=99999., verbose=True):
@@ -166,17 +166,17 @@ def get_mask_for_unphysical2(U, low_tld=-2000., high_tld=2000., fill_value=99999
     """
     U = np.array(U)
     if verbose:
-        print '...Note that nan/inf values in U are replaced by ' + str(fill_value)
-        print '...number of invalid values (nan and inf) in the array: ' + str(np.isnan(U).sum() + np.isinf(U).sum())
-        print '...number of nan values in U: ' + str(np.isnan(U).sum())
-        print '...number of inf values in U: ' + str(np.isinf(U).sum()) + '\n'
+        print('...Note that nan/inf values in U are replaced by ' + str(fill_value))
+        print('...number of invalid values (nan and inf) in the array: ' + str(np.isnan(U).sum() + np.isinf(U).sum()))
+        print('...number of nan values in U: ' + str(np.isnan(U).sum()))
+        print('...number of inf values in U: ' + str(np.isinf(U).sum()) + '\n')
 
     # Replace all nan and inf values with fill_value.
     # fix_invalid still enforces a mask on elements with originally invalid values
     U_fixed = ma.fix_invalid(U, fill_value=fill_value)
     n_invalid = ma.count_masked(U_fixed)
     if verbose:
-        print '...number of masked elements by masked_invalid: ' + str(n_invalid)
+        print('...number of masked elements by masked_invalid: ' + str(n_invalid))
     # Update the mask to False (no masking)
     U_fixed.mask = False
 
@@ -188,8 +188,8 @@ def get_mask_for_unphysical2(U, low_tld=-2000., high_tld=2000., fill_value=99999
     n_greater = ma.count_masked(b) - n_invalid
     n_less = ma.count_masked(c)
     if verbose:
-        print '...number of masked elements greater than cutoff: ' + str(n_greater)
-        print '...number of masked elements less than -cutoff: ' + str(n_less)
+        print('...number of masked elements greater than cutoff: ' + str(n_greater))
+        print('...number of masked elements less than -cutoff: ' + str(n_less))
 
     # Generate a mask for all nonsense values in the array U
     mask = ~(~b.mask * ~c.mask)
@@ -202,7 +202,7 @@ def get_mask_for_unphysical2(U, low_tld=-2000., high_tld=2000., fill_value=99999
     N = 1
     for i in range(len(U.shape)):
         N *= U.shape[i]
-    print '...total number of unphysical values: ' + str(ma.count_masked(d)) + '  (' + str((float(n_total)/N*100)) + '%)\n'
+    print('...total number of unphysical values: ' + str(ma.count_masked(d)) + '  (' + str((float(n_total)/N*100)) + '%)\n')
     return mask
 
 def get_mask_for_unphysical3(U, low_tld=-2000., high_tld=2000., diff_tld=5, fill_value=99999., verbose=True):
@@ -230,17 +230,17 @@ def get_mask_for_unphysical3(U, low_tld=-2000., high_tld=2000., diff_tld=5, fill
         Udiff = np.array([0])
     #print U, Udiff
     if verbose:
-        print '...Note that nan/inf values in U are replaced by ' + str(fill_value)
-        print '...number of invalid values (nan and inf) in the array: ' + str(np.isnan(U).sum() + np.isinf(U).sum())
-        print '...number of nan values in U: ' + str(np.isnan(U).sum())
-        print '...number of inf values in U: ' + str(np.isinf(U).sum()) + '\n'
+        print('...Note that nan/inf values in U are replaced by ' + str(fill_value))
+        print('...number of invalid values (nan and inf) in the array: ' + str(np.isnan(U).sum() + np.isinf(U).sum()))
+        print('...number of nan values in U: ' + str(np.isnan(U).sum()))
+        print('...number of inf values in U: ' + str(np.isinf(U).sum()) + '\n')
 
     # Replace all nan and inf values with fill_value.
     # fix_invalid still enforces a mask on elements with originally invalid values
     U_fixed = ma.fix_invalid(U, fill_value=fill_value)
     n_invalid = ma.count_masked(U_fixed)
     if verbose:
-        print '...number of masked elements by masked_invalid(nan and inf): ' + str(n_invalid)
+        print('...number of masked elements by masked_invalid(nan and inf): ' + str(n_invalid))
     # Update the mask to False (no masking)
     U_fixed.mask = False
 
@@ -258,10 +258,10 @@ def get_mask_for_unphysical3(U, low_tld=-2000., high_tld=2000., diff_tld=5, fill
     n_diff_greater = ma.count_masked(mask_diff_greater)
     n__diff_less = ma.count_masked(mask_diff_less)
     if verbose:
-        print '...number of masked elements greater than cutoff: ' + str(n_greater)
-        print '...number of masked elements less than -cutoff: ' + str(n_less)
-        print '...number of masked elements greater than difference cutoff: ' + str(n_diff_greater)
-        print '...number of masked elements less than -difference cutoff: ' + str(n__diff_less)
+        print('...number of masked elements greater than cutoff: ' + str(n_greater))
+        print('...number of masked elements less than -cutoff: ' + str(n_less))
+        print('...number of masked elements greater than difference cutoff: ' + str(n_diff_greater))
+        print('...number of masked elements less than -difference cutoff: ' + str(n__diff_less))
 
     # Generate a mask for all nonsense values in the array U
     mask = ~(~mask_greater.mask * ~mask_less.mask * ~mask_diff_greater.mask * ~mask_diff_less.mask)
@@ -275,7 +275,7 @@ def get_mask_for_unphysical3(U, low_tld=-2000., high_tld=2000., diff_tld=5, fill
     for i in range(len(U.shape)):
         N *= U.shape[i]
     if verbose:
-        print '...total number of unphysical values: ' + str(ma.count_masked(U_masked_unphysical)) + '  (' + str((float(n_total)/N*100)) + '%)\n'
+        print('...total number of unphysical values: ' + str(ma.count_masked(U_masked_unphysical)) + '  (' + str((float(n_total)/N*100)) + '%)\n')
     #print mask
     #print U_masked_unphysical
     return mask
@@ -353,17 +353,17 @@ def clean_vdata(M, cutoffU=2000, fill_value=np.nan, verbose=True):
     -------
 
     """
-    print 'Cleaning M.Ux...'
+    print('Cleaning M.Ux...')
     mask = get_mask_for_unphysical(M.Ux, cutoffU=cutoffU, fill_value=fill_value, verbose=verbose)
     Ux_filled_with_nans = fill_unphysical_with_sth(M.Ux, mask, fill_value=fill_value)
     Ux_interpolated = interpolate_using_mask(Ux_filled_with_nans, mask)
     M.Ux[:]= Ux_interpolated[:]
-    print 'Cleaning M.Uy...'
+    print('Cleaning M.Uy...')
     mask = get_mask_for_unphysical(M.Uy, cutoffU=cutoffU, fill_value=fill_value, verbose=verbose)
     Uy_filled_with_nans = fill_unphysical_with_sth(M.Uy, mask, fill_value=fill_value)
     Uy_interpolated = interpolate_using_mask(Uy_filled_with_nans, mask)
     M.Uy[:]= Uy_interpolated[:]
-    print '...Cleaning Done.'
+    print('...Cleaning Done.')
     return M
 
 
@@ -587,7 +587,7 @@ def interpolate_1Darrays(x, data, xint=None, xnum=None, xmax=None, xmin=None, mo
     elif xint is None and xnum is not None:
         xint = np.abs(xmax - xmin) / float(xnum)
     elif xint is not None and xnum is not None:
-        print 'WARNING: Both x interval and xnum were provided! Ignoring provided x interval...'
+        print('WARNING: Both x interval and xnum were provided! Ignoring provided x interval...')
         xint = np.abs(xmax - xmin) / float(xnum)
 
     xnew = np.arange(xmin, xmax, xint)
@@ -605,10 +605,10 @@ def interpolate_1Darrays(x, data, xint=None, xnum=None, xmax=None, xmin=None, mo
 def smooth(x, window_len=11, window='hanning'):
     """smooth the data using a window with requested size.
 
-    This method is based on the convolution of a scaled window with the signal.
+    This method is based on the convolution of a scaled window with a given signal.
     The signal is prepared by introducing reflected copies of the signal
     (with the window size) in both ends so that transient parts are minimized
-    in the begining and end part of the output signal.
+    in the beginning and end part of the output signal.
 
     input:
         x: the input signal
@@ -628,23 +628,23 @@ def smooth(x, window_len=11, window='hanning'):
     see also:
 
     numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
-    scipy.signal.lfilter
+    scipy.signal.filter
 
     TODO: the window parameter could be the window itself if an array instead of a string
     NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
     """
 
     if x.ndim != 1:
-        raise ValueError, "smooth only accepts 1 dimension arrays."
+        raise ValueError("smooth() only accepts 1 dimension arrays.")
 
     if x.size < window_len:
-        raise ValueError, "Input vector needs to be bigger than window size."
+        raise ValueError("Input vector needs to be bigger than window size.")
 
     if window_len < 3:
         return x
 
     if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+        raise ValueError("Window is one of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
 
     s = np.r_[x[window_len - 1:0:-1], x, x[-2:-window_len - 1:-1]]
     # print(len(s))
@@ -654,7 +654,7 @@ def smooth(x, window_len=11, window='hanning'):
         w = eval('np.' + window + '(window_len)')
 
     y = np.convolve(w / w.sum(), s, mode='valid')
-    return y
+    return y[(window_len//2-1):(window_len//2-1)+len(x)]
 
 
 
@@ -754,5 +754,5 @@ def lowpass_filter(signal, dt, f=10):
     signal_f_cut = copy.deepcopy(signal_f)
     signal_f_cut[np.abs(freq) > f] = 0
     signal_cut = ifft(signal_f_cut)
-    print np.sum(np.abs(freq) > f), n
+    print(np.sum(np.abs(freq) > f), n)
     return signal_cut
