@@ -21,6 +21,9 @@ import glob
 from fractions import Fraction
 from math import modf
 import pickle
+import ilpm.vector as vec
+# comment this and plot_fit_curve if it breaks
+import library.basics.std_func as std_func
 
 #Global variables
 #Default color cycle: iterator which gets repeated if all elements were exhausted
@@ -45,7 +48,7 @@ params = {'figure.figsize': __figsize__,
 
 ## Save a figure
 def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, overwrite=True, tight_layout=False,
-         savedata=True, transparent=True, **kwargs):
+         savedata=True, transparent=True, bkgcolor='w', **kwargs):
     """Save a figure from pyplot
     Parameters
     ----------
@@ -90,8 +93,9 @@ def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, over
     ver_no = 0
     while os.path.exists(savepath) and not overwrite:
         # this needs to be fixed. right now, it keeps saving to _000.png
-        savepath = directory + '/' + os.path.split(path)[1][:-len(ext)] + '_%03d.' % ver_no + ext
+        savepath = directory + '/' + os.path.split(path)[1]+ '_%03d.' % ver_no + ext
         ver_no += 1
+
 
 
     if verbose:
@@ -103,7 +107,7 @@ def save(path, ext='pdf', close=False, verbose=True, fignum=None, dpi=None, over
     # Save fig instance... This may fail for python2
     if savedata:
         try:
-            pickle.dump(fig, open(savepath + '_fig.pkl', 'wb'))
+            pickle.dump(fig, open(savepath[:-len(ext)-1] + '_fig.pkl', 'wb'))
         except:
             print('... Could not save a fig instance')
 
@@ -194,7 +198,7 @@ def plotfunc(func, x, param, fignum=1, subplot=111, ax = None, label=None, color
         ax.legend()
     return fig, ax
 
-def plot(x, y, fignum=1, figsize=None, label='', color=None, subplot=None, legend=False, fig=None, ax=None,**kwargs):
+def plot(x, y, fignum=1, figsize=None, label='', color=None, subplot=None, legend=False, fig=None, ax=None, maskon=False, thd=1, **kwargs):
     """
     plot a graph using given x,y
     fignum can be specified
@@ -207,20 +211,35 @@ def plot(x, y, fignum=1, figsize=None, label='', color=None, subplot=None, legen
     elif ax is None:
         ax = plt.gca()
 
+    if x is None:
+        x = np.range(len(y))
+    # Make sure x and y are np.array
+    x, y = np.asarray(x), np.asarray(y)
 
     if len(x) > len(y):
         print("Warning : x and y data do not have the same length")
         x = x[:len(y)]
-    if color is None:
-        ax.plot(x, y, label=label, **kwargs)
+    elif len(y) > len(x):
+        print("Warning : x and y data do not have the same length")
+        y = y[:len(x)]
+    if maskon:
+        mask = get_mask4erroneous_pts(x, y, thd=thd)
     else:
-        ax.plot(x, y, color=color, label=label, **kwargs)
+        mask = [True] * len(x)
+
+    if color is None:
+        ax.plot(x[mask], y[mask], label=label, **kwargs)
+    else:
+        ax.plot(x[mask], y[mask], color=color, label=label, **kwargs)
+
+
+
     if legend:
         ax.legend()
     return fig, ax
 
 
-def plot_saddoughi(fignum=1, fig=None, ax=None, figsize=None, label='', color=None, subplot=None, legend=False, **kwargs):
+def plot_saddoughi(fignum=1, fig=None, ax=None, figsize=None, label='', color='k', alpha=0.6, subplot=None, legend=False, **kwargs):
     """
     plot universal 1d energy spectrum (Saddoughi, 1992)
     """
@@ -234,16 +253,17 @@ def plot_saddoughi(fignum=1, fig=None, ax=None, figsize=None, label='', color=No
     x = np.asarray([1.27151, 0.554731, 0.21884, 0.139643, 0.0648844, 0.0198547, 0.00558913, 0.00128828, 0.000676395, 0.000254346])
     y = np.asarray([0.00095661, 0.0581971, 2.84666, 11.283, 59.4552, 381.78, 2695.48, 30341.9, 122983, 728530])
 
-    if color is None:
-        ax.plot(x, y, label=label, **kwargs)
-    else:
-        ax.plot(x, y, color=color, label=label, **kwargs)
+    ax.plot(x, y, color=color, label=label, alpha=alpha,**kwargs)
     if legend:
         ax.legend()
+    tologlog(ax)
+    labelaxes(ax, '$\kappa \eta$', '$E_{11} / (\epsilon\\nu^5)^{1/4}$')
     return fig, ax
 
 
-def scatter(x, y, ax=None, fignum=1, figsize=None, marker='o', fillstyle='full', label=None, subplot=None, legend=False, **kwargs):
+def scatter(x, y, ax=None, fignum=1, figsize=None, marker='o', fillstyle='full', label=None, subplot=None, legend=False,
+            maskon=False, thd=1,
+            **kwargs):
     """
     plot a graph using given x,y
     fignum can be specified
@@ -258,13 +278,19 @@ def scatter(x, y, ax=None, fignum=1, figsize=None, marker='o', fillstyle='full',
     if len(x.flatten()) > len(y.flatten()):
         print("Warning : x and y data do not have the same length")
         x = x[:len(y)]
+
+    if maskon:
+        mask = get_mask4erroneous_pts(x, y, thd=thd)
+    else:
+        mask = [True] * len(x)
+
     if fillstyle =='none':
         # Scatter plot with open markers
         facecolors = 'none'
         # ax.scatter(x, y, color=color, label=label, marker=marker, facecolors=facecolors, edgecolors=edgecolors, **kwargs)
-        ax.scatter(x, y, label=label, marker=marker, facecolors=facecolors, **kwargs)
+        ax.scatter(x[mask], y[mask], label=label, marker=marker, facecolors=facecolors, **kwargs)
     else:
-        ax.scatter(x, y, label=label, marker=marker, **kwargs)
+        ax.scatter(x[mask], y[mask], label=label, marker=marker, **kwargs)
     if legend:
         plt.legend()
     return fig, ax
@@ -317,7 +343,8 @@ def pdf(data, nbins=10, return_data=False, vmax=None, vmin=None, fignum=1, figsi
         return fig, ax, bins, hist
 
 
-def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full', linestyle='None', label=None, mfc='white', subplot=None, legend=False, figsize=None, **kwargs):
+def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full', linestyle='None', label=None, mfc='white',
+             subplot=None, legend=False, figsize=None, maskon=False, thd=1, **kwargs):
     """ errorbar plot
 
     Parameters
@@ -348,17 +375,21 @@ def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full', lines
         xerr = np.array(xerr)
     if not (isinstance(yerr, int) or isinstance(yerr, float)):
         yerr = np.array(yerr)
-
-    if fillstyle == 'none':
-        ax.errorbar(x, y, xerr=xerr, yerr=yerr, marker=marker, mfc=mfc, linestyle=linestyle, label=label, **kwargs)
+    if maskon:
+        mask = get_mask4erroneous_pts(x, y, thd=thd)
     else:
-        ax.errorbar(x, y, xerr=xerr, yerr=yerr, marker=marker, fillstyle=fillstyle, linestyle=linestyle, label=label, **kwargs)
+        mask = [True] * len(x)
+    if fillstyle == 'none':
+        ax.errorbar(x[mask], y[mask], xerr=xerr[mask], yerr=yerr[mask], marker=marker, mfc=mfc, linestyle=linestyle, label=label, **kwargs)
+    else:
+        ax.errorbar(x[mask], y[mask], xerr=xerr[mask], yerr=yerr[mask], marker=marker, fillstyle=fillstyle, linestyle=linestyle, label=label, **kwargs)
     if legend:
         plt.legend()
     return fig, ax
 
 def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax=None, label=None,
-              legend=False, figsize=None, color_cycle=__color_cycle__, **kwargs):
+              legend=False, figsize=None, color_cycle=__color_cycle__, maskon=False, thd=1, **kwargs):
+
     if ax is None:
         fig, ax = set_fig(fignum, subplot, figsize=figsize)
     else:
@@ -381,13 +412,15 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
         ymin = y - yerr
         ymax = y + yerr
 
-
-    if color is not None:
-        ax.plot(x, y, color=color, label=label, **kwargs)
-        ax.fill_between(x, ymax, ymin, color=color, alpha=alpha_fill)
+    if maskon:
+        mask = get_mask4erroneous_pts(x, y, thd=thd)
     else:
-        ax.plot(x, y,label=label, **kwargs)
-        ax.fill_between(x, ymax, ymin, alpha=alpha_fill)
+        mask = [True] * len(x)
+
+
+    p = ax.plot(x[mask], y[mask], color=color, label=label, **kwargs)
+    color = p[0].get_color()
+    ax.fill_between(x[mask], ymax[mask], ymin[mask], color=color, alpha=alpha_fill)
 
     #patch used for legend
     color_patch = mpatches.Patch(color=color, label=label)
@@ -399,7 +432,7 @@ def errorfill(x, y, yerr, fignum=1, color=None, subplot=None, alpha_fill=0.3, ax
 
 
 ## Plot a fit curve
-def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None, linestyle='--',
+def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, ax=None, figsize=None, linestyle='--',
                    xmin=None, xmax=None, add_equation=True, eq_loc='bl', color=None, label='fit',
                    show_r2=False, return_r2=False, **kwargs):
     """
@@ -417,7 +450,8 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
     fig, ax
     popt, pcov : fit results, covariance matrix
     """
-
+    if ax is None:
+        fig, ax = set_fig(fignum, subplot, figsize=figsize)
     xdata = np.array(xdata)
     ydata = np.array(ydata)
 
@@ -442,10 +476,10 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
         popt, pcov = curve_fit(std_func.linear_func, xdata, ydata)
         if color is None:
             fig, ax = plot(x_for_plot, std_func.linear_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
-                           label=label, figsize=figsize, linestyle=linestyle)
+                           label=label, figsize=figsize, linestyle=linestyle, ax=ax)
         else:
             fig, ax = plot(x_for_plot, std_func.linear_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
-                           label=label, figsize=figsize, color=color, linestyle=linestyle, **kwargs)
+                           label=label, figsize=figsize, color=color, linestyle=linestyle, ax=ax, **kwargs)
 
         if add_equation:
             text = '$y=ax+b$: a=%.2f, b=%.2f' % (popt[0], popt[1])
@@ -457,10 +491,10 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
         popt, pcov = curve_fit(std_func.power_func, xdata, ydata)
         if color is None:
             fig, ax = plot(x_for_plot, std_func.power_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
-                           label=label, figsize=figsize, linestyle=linestyle, **kwargs)
+                           label=label, figsize=figsize, linestyle=linestyle, ax=ax, **kwargs)
         else:
             fig, ax = plot(x_for_plot, std_func.power_func(x_for_plot, *popt), fignum=fignum, subplot=subplot,
-                           label=label, figsize=figsize, color=color, linestyle=linestyle, **kwargs)
+                           label=label, figsize=figsize, color=color, linestyle=linestyle, ax=ax, **kwargs)
 
         if add_equation:
             text = '$y=ax^b$: a=%.2f, b=%.2f' % (popt[0], popt[1])
@@ -470,10 +504,10 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
         popt, pcov = curve_fit(func, xdata, ydata)
         if color is None:
             fig, ax = plot(x_for_plot, func(x_for_plot, *popt), fignum=fignum, subplot=subplot, label=label, figsize=figsize,
-                           linestyle=linestyle, **kwargs)
+                           linestyle=linestyle, ax=ax, **kwargs)
         else:
             fig, ax = plot(x_for_plot, func(x_for_plot, *popt), fignum=fignum, subplot=subplot, label=label, figsize=figsize,
-                           color=color, linestyle=linestyle, **kwargs)
+                           color=color, linestyle=linestyle, ax=ax, **kwargs)
         y_fit = func(xdata, *popt)
     #plot(x_for_plot, std_func.power_func(x_for_plot, *popt))
 
@@ -497,8 +531,8 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, figsize=None,
 
 ## 2D plotsFor the plot you showed at group meeting of lambda converging with resolution, can you please make a version with two x axes (one at the top, one below) one pixel spacing, other PIV pixel spacing, and add a special tick on each for the highest resolution point.
 # (pcolormesh)
-def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None, vmax=None, log10=False, label=None, show=False,
-               cbar=True, cmap='magma', aspect='equal', linewidth=0,  option='scientific', **kwargs):
+def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None, vmax=None, log10=False, label=None,
+               cbar=True, cmap='magma', aspect='equal', option='scientific', ntick=5, tickinc=None, **kwargs):
     """  Color plot of 2D array
     Parameters
     ----------
@@ -540,13 +574,13 @@ def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None
 
     if cbar:
         if vmin is None and vmax is None:
-            add_colorbar(cc, ax=ax, label=label, option=option)
+            add_colorbar(cc, ax=ax, label=label, option=option, ntick=ntick, tickinc=tickinc)
         elif vmin is not None and vmax is None:
-            add_colorbar(cc, ax=ax, label=label, option=option, vmin=vmin)
+            add_colorbar(cc, ax=ax, label=label, option=option, vmin=vmin, ntick=ntick, tickinc=tickinc)
         elif vmin is None and vmax is not None:
-            add_colorbar(cc, ax=ax, label=label, option=option, vmax=vmax)
+            add_colorbar(cc, ax=ax, label=label, option=option, vmax=vmax, ntick=ntick, tickinc=tickinc)
         else:
-            add_colorbar(cc, ax=ax, label=label, option=option, vmin=vmin, vmax=vmax)
+            add_colorbar(cc, ax=ax, label=label, option=option, vmin=vmin, vmax=vmax, ntick=ntick, tickinc=tickinc)
     if aspect == 'equal':
         ax.set_aspect('equal')
     # set edge color to face color
@@ -710,11 +744,20 @@ def legend(ax, remove=False, **kwargs):
 
 
 # Colorbar
-# Scientific format for Color bar- set format=sfmt to activate it
-sfmt=mpl.ticker.ScalarFormatter(useMathText=True)
-# Scientific notation is used for data < 10^-n or data >= 10^m, where n and m are the power limits set using set_powerlimits((n,m))
-sfmt.set_scientific(True)
-sfmt.set_powerlimits((0, 0)) # (n,m): 10^m <= data < 10 ^ -n
+def reset_sfmt():
+    global sfmt
+    # Scientific format for Color bar- set format=sfmt to activate it
+    sfmt = mpl.ticker.ScalarFormatter(useMathText=True)
+    # Scientific notation is used for data < 10^-n or data >= 10^m, where n and m are the power limits set using set_powerlimits((n,m))
+    sfmt.set_scientific(True)
+    sfmt.set_powerlimits((0, 0))  # (n,m): 10^m <= data < 10 ^ -n]
+    # sfmt.format = '$\mathdefault{%1.1f}$'
+reset_sfmt()
+
+def get_sfmt():
+    global sfmt
+    reset_sfmt()
+    return sfmt
 
 def add_colorbar_old(mappable, fig=None, ax=None, fignum=None, label=None, fontsize=__fontsize__,
                  vmin=None, vmax=None, cmap='jet', option='normal', **kwargs):
@@ -759,7 +802,7 @@ def add_colorbar_old(mappable, fig=None, ax=None, fignum=None, label=None, fonts
 
 
 def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', label=None, fontsize=None, option='normal',
-                 tight_layout=True, ticklabelsize=None, aspect='equal', ntick=10, tickinc=None, **kwargs):
+                 tight_layout=True, ticklabelsize=None, aspect='equal', ntick=5, tickinc=None, **kwargs):
     """
     Adds a color bar
 
@@ -777,6 +820,7 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
     -------
 
     """
+    global sfmt
     def get_ticks_for_sfmt(mappable, n=10, inc=0.5, **kwargs):
         """
         Returns ticks for scientific notation
@@ -803,7 +847,6 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
         # ticks = np.linspace(zmin, zmax, 2*n)
         exponent = int(np.floor(np.log10(np.abs(zmax))))
         # ticks = np.around(ticks[1::2], decimals=-exponent + 1)
-
         if tickinc is not None:
             # Specify the increment of ticks!
             dz = inc * 10 ** exponent
@@ -811,8 +854,13 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
         else:
             # Specify the number of ticks!
             exp = int(np.floor(np.log10((zmax - zmin) / n)))
-            dz =  np.round((zmax - zmin) / n, -exp)
+            dz = np.round((zmax - zmin) / n, -exp)
+            # exp = int(np.ceil(np.log10((zmax - zmin) / n)))
+            # dz = (zmax - zmin) / n
             ticks = [i * dz for i in range(int(zmin / dz), int(zmax / dz) + 1)]
+            print(np.log10((zmax - zmin) / n), exp)
+            print((zmax - zmin) / n, dz)
+            print(ticks)
 
         return ticks
 
@@ -835,13 +883,16 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
     if fig is None:
         fig = plt.gcf()
 
+    reset_sfmt()
 
     divider = axes_grid.make_axes_locatable(ax)
     cax = divider.append_axes(location, size='5%', pad=0.15)
     if option == 'scientific_custom':
         ticks = get_ticks_for_sfmt(mappable, n=ntick, inc=tickinc, **kwargs)
         kwargs = remove_vmin_vmax_from_kwargs(**kwargs)
+        # sfmt.format = '$\mathdefault{%1.1f}$'
         cb = fig.colorbar(mappable, cax=cax, format=sfmt, ticks=ticks, **kwargs)
+        # cb = fig.colorbar(mappable, cax=cax, format=sfmt, **kwargs)
     elif option == 'scientific':
         # old but more robust
         kwargs = remove_vmin_vmax_from_kwargs(**kwargs)
@@ -922,7 +973,7 @@ def add_discrete_colorbar(ax, colors, vmin=0, vmax=None, label=None, fontsize=No
 
 def add_colorbar_alone(ax, values, cmap=cmap, label=None, fontsize=None, option='normal',
                  tight_layout=True, ticklabelsize=None, ticklabel=None,
-                 aspect = None, location='right', **kwargs):
+                 aspect = None, location='right', color='k', **kwargs):
     fig = ax.get_figure()
 
     # number of values
@@ -950,9 +1001,9 @@ def add_colorbar_alone(ax, values, cmap=cmap, label=None, fontsize=None, option=
 
     if not label is None:
         if fontsize is None:
-            cb.set_label(label)
+            cb.set_label(label, color=color)
         else:
-            cb.set_label(label, fontsize=fontsize)
+            cb.set_label(label, fontsize=fontsize, color=color)
     if ticklabelsize is not None:
         cb.ax.tick_params(labelsize=ticklabelsize)
 
@@ -1361,6 +1412,7 @@ def draw_power_triangle(ax, x, y, exponent, w=None, h=None, facecolor='none', ed
         x_base, y_base = 10 ** (exp_x + exp_w * 0.5), 10 ** (exp_y + exp_h - (exp_ymax - exp_ymin) / beta)
         x_height, y_height = 10 ** (exp_x - (exp_xmax - exp_xmin) / beta), 10 ** (exp_y + exp_h * 0.6)
 
+
     if set_base_label_one:
         ax.text(x_base, y_base, '1', fontsize=fontsize)
         ax.text(x_height, y_height, '%.2f' % exponent, fontsize=fontsize)
@@ -1484,7 +1536,7 @@ def get_color_list_gradient(color1='greenyellow', color2='darkgreen', n=10):
 
 def hex2rgb(hex):
     """
-    Converts HEX code to RGB in a numpy array
+    Converts a HEX code to RGB in a numpy array
     Parameters
     ----------
     hex: str, hex code. e.g. #B4FBB8
@@ -1500,14 +1552,13 @@ def hex2rgb(hex):
 
 def cname2hex(cname):
     """
-
+    Converts a color registered on matplotlib to a HEX code
     Parameters
     ----------
-    hex: str, hex code. e.g. #B4FBB8
+    cname
 
     Returns
     -------
-    rgb: numpy array. RGB
 
     """
     colors = dict(mpl.colors.BASE_COLORS, **mpl.colors.CSS4_COLORS) # dictionary. key: names, values: hex codes
@@ -1542,12 +1593,12 @@ def set_color_cycle_gradient(ax, color1='greenyellow', color2='navy', n=10):
 def update_figure_params(params):
     """
     update a default matplotlib setting
-    e.g. params = {'legend.fontsize': 'x-large',
-          'figure.figsize': (15, 5),
-         'axes.labelsize': 'x-large',
-         'axes.titlesize':'x-large',
-         'xtick.labelsize':'x-large',
-         'ytick.labelsize':'x-large'}
+    e.g. params = { 'legend.fontsize': 'x-large',
+                    'figure.figsize': (15, 5),
+                    'axes.labelsize': 'x-large',
+                    'axes.titlesize':'x-large',
+                    'xtick.labelsize':'x-large',
+                    'ytick.labelsize':'x-large'}
     Parameters
     ----------
     params: dictionary
@@ -1556,7 +1607,7 @@ def update_figure_params(params):
     -------
 
     """
-   pylab.rcParams.update(params )
+    pylab.rcParams.update(params)
 
 def reset_figure_params():
     pylab.rcParams.update(params)
@@ -1569,7 +1620,7 @@ reset_figure_params()
 
 
 # Embedded plots
-def add_subplot_axes(ax, rect, axisbg='w'):
+def add_subplot_axes(ax, rect, axisbg='w', alpha=1):
     """
     Creates a sub-subplot inside the subplot (ax)
     rect: list, [x, y, width, height] e.g. rect = [0.2,0.2,0.7,0.7]
@@ -1582,8 +1633,8 @@ def add_subplot_axes(ax, rect, axisbg='w'):
     Returns
     -------
     subax, Axes class object
-
     """
+
     fig = plt.gcf()
     box = ax.get_position()
     width = box.width
@@ -1597,16 +1648,39 @@ def add_subplot_axes(ax, rect, axisbg='w'):
     height *= rect[3]
     subax = fig.add_axes([x, y, width,height])
     subax.set_facecolor(axisbg)
+    subax.patch.set_alpha(alpha)
     x_labelsize = subax.get_xticklabels()[0].get_size()
     y_labelsize = subax.get_yticklabels()[0].get_size()
-    x_labelsize *= rect[2]**0.5
-    y_labelsize *= rect[3]**0.5
+    x_labelsize *= rect[2]**0.3
+    y_labelsize *= rect[3]**0.3
     subax.xaxis.set_tick_params(labelsize=x_labelsize)
     subax.yaxis.set_tick_params(labelsize=y_labelsize)
     return subax
 
 
 # sketches
+def draw_circle(ax, x, y, r, linewidth=1, edgecolor='r', facecolor='none', fill=False, **kwargs):
+    """
+    Draws a circle in a figure (ax)
+    Parameters
+    ----------
+    ax
+    x
+    y
+    r
+    linewidth
+    edgecolor
+    facecolor
+    fill
+
+    Returns
+    -------
+
+    """
+    circle = plt.Circle((x, y), r, linewidth=linewidth, edgecolor=edgecolor, facecolor=facecolor, fill=fill, **kwargs)
+    ax.add_artist(circle)
+    return circle
+
 def draw_rectangle(ax, x, y, width, height, angle=0.0, linewidth=1, edgecolor='r', facecolor='none', **kwargs):
     """
     Draws a rectangle in a figure (ax)
@@ -1675,7 +1749,8 @@ def draw_box(ax, xx, yy, w_box=325., h_box=325., xoffset=0, yoffset=0, linewidth
         ... x=0: LEFT of the scale bar, x=1: RIGHT of the scale bar
         ... y=0: LEFT of the scale bar, x=1: RIGHT of the scale bar
 
-    sb_lw:
+    sb_lw: float
+        ... line width of the scale bar
 
     facecolor
     fluidcolor
@@ -1744,7 +1819,41 @@ def approximate_fraction(x, e):
     from x by no more than e."""
     return simplest_fraction_in_interval(x - e, x + e)
 
+def get_mask4erroneous_pts(x, y, thd=1):
+    """
+    Retruns a mask that can be sued to hide erroneous data points for 1D plots
+    ... e.g. x[mask], y[mask] hide the jumps which appear to be false to human eyes
+    ... Uses P = dy/dx / y to determine whether data points appear to be false
+        If P is high, we'd expect a jump. thd is a threashold of P.
+    Parameters
+    ----------
+    x: 1d array
+    y: 1d array
+    thd: float, threshold on P (fractional dy/dx)
 
+    Returns
+    -------
+    mask: 1d bool array
+
+    """
+    fractional_dydx =  np.gradient(y, x) / y
+    mask = np.abs(fractional_dydx) < thd
+    mask = np.roll(mask, 1) # due to the convention of np.gradient
+    return mask
+
+def tight_layout(fig, rect=[0, 0.03, 1, 0.95]):
+    """
+    Reminder for myself how tight_layout works with the ect option
+    fig.tight_layout(rect=rect)
+    Parameters
+    ----------
+    fig
+    rect
+
+    Returns
+    -------
+    """
+    fig.tight_layout(rect=rect)
 
 # data extraction from fig
 def get_scatter_data_from_fig(fig, axis_number=0):
@@ -1770,7 +1879,21 @@ def get_scatter_data_from_fig(fig, axis_number=0):
     return data_list
 
 def get_plot_data_from_fig(fig, axis_number=0):
-    nlines =  len(fig.axes[axis_number].lines)
+    """
+    Returns a list of data included in the figure
+    ... this function extracts data points for fig.ax.lines
+    ... Any other data must be returned
+
+    Parameters
+    ----------
+    fig
+    axis_number
+
+    Returns
+    -------
+
+    """
+    nlines = len(fig.axes[axis_number].lines)
     xlist, ylist = [], []
     for i in range(nlines):
         x = fig.axes[axis_number].lines[i]._xorig

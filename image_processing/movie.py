@@ -301,5 +301,5 @@ if __name__ == "__main__":
         print('SPECIFY a directory where images are stored! Exiting...')
         sys.exit(1)
     else:
-        print('make a movie with glob option using a natural sorting...')
+        print('make a movie with glob option using natural sorting...')
         make_movie(args.imgdir + '/', args.imgdir, framerate=args.framerate, rm_images=False, ext=args.imgtype, option='glob')
