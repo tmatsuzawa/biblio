@@ -17,10 +17,11 @@ import mpl_toolkits.axes_grid as axes_grid
 import itertools
 from scipy import stats
 import numpy as np
-import glob
+import glob, copy
 from fractions import Fraction
 from math import modf
 import pickle
+import seaborn as sns
 import ilpm.vector as vec
 # comment this and plot_fit_curve if it breaks
 import library.basics.std_func as std_func
@@ -31,6 +32,7 @@ import library.basics.std_func as std_func
 __def_colors__ = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 __color_cycle__ = itertools.cycle(['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'])  #matplotliv v2.0
 __old_color_cycle__ = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])  #matplotliv classic
+__cc_seaborn__ = itertools.cycle(sns.color_palette('muted', 10))
 __fontsize__ = 16
 __figsize__ = (8, 8)
 cmap = 'magma'
@@ -198,7 +200,8 @@ def plotfunc(func, x, param, fignum=1, subplot=111, ax = None, label=None, color
         ax.legend()
     return fig, ax
 
-def plot(x, y, fignum=1, figsize=None, label='', color=None, subplot=None, legend=False, fig=None, ax=None, maskon=False, thd=1, **kwargs):
+
+def plot(x, y=None, fignum=1, figsize=None, label='', color=None, subplot=None, legend=False, fig=None, ax=None, maskon=False, thd=1, **kwargs):
     """
     plot a graph using given x,y
     fignum can be specified
@@ -211,8 +214,9 @@ def plot(x, y, fignum=1, figsize=None, label='', color=None, subplot=None, legen
     elif ax is None:
         ax = plt.gca()
 
-    if x is None:
-        x = np.range(len(y))
+    if y is None:
+        y = copy.deepcopy(x)
+        x = np.arange(len(x))
     # Make sure x and y are np.array
     x, y = np.asarray(x), np.asarray(y)
 
@@ -343,7 +347,7 @@ def pdf(data, nbins=10, return_data=False, vmax=None, vmin=None, fignum=1, figsi
         return fig, ax, bins, hist
 
 
-def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full', linestyle='None', label=None, mfc='white',
+def errorbar(x, y, xerr=None, yerr=None, fignum=1, marker='o', fillstyle='full', linestyle='None', label=None, mfc='white',
              subplot=None, legend=False, figsize=None, maskon=False, thd=1, **kwargs):
     """ errorbar plot
 
@@ -369,12 +373,19 @@ def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full', lines
     fig, ax = set_fig(fignum, subplot, figsize=figsize)
     # Make sure that xerr and yerr are numpy arrays
     ## x, y, xerr, yerr do not have to be numpy arrays. It is just a convention. - takumi 04/01/2018
-    x, y = np.array(x), np.array(y)
+    x, y = np.asarray(x), np.asarray(y)
+    if xerr is None:
+        xerr = np.zeros_like(x)
+    if yerr is None:
+        yerr = np.zeros_like(y)
+
     # Make xerr and yerr numpy arrays if they are not scalar. Without this, TypeError would be raised.
     if not (isinstance(xerr, int) or isinstance(xerr, float)):
-        xerr = np.array(xerr)
+        xerr = np.asarray(xerr)
     if not (isinstance(yerr, int) or isinstance(yerr, float)):
-        yerr = np.array(yerr)
+        yerr = np.asarray(yerr)
+
+
     if maskon:
         mask = get_mask4erroneous_pts(x, y, thd=thd)
     else:
@@ -382,7 +393,12 @@ def errorbar(x, y, xerr=0, yerr=0, fignum=1, marker='o', fillstyle='full', lines
     if fillstyle == 'none':
         ax.errorbar(x[mask], y[mask], xerr=xerr[mask], yerr=yerr[mask], marker=marker, mfc=mfc, linestyle=linestyle, label=label, **kwargs)
     else:
-        ax.errorbar(x[mask], y[mask], xerr=xerr[mask], yerr=yerr[mask], marker=marker, fillstyle=fillstyle, linestyle=linestyle, label=label, **kwargs)
+        print(x[mask], y[mask], xerr[mask])
+        ax.errorbar(x[mask], y[mask], xerr=xerr[mask], yerr=yerr[mask],
+                    # marker=marker,
+                    # fillstyle=fillstyle,
+                    # linestyle=linestyle,
+                    label=label, **kwargs)
     if legend:
         plt.legend()
     return fig, ax
@@ -581,8 +597,7 @@ def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None
             add_colorbar(cc, ax=ax, label=label, option=option, vmax=vmax, ntick=ntick, tickinc=tickinc)
         else:
             add_colorbar(cc, ax=ax, label=label, option=option, vmin=vmin, vmax=vmax, ntick=ntick, tickinc=tickinc)
-    if aspect == 'equal':
-        ax.set_aspect('equal')
+    ax.set_aspect(aspect)
     # set edge color to face color
     cc.set_edgecolor('face')
 
@@ -744,17 +759,55 @@ def legend(ax, remove=False, **kwargs):
 
 
 # Colorbar
-def reset_sfmt():
+# def reset_sfmt():
+#     global sfmt
+#     # Scientific format for Color bar- set format=sfmt to activate it
+#     sfmt = mpl.ticker.ScalarFormatter(useMathText=True)
+#     # Scientific notation is used for data < 10^-n or data >= 10^m, where n and m are the power limits set using set_powerlimits((n,m))
+#     sfmt.set_scientific(True)
+#     sfmt.set_powerlimits((0, 0))  # (n,m): 10^m <= data < 10 ^ -n]
+#     # sfmt.format = '$\mathdefault{%1.1f}$'
+
+# Colorbar
+class FormatScalarFormatter(mpl.ticker.ScalarFormatter):
+    """
+    Ad-hoc class to subclass matplotlib.ticker.ScalarFormatter
+    in order to alter the number of visible digits on color bars
+    """
+    def __init__(self, fformat="%03.1f", offset=True, mathText=True):
+        self.fformat = fformat
+        mpl.ticker.ScalarFormatter.__init__(self,useOffset=offset,useMathText=mathText)
+        self.set_scientific(True)
+        # Scientific notation is used for data < 10^-n or data >= 10^m, where n and m are the power limits set using set_powerlimits((n,m))
+        self.set_powerlimits((0, 0))
+    def _set_format(self):
+        """
+        Call this method to change the format of tick labels
+
+
+        Returns
+        -------
+
+        """
+
+        self.format = self.fformat
+        if self._useMathText:
+            self.format = '$%s$' % mpl.ticker._mathdefault(self.format)
+    def _update_format(self, fformat):
+        self.fformat = fformat
+        self._set_format()
+
+def reset_sfmt(fformat="%03.1f"):
     global sfmt
-    # Scientific format for Color bar- set format=sfmt to activate it
-    sfmt = mpl.ticker.ScalarFormatter(useMathText=True)
-    # Scientific notation is used for data < 10^-n or data >= 10^m, where n and m are the power limits set using set_powerlimits((n,m))
-    sfmt.set_scientific(True)
-    sfmt.set_powerlimits((0, 0))  # (n,m): 10^m <= data < 10 ^ -n]
-    # sfmt.format = '$\mathdefault{%1.1f}$'
+    sfmt = FormatScalarFormatter() # Default format: "%03.1f"
+    # sfmt.fformat = fformat # update format
+    # sfmt._set_format() # this updates format for scientific nota
+    sfmt._update_format(fformat)
+
 reset_sfmt()
 
 def get_sfmt():
+    ""
     global sfmt
     reset_sfmt()
     return sfmt
@@ -802,9 +855,12 @@ def add_colorbar_old(mappable, fig=None, ax=None, fignum=None, label=None, fonts
 
 
 def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', label=None, fontsize=None, option='normal',
-                 tight_layout=True, ticklabelsize=None, aspect='equal', ntick=5, tickinc=None, **kwargs):
+                 tight_layout=False, ticklabelsize=None, aspect='equal', ntick=5, tickinc=None, **kwargs):
     """
-    Adds a color bar
+    Adds a color bar.
+
+    - REQUIRES MATPLOTLIB TO BE NEWER THAN 3.2.0
+    ... it is confirmed to fail for matplotlib==3.1.3
 
     e.g.
         fig = plt.figure()
@@ -858,9 +914,9 @@ def add_colorbar(mappable, fig=None, ax=None, fignum=None, location='right', lab
             # exp = int(np.ceil(np.log10((zmax - zmin) / n)))
             # dz = (zmax - zmin) / n
             ticks = [i * dz for i in range(int(zmin / dz), int(zmax / dz) + 1)]
-            print(np.log10((zmax - zmin) / n), exp)
-            print((zmax - zmin) / n, dz)
-            print(ticks)
+            # print(np.log10((zmax - zmin) / n), exp)
+            # print((zmax - zmin) / n, dz)
+            # print(ticks)
 
         return ticks
 
@@ -1789,6 +1845,39 @@ def draw_box(ax, xx, yy, w_box=325., h_box=325., xoffset=0, yoffset=0, linewidth
     ax.spines["bottom"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["left"].set_visible(False)
+
+
+def draw_donut(r1, r2, n=50, ax=None, **kwargs):
+    """
+    Draw a donut using ax.fill()
+    e.g.
+        fig, ax = plt.subplots()
+        draw_donut(4, 10, ax=ax, edgecolor=None, facecolor='r', alpha=0.2)
+        plt.show()
+    Parameters
+    ----------
+    r1
+    r2
+    n
+    ax
+    kwargs
+
+    Returns
+    -------
+
+    """
+    radii = [r1, r2]
+    theta = np.linspace(0, 2*np.pi, n, endpoint=True)
+    xs = np.outer(radii, np.cos(theta))
+    ys = np.outer(radii, np.sin(theta))
+
+    # in order to have a closed area, the circles
+    # should be traversed in opposite directions
+    xs[1,:] = xs[1,::-1]
+    ys[1,:] = ys[1,::-1]
+    ax.fill(np.ravel(xs), np.ravel(ys), **kwargs)
+
+
 
 ## misc.
 def simplest_fraction_in_interval(x, y):

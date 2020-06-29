@@ -6,14 +6,13 @@ from PIL import Image, ImageDraw, ImageFont, ImageColor
 import re
 import argparse
 import sys
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-
 '''Module with functions for making movies
 '''
-# Abs path to ffmpeg
-ffmpeg_path = '/Users/takumi/Documents/git/takumi/library/library/image_processing/ffmpeg'
+
+# path to ffmpeg
+mod_path = os.path.abspath(__file__)
+mod_dir = os.path.dirname(mod_path)
+ffmpeg_path = os.path.join(mod_dir, 'ffmpeg')
 
 
 def make_movie_noah(imgname, movname, indexsz='05', framerate=10, imgdir=None, rm_images=False,
@@ -106,6 +105,7 @@ def make_movie(imgname=None, imgdir=None, movname=None, indexsz='05', framerate=
         else:
             pdir, filename = os.path.split(imgname)
             movname = pdir
+        movname += '_%dfps' % int(framerate)
 
 
     if not option=='glob':

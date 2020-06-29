@@ -6,7 +6,7 @@ Module for read/write
 import os
 import sys
 import numpy as np
-import json
+import json, pandas
 import csv
 import pickle
 import h5py
@@ -23,9 +23,14 @@ def read_json(datafilepath, verbose=True):
 #pickle
 def read_pickle(filename):
     with open(filename, "rb" ) as pickle_in:
-        obj = pickle.load(pickle_in)
+        try:
+            obj = pickle.load(pickle_in)
+        except UnicodeDecodeError:
+            try:
+                obj = pickle.load(pickle_in, encoding="bytes")
+            except:
+                obj = pandas.read_pickle(filename)
     return obj
-
 # csv
 def read_csv(datapath, encoding='utf-8-sig'):
     """
@@ -46,7 +51,7 @@ def read_csv(datapath, encoding='utf-8-sig'):
 
     """
     from io import open
-    with open(datapath, 'rb') as csvfile:
+    with open(datapath, 'r') as csvfile:
         # If the csv file contains UTF-8-BOM in the beginning, make it unicode
         #
         # csvfile = csvfile.read().decode("utf-8-sig").encode("utf-8")
@@ -56,9 +61,15 @@ def read_csv(datapath, encoding='utf-8-sig'):
         data = []
         for i, row in enumerate(reader):
             if i == 0:
-                data_names = [s.decode(encoding).encode('ascii') for s in row]
+                try:
+                    data_names = [s.decode(encoding).encode('ascii') for s in row]
+                except:
+                    data_names = [s for s in row]
             else:
-                data.append([float(s.decode(encoding).encode('ascii')) for s in row])
+                try:
+                    data.append([float(s.decode(encoding).encode('ascii')) for s in row])
+                except:
+                    data.append([float(s) for s in row])
         data = np.array(data).reshape(i, len(data_names))
 
     return data_names, data

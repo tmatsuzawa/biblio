@@ -122,8 +122,6 @@ def count_nans(arr, verbose=True):
         print('no. of nans: %d / %d' % (nnans, np.asarray(arr).size))
     return nnans
 
-
-
 def get_n_largest_values(arr, n=1):
     """
     Return the n largest values of an array in a list
@@ -319,6 +317,102 @@ def get_average_data_from_periodic_data(time, periodic_data, freq=1., interpolat
         return time_short, data_mean, data_std
 
 
+def get_phase_average(x, period_ind=None,
+                      time=None, freq=None, nbins=100,
+                      axis=-1):
+    """
+    Returns phase average of a ND array (generalization of get_average_data_from_periodic_data)
+    ... Assume x is a periodic data, and you are interested in averaging data by locking the phase.
+       This function returns time (a cycle), phase-averaged data, std of the data
+    ... Two methods to do this
+        1. This is easy IF data is spaced evenly in time
+        ... average [x[0], x[period], x[period*2], ...],
+           then average [x[1], x[1+period], x[1+period*2], ...], ...
+        2. Provide a time array as well as data.
+            ... For example, one can give unevenly spaced data (ND array) in time
+               one can take phase average by taking a histogram appropriately
+    ... Arguments for each method:
+        1. x, period_ind
+        2. x, time, freq
+
+    Parameters
+    ----------
+    x: ND array, data
+        ... one of the array shape must must match len(time)
+    period_ind: int
+        ... period in index space
+    time: 1d array, default: None
+        ... time of data
+    freq: float
+        ... frequency of the periodicity of the data
+    nbins: int
+        ... number of points to probe data in the period
+    axis: int, default:-1
+        ... axis number to specify the temporal axis of the data
+
+    Returns
+    -------
+    t_p: time (a single cycle)
+        ... For the method 1, it returns np.arange(nbins)
+    x_pavg: phase-averaged data (N-1)D array
+    x_perr: std of the data by phase averaging (N-1)D array (NOT Standard error)
+    """
+
+    x = np.asarray(x)
+
+    if time is not None:
+        time = np.asarray(time) - np.nanmin(time)
+
+    if freq is None and period_ind is None:
+        raise ValueError('... freq OR period_ind must be given to compute a phase average. Exiting...')
+    if freq is not None and period_ind is not None:
+        raise ValueError(
+            'Both freq and period_ind were given! This is invalid. Specify the period of the given data by specifying one of them!')
+    if period_ind is not None and freq is None:
+        # Phase average when phase is specified by indices
+        # ... Handy if data is taken at constant time
+        # ... residue = indices mod period_ind
+        # ... it averages [x[residue], x[residue + period_ind], x[residue + period_ind*2], x[residue + period_ind*3], ...]
+
+        t_p = np.arange(period_ind)
+
+        shape_pavg = list(x.shape)
+        del shape_pavg[axis]
+        shape_pavg += [period_ind]
+        x_pavg = np.empty(shape_pavg)
+        x_perr = np.empty(shape_pavg)
+        for i in range(period_ind):
+            x_pavg[..., i] = np.nanmean(x.take(indices=range(0, x.shape[axis], period_ind), axis=axis))
+            x_perr[..., i] = np.nanstd(x.take(indices=range(0, x.shape[axis], period_ind), axis=axis))
+        x_pavg = np.swapaxes(x_pavg, axis, -1)
+        x_perr = np.swapaxes(x_perr, axis, -1)
+
+    if freq is not None and period_ind is None:
+        time, x = np.asarray(time), np.asarray(x)
+        time_mod = time % (1./freq)
+
+        period = 1. / freq
+        dt = period / nbins
+        t_p = np.arange(nbins) * dt + dt / 2.
+
+        shape_pavg = list(x.shape)
+        del shape_pavg[axis]
+        shape_pavg += [nbins]
+        x_pavg = np.empty(shape_pavg)
+        x_perr = np.empty(shape_pavg)
+
+        for i in range(nbins):
+            tmin, tmax = t_p[i] - dt / 2., t_p[i] + dt / 2,
+            keep1, keep2 = time_mod >= tmin, time_mod < tmax
+            keep = keep1 * keep2
+
+            indices = np.arange(x.shape[axis])[keep]
+            x_pavg[..., i] = np.nanmean(x.take(indices=indices, axis=axis), axis=0)
+            x_perr[..., i] = np.nanstd(x.take(indices=indices, axis=axis), axis=0)
+
+        x_pavg = np.swapaxes(x_pavg, axis, -1)
+        x_perr = np.swapaxes(x_perr, axis, -1)
+    return t_p, x_pavg, x_perr
 
 # Interpolation / map_coordinates etc.
 def get_values_from_ndarray_at_coord(data_arr, x, y, order=3):
