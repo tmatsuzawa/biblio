@@ -69,9 +69,12 @@ def generate_data_dct_masked(dataPath, threshold=0.0, separation='\t'):
 
     for x in range(0,len(key)):
         dataMasked["var{0}".format(x)] = []  # initialize lists var0, var1,...
-        npDataArray=np.ma.array(data["var{0}".format(x)]) #Use numpy array for masking
-        npMaskedDataArray = np.ma.masked_where(npDataArray < threshold, npDataArray)
-        dataMasked["var{0}".format(x)]= npMaskedDataArray  #Mask values below the threshold
+        npDataArray=np.ma.asarray(data["var{0}".format(x)]) #Use numpy array for masking
+        try:
+            npMaskedDataArray = np.ma.masked_where(npDataArray < threshold, npDataArray)
+            dataMasked["var{0}".format(x)]= npMaskedDataArray  #Mask values below the threshold
+        except:
+            dataMasked["var{0}".format(x)] = None
     return key, dataMasked, counter
 
 

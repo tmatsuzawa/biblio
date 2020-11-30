@@ -257,7 +257,7 @@ def plot_saddoughi(fignum=1, fig=None, ax=None, figsize=None, label='', color='k
     x = np.asarray([1.27151, 0.554731, 0.21884, 0.139643, 0.0648844, 0.0198547, 0.00558913, 0.00128828, 0.000676395, 0.000254346])
     y = np.asarray([0.00095661, 0.0581971, 2.84666, 11.283, 59.4552, 381.78, 2695.48, 30341.9, 122983, 728530])
 
-    ax.plot(x, y, color=color, label=label, alpha=alpha,**kwargs)
+    ax.plot(x, y, color=color, label=label, alpha=alpha, **kwargs)
     if legend:
         ax.legend()
     tologlog(ax)
@@ -548,7 +548,8 @@ def plot_fit_curve(xdata, ydata, func=None, fignum=1, subplot=111, ax=None, figs
 ## 2D plotsFor the plot you showed at group meeting of lambda converging with resolution, can you please make a version with two x axes (one at the top, one below) one pixel spacing, other PIV pixel spacing, and add a special tick on each for the highest resolution point.
 # (pcolormesh)
 def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None, vmax=None, log10=False, label=None,
-               cbar=True, cmap='magma', aspect='equal', option='scientific', ntick=5, tickinc=None, **kwargs):
+               cbar=True, cmap='magma', aspect='equal', option='scientific', ntick=5, tickinc=None,
+               invert_yaxis=False, **kwargs):
     """  Color plot of 2D array
     Parameters
     ----------
@@ -600,6 +601,9 @@ def color_plot(x, y, z, subplot=None, fignum=1, figsize=None, ax=None, vmin=None
     ax.set_aspect(aspect)
     # set edge color to face color
     cc.set_edgecolor('face')
+
+    if invert_yaxis:
+        ax.invert_yaxis()
 
     return fig, ax, cc
 
@@ -1713,7 +1717,61 @@ def add_subplot_axes(ax, rect, axisbg='w', alpha=1):
     subax.yaxis.set_tick_params(labelsize=y_labelsize)
     return subax
 
+# secondary axes
+def add_secondary_yaxis(ax, funcs, label=None, loc='right', log=False, **kwargs):
+    """
+    Adds a secondary y-axis using the existing y-axis
 
+    E.g.
+        def CtoF(x):
+            return x * 1.8 + 32
+        def FtoC(x):
+            return (x - 32) / 1.8
+        secaxy = add_secondary_yaxis(ax, functions=(CtoF, FtoC))
+
+    Parameters
+    ----------
+    ax
+    funcs: tuple of two functions (Y1toY2, Y2toY1)
+    label
+    loc
+    log
+    kwargs
+
+    Returns
+    -------
+    sec_axy: secondary ax (ax.Axes obj)
+
+    """
+    sec_axy = ax.secondary_yaxis(loc, functions=(funcs[0], funcs[1]))
+    sec_axy.set_ylabel(label, **kwargs)
+    if log:
+        sec_axy.set_yscale("log")
+    return sec_axy
+
+def add_secondary_xaxis(ax, funcs, label=None, loc='top', log=False, **kwargs):
+    """
+    Adds a secondary y-axis using the existing y-axis
+
+    Parameters
+    ----------
+    ax
+    funcs: tuple of two functions (Y1toY2, Y2toY1)
+    label
+    loc
+    log
+    kwargs
+
+    Returns
+    -------
+    sec_axx: secondary ax (ax.Axes obj)
+
+    """
+    sec_axx = ax.secondary_xaxis(loc, functions=(funcs[0], funcs[1]))
+    sec_axx.set_xlabel(label, **kwargs)
+    if log:
+        sec_axx.set_xscale("log")
+    return sec_axx
 # sketches
 def draw_circle(ax, x, y, r, linewidth=1, edgecolor='r', facecolor='none', fill=False, **kwargs):
     """
@@ -1990,3 +2048,4 @@ def get_plot_data_from_fig(fig, axis_number=0):
         xlist.append(x)
         ylist.apppend(y)
     return xlist, ylist
+
