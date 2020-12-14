@@ -484,7 +484,7 @@ def extend_1darray_fill(arr, newarrsize, fill_value=np.nan):
     """
     arr = np.array(arr)
     if len(arr) < newarrsize:
-        return np.pad(arr, (0, newarrsize - len(arr)), 'constant', constant_values=(np.nan, np.nan))
+        return np.pad(arr, (0, newarrsize - len(arr)), 'constant', constant_values=(fill_value, fill_value))
     else:
         print('Original array is bigger than new array. Returning the original array...')
         return arr
@@ -518,7 +518,7 @@ array([[  0.,   1.,   2.,   3.,   4.,  nan],
     """
     arr = np.array(arr)
     shape = arr.shape
-    arr_ext = np.full(newarrshape, np.nan)
+    arr_ext = np.full(newarrshape, fill_value)
     arr_ext[0:shape[0], 0:shape[1]] = arr
     return arr_ext
 

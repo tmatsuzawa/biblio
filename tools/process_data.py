@@ -717,8 +717,6 @@ def bin_data(arg, data, nbins=25):
 
 
 
-
-
 ## get velocity from position, time arrays
 def compute_velocity_simple(time, pos):
     """
